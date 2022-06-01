@@ -1,0 +1,3 @@
+[submodule "py-EnBiD"]
+	path = py-EnBiD
+	url = git@github.com:athob/py-EnBiD.git
