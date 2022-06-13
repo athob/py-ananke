@@ -1,28 +1,33 @@
 #!/usr/bin/env python
-import os
 import pathlib
-import sys
-import re
-import fileinput
-import subprocess
-import urllib.request
 import distutils
-from distutils.errors import CompileError
-from distutils.command.build_ext import build_ext as CmdBuildExt
+from distutils.command.build_ext import build_ext
 from distutils.cmd import Command
 from distutils.core import setup
 
-ROOT_DIR = os.path.split(os.path.abspath(__file__))[0]
-NAME = 'ananke'
-LOG_DIR = 'log'
-SRC_DIR = 'src'
-PYENBID = 'py-EnBiD'
+from src._build_utils import *
+from src.ananke.constants import NAME, SRC_DIR, PYENBID, PYGALAXIA
+from src.ananke.__metadata__ import *
+
+ROOT_DIR = pathlib.Path(__file__).parent
 
 long_description = ""
 
-# metadata are set in the below file, but use this here to avoid warnings.
-__author__ = __copyright__ = __credits__ = __license__ = __version__ = __maintainer__ = __email__ = __status__ = None
-exec(open(os.path.join(ROOT_DIR, SRC_DIR, NAME, "__metadata__.py")).read())
+
+class MyBuildExt(build_ext):
+    def run(self):
+        check_submodules(ROOT_DIR)
+
+
+class MyTest(Command):
+    description = 'run tests'
+    user_options = []
+
+    def initialize_options(self): pass
+
+    def finalize_options(self): pass
+
+    def run(self): pass
 
 
 setup(name=NAME,
@@ -50,10 +55,9 @@ setup(name=NAME,
       python_requires='>=3',
       packages=[NAME],
       package_dir={'': SRC_DIR},
-      # package_data={NAME: all_files(*for_all_files, basedir=os.path.join(SRC_DIR, NAME))},
-      # include_package_data=True,
-      install_requires=['pandas',
-                        f"EnBiD @ file://{(pathlib.Path(__file__).parent / PYENBID).resolve()}"],
-      # ext_modules=[distutils.extension.Extension('', [])],
-      # cmdclass={'build_ext': MyBuildExt, 'test': MyTest},
+      install_requires=['numpy', 'pandas', 'ebfpy',
+                        f"EnBiD @ file://{(ROOT_DIR / PYENBID).resolve()}",
+                        f"Galaxia @ file://{(ROOT_DIR / PYGALAXIA).resolve()}"],
+      ext_modules=[distutils.extension.Extension('', [])],
+      cmdclass={'build_ext': MyBuildExt, 'test': MyTest},
       )

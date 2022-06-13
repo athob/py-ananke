@@ -1,3 +1,6 @@
 [submodule "py-EnBiD"]
 	path = py-EnBiD
 	url = git@github.com:athob/py-EnBiD.git
+[submodule "py-Galaxia"]
+	path = py-Galaxia
+	url = git@github.com:athob/py-Galaxia.git
