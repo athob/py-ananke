@@ -6,7 +6,7 @@ import pathlib
 import sys
 import subprocess
 
-from .ananke.constants import *
+from .constants import *
 
 __all__ = ['say', 'all_files', 'check_submodules']
 

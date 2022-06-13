@@ -1,33 +1,16 @@
 #!/usr/bin/env python
 import pathlib
-import distutils
-from distutils.command.build_ext import build_ext
-from distutils.cmd import Command
 from distutils.core import setup
 
 from src._build_utils import *
-from src.ananke.constants import NAME, SRC_DIR, PYENBID, PYGALAXIA
-from src.ananke.__metadata__ import *
+from src.constants import NAME, SRC_DIR, PYENBID, PYGALAXIA
+from src.__metadata__ import *
 
 ROOT_DIR = pathlib.Path(__file__).parent
 
 long_description = ""
 
-
-class MyBuildExt(build_ext):
-    def run(self):
-        check_submodules(ROOT_DIR)
-
-
-class MyTest(Command):
-    description = 'run tests'
-    user_options = []
-
-    def initialize_options(self): pass
-
-    def finalize_options(self): pass
-
-    def run(self): pass
+check_submodules(ROOT_DIR)
 
 
 setup(name=NAME,
@@ -57,7 +40,5 @@ setup(name=NAME,
       package_dir={'': SRC_DIR},
       install_requires=['numpy', 'pandas', 'ebfpy',
                         f"EnBiD @ file://{(ROOT_DIR / PYENBID).resolve()}",
-                        f"Galaxia @ file://{(ROOT_DIR / PYGALAXIA).resolve()}"],
-      ext_modules=[distutils.extension.Extension('', [])],
-      cmdclass={'build_ext': MyBuildExt, 'test': MyTest},
+                        f"Galaxia @ file://{(ROOT_DIR / PYGALAXIA).resolve()}"]
       )
