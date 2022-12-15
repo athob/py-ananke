@@ -38,7 +38,6 @@ setup(name=NAME,
       python_requires='>=3',
       packages=[NAME],
       package_dir={'': SRC_DIR},
-      install_requires=['numpy', 'pandas', 'ebfpy',
-                        f"EnBiD @ file://{(ROOT_DIR / PYENBID).resolve()}",
+      install_requires=[f"EnBiD @ file://{(ROOT_DIR / PYENBID).resolve()}",
                         f"Galaxia @ file://{(ROOT_DIR / PYGALAXIA).resolve()}"]
       )
