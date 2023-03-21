@@ -22,9 +22,10 @@ def say(text):
     if not sys.stdout.isatty():
         # output was redirected, but we still try to send the message to the terminal
         try:
-            with open('/dev/tty', 'w') as out:
-                out.write(text)
-                out.flush()
+            if pathlib.Path('/dev/tty').exists():
+                with open('/dev/tty', 'w') as out:
+                    out.write(text)
+                    out.flush()
         except PermissionError:
             # /dev/tty may not exist or may not be writable!
             pass
