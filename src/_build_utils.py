@@ -26,7 +26,7 @@ def say(text):
                 with open('/dev/tty', 'w') as out:
                     out.write(text)
                     out.flush()
-        except PermissionError:
+        except (OSError, PermissionError):
             # /dev/tty may not exist or may not be writable!
             pass
 
