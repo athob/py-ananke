@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 """
-Package parameters
+Contains the ananke module constants.
 """
-
 __all__ = ['NAME', 'LOG_DIR', 'SRC_DIR', 'PYENBID', 'PYGALAXIA', 'POS_TAG', 'VEL_TAG']
 
 NAME = 'ananke'

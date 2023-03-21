@@ -6,7 +6,7 @@ __all__ = ['__author__', '__copyright__', '__credits__', '__license__', '__versi
 
 __author__ = "Adrien Thob"
 __copyright__ = None
-__credits__ = ["Adrien Thob"]
+__credits__ = ["Adrien Thob", "Robyn Sanderson"]
 __license__ = "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)"
 __version__ = "0.0.0.dev1"
 __maintainer__ = "Adrien Thob"
