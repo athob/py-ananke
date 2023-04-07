@@ -82,6 +82,7 @@ class Ananke:
         """
         output = Galaxia.make_survey_from_particles(self.particles, rho[POS_TAG], rho[VEL_TAG], simname=self.name, ngb=self.ngb, **self.parameters)
         self.__output = output
+        return self._output
     
     _run_galaxia.__doc__ = _run_galaxia.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG)
     
