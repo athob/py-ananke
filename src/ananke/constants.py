@@ -7,8 +7,8 @@ __all__ = ['NAME', 'LOG_DIR', 'SRC_DIR', 'PYENBID', 'PYGALAXIA', 'POS_TAG', 'VEL
 NAME = 'ananke'
 LOG_DIR = 'log'
 SRC_DIR = 'src'
-PYENBID = 'py-EnBiD'
-PYGALAXIA = 'py-Galaxia'
+PYENBID = 'py-EnBiD-ananke'
+PYGALAXIA = 'py-Galaxia-ananke'
 
 POS_TAG = 'pos'
 VEL_TAG = 'vel'

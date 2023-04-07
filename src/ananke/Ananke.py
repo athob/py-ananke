@@ -6,8 +6,8 @@ Please note that this module is private. The Ananke class is
 available in the main ``ananke`` namespace - use that instead.
 """
 import pathlib
-import EnBiD
-import Galaxia
+import EnBiD_ananke as EnBiD
+import Galaxia_ananke as Galaxia
 
 from .constants import *
 
