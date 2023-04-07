@@ -1,6 +1,6 @@
-[submodule "py-EnBiD"]
+[submodule "py-EnBiD-ananke"]
 	path = py-EnBiD-ananke
-	url = ../../athob/py-EnBiD.git
-[submodule "py-Galaxia"]
+	url = ../../athob/py-EnBiD-ananke.git
+[submodule "py-Galaxia-ananke"]
 	path = py-Galaxia-ananke
-	url = ../../athob/py-Galaxia.git
+	url = ../../athob/py-Galaxia-ananke.git
