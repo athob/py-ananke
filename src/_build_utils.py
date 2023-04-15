@@ -4,8 +4,8 @@ Contains the ananke module building utility tools.
 """
 import pathlib
 import sys
-import subprocess
-from packaging import version
+# import subprocess
+# from packaging import version
 
 from .constants import *
 
@@ -43,5 +43,5 @@ def all_files(*paths, basedir='.'):
 def check_submodules(root_dir):
     # if not pathlib.os.listdir(PYENBID) or not pathlib.os.listdir(PYGALAXIA):
     say("\nChecking submodules, running git...")
-    subprocess.call(['git', 'submodule', 'update', '--init', '--recursive'], cwd=root_dir)
+    # subprocess.call(['git', 'submodule', 'update', '--init', '--recursive'], cwd=root_dir)
 
