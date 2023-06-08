@@ -5,11 +5,10 @@ Contains the Ananke class definition
 Please note that this module is private. The Ananke class is
 available in the main ``ananke`` namespace - use that instead.
 """
-import pathlib
-import EnBiD_ananke as EnBiD
 import Galaxia_ananke as Galaxia
 
 from .constants import *
+from .Densities import Densities
 
 __all__ = ['Ananke']
 
@@ -35,14 +34,14 @@ class Ananke:
         
         Notes
         -----
-        The input particles must include same_length arrays for every key of
+        The input particles must include same-length arrays for every key of
         the list of keys return by property required_particles_keys.
         Particular attention should be given to arrays of keys '{_pos}' and
         '{_vel}' that must be shaped as (Nx3) arrays of, respectively,
         position and velocity vectors.
     """
-    _pos = 'pos3'
-    _vel = 'vel3'
+    _pos = Densities._pos
+    _vel = Densities._vel
     _required_particles_keys = Galaxia.Input._required_keys_in_particles
     __doc__ = __doc__.format(_pos=_pos, _vel=_vel)
 
@@ -50,27 +49,14 @@ class Ananke:
         self.__particles = particles  # TODO for extinctions, consider new dictionary entry 'log10_NH_dustweighted'
         self.__name = name
         self.__ngb = ngb
-        self.__d_params = d_params
+        self.__densities_proxy = self._prepare_densities_proxy(d_params)
         self.__parameters = kwargs
         self.__output = None
-    
-    def _run_enbid(self):
-        """
-            Method to generate the dictionary of kernel density estimates that
-            is needed to generate the survey from the pipeline particles
-            
-            Returns
-            ----------
-            rho : dict({POS_TAG}=array_like, {VEL_TAG}=array_like)
-                A dictionary of same-length arrays representing kernel density
-                estimates for the pipeline particles
-        """
-        path = pathlib.Path(self.name)
-        rho_pos = EnBiD.enbid(self.particles[self._pos], name=path / POS_TAG, ngb=self.ngb, **self.d_params)
-        rho_vel = EnBiD.enbid(self.particles[self._vel], name=path / VEL_TAG, ngb=self.ngb, **self.d_params)
-        return {POS_TAG: rho_pos, VEL_TAG: rho_vel}
-    
-    _run_enbid.__doc__ = _run_enbid.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG)
+
+    def _prepare_densities_proxy(self, d_params):
+        return Densities({self._pos: self.particles[self._pos],
+                          self._vel: self.particles[self._vel]},
+                          self.name, self.ngb, **d_params)
 
     def _run_galaxia(self, rho):
         """
@@ -93,7 +79,7 @@ class Ananke:
         """
             Run the pipeline
         """
-        return self._run_galaxia(self._run_enbid())
+        return self._run_galaxia(self.densities)
 
     @property
     def particles(self):
@@ -108,9 +94,9 @@ class Ananke:
         return self.__ngb
     
     @property
-    def d_params(self):
-        return self.__d_params
-
+    def densities(self):
+        return self.__densities_proxy.densities
+    
     @property
     def parameters(self):
         return self.__parameters
