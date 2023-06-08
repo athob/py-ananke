@@ -27,6 +27,8 @@ class Ananke:
             Name for the pipeline
         ngb : int
             Number of neighbours to use in kernel density estimation
+        d_params : dict
+            Parameters to configure the kernel density estimation
         **kwargs
             Additional parameters used by the function
             make_survey_from_particles in Galaxia
@@ -44,10 +46,11 @@ class Ananke:
     _required_particles_keys = Galaxia.Input._required_keys_in_particles
     __doc__ = __doc__.format(_pos=_pos, _vel=_vel)
 
-    def __init__(self, particles, name, ngb=64, **kwargs) -> None:
-        self.__particles = particles
+    def __init__(self, particles, name, ngb=64, d_params={}, **kwargs) -> None:
+        self.__particles = particles  # TODO for extinctions, consider new dictionary entry 'log10_NH_dustweighted'
         self.__name = name
         self.__ngb = ngb
+        self.__d_params = d_params
         self.__parameters = kwargs
         self.__output = None
     
@@ -63,8 +66,8 @@ class Ananke:
                 estimates for the pipeline particles
         """
         path = pathlib.Path(self.name)
-        rho_pos = EnBiD.enbid(self.particles[self._pos], name=path / POS_TAG, ngb=self.ngb)
-        rho_vel = EnBiD.enbid(self.particles[self._vel], name=path / VEL_TAG, ngb=self.ngb)
+        rho_pos = EnBiD.enbid(self.particles[self._pos], name=path / POS_TAG, ngb=self.ngb, **self.d_params)
+        rho_vel = EnBiD.enbid(self.particles[self._vel], name=path / VEL_TAG, ngb=self.ngb, **self.d_params)
         return {POS_TAG: rho_pos, VEL_TAG: rho_vel}
     
     _run_enbid.__doc__ = _run_enbid.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG)
@@ -103,6 +106,10 @@ class Ananke:
     @property
     def ngb(self):
         return self.__ngb
+    
+    @property
+    def d_params(self):
+        return self.__d_params
 
     @property
     def parameters(self):
