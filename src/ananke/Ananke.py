@@ -54,9 +54,7 @@ class Ananke:
         self.__output = None
 
     def _prepare_densities_proxy(self, d_params):
-        return Densities({self._pos: self.particles[self._pos],
-                          self._vel: self.particles[self._vel]},
-                          self.name, self.ngb, **d_params)
+        return Densities(self, **d_params)
 
     def _run_galaxia(self, rho):
         """

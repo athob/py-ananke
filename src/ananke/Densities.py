@@ -19,13 +19,8 @@ class Densities:
 
         Parameters
         ----------
-        particles : dict({_pos}=array_like, {_vel}=array_like)
-            A dictionary of same-shape Nx3 arrays representing particles
-            positions and velocities of a stellar population
-        name : str
-            Name for the pipeline
-        ngb : int
-            Number of neighbours to use in kernel density estimation
+        ananke : Ananke object
+            The Ananke object that utilizes this Densities object
         **kwargs
             Additional parameters to be used by the density estimator
     """
@@ -33,10 +28,8 @@ class Densities:
     _vel = 'vel3'
     __doc__ = __doc__.format(_pos=_pos, _vel=_vel)
 
-    def __init__(self, particles, name, ngb=64, **kwargs) -> None:
-        self.__particles = particles
-        self.__name = name
-        self.__ngb = ngb
+    def __init__(self, ananke, **kwargs) -> None:
+        self.__ananke = ananke
         self.__parameters = kwargs
         self.__densities = None
     
@@ -60,16 +53,20 @@ class Densities:
     _run_enbid.__doc__ = _run_enbid.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG)
 
     @property
+    def ananke(self):
+        return self.__ananke
+
+    @property
     def particles(self):
-        return self.__particles
+        return self.ananke.particles
 
     @property
     def name(self):
-        return self.__name
+        return self.ananke.name
 
     @property
     def ngb(self):
-        return self.__ngb
+        return self.ananke.ngb
 
     @property
     def parameters(self):
