@@ -24,10 +24,6 @@ class Densities:
         **kwargs
             Additional parameters to be used by the density estimator
     """
-    _pos = 'pos3'
-    _vel = 'vel3'
-    __doc__ = __doc__.format(_pos=_pos, _vel=_vel)
-
     def __init__(self, ananke, **kwargs) -> None:
         self.__ananke = ananke
         self.__parameters = kwargs
@@ -45,8 +41,8 @@ class Densities:
                 estimates for the pipeline particles
         """
         path = pathlib.Path(self.name)
-        rho_pos = EnBiD.enbid(self.particles[self._pos], name=path / POS_TAG, ngb=self.ngb, **self.parameters)
-        rho_vel = EnBiD.enbid(self.particles[self._vel], name=path / VEL_TAG, ngb=self.ngb, **self.parameters)
+        rho_pos = EnBiD.enbid(self.particle_positions, name=path / POS_TAG, ngb=self.ngb, **self.parameters)
+        rho_vel = EnBiD.enbid(self.particle_velocities, name=path / VEL_TAG, ngb=self.ngb, **self.parameters)
         self.__densities = {POS_TAG: rho_pos, VEL_TAG: rho_vel}
         return self.__densities
     
@@ -55,10 +51,14 @@ class Densities:
     @property
     def ananke(self):
         return self.__ananke
-
+    
     @property
-    def particles(self):
-        return self.ananke.particles
+    def particle_positions(self):
+        return self.ananke.particle_positions
+    
+    @property
+    def particle_velocities(self):
+        return self.ananke.particle_velocities
 
     @property
     def name(self):
