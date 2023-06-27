@@ -5,9 +5,14 @@ Contains the Extinction class definition
 Please note that this module is private. The Extinction class is
 available in the main ``ananke`` namespace - use that instead.
 """
+from collections.abc import Iterable
 import numpy as np
 import scipy as sp
+import pandas as pd
 
+from Galaxia_ananke import utils as Gutils
+
+from ._default_extinction_coeff import *
 from .constants import *
 
 __all__ = ['Extinction']
@@ -27,13 +32,17 @@ class Extinction:
     _col_density = "log10_NH_dustweighted"
     _part_id = 'partid'  # TODO consolidate with export_keys in Output of Galaxia_ananke
     _galaxia_pos = ['px', 'py', 'pz']
+    _reddening = 'E(B-V)'
+    _extinction_template = staticmethod(lambda mag_name: f'A_{mag_name}')
+    _extinction_0 = _extinction_template(0)
+    _extra_output_keys = [_reddening, _extinction_0]
 
     def __init__(self, ananke, **kwargs) -> None:
         self.__ananke = ananke
         self.__interpolator = None
-        self.__reddening = None
-        self.__extinction = None
+        self.__extinctions = None
         self.__parameters = kwargs
+        self._text_extinction_coeff()
     
     def _make_interpolator(self):  # TODO to review
         xvsun = self.ananke.observer_position
@@ -90,29 +99,41 @@ class Extinction:
     
     @property
     def reddening(self):
-        if self.__reddening is None:
-            self.__reddening = self.qdust * 10**self.interpolated_column_densities
-        return self.__reddening
+        if self._reddening not in self.galaxia_output.column_names:
+            self.galaxia_output[self._reddening] = self.qdust * 10**self.interpolated_column_densities
+        return self.galaxia_output[self._reddening]
 
     @property
-    def extinction(self):
-        if self.__extinction is None:
-            self.__extinction = self.three_p_one * self.reddening
-        return self.__extinction
+    def extinction_0(self):
+        if self._extinction_0 not in self.galaxia_output.column_names:
+            self.galaxia_output[self._extinction_0] = self.three_p_one * self.reddening
+        return self.galaxia_output[self._extinction_0]
 
+    def _expand_and_apply_extinction_coeff(self, df, A0):
+        extinction_coeff = self.extinction_coeff
+        if not isinstance(extinction_coeff, Iterable):
+            extinction_coeff = [extinction_coeff]
+        return {key: A0 * coeff for coeff_dict in [(ext_coeff(df) if callable(ext_coeff) else ext_coeff) for ext_coeff in extinction_coeff] for key,coeff in coeff_dict.items()}  # TODO adapt to dataframe type of output?
 
-        # #calculate intrinsic colors
-        # data['bp_rp_int'] = data['gaia_g_bpmag'] - data['gaia_g_rpmag']
-        # data['bp_g_int'] = data['gaia_g_bpmag'] - data['gaia_gmag']
-        # data['g_rp_int'] = data['gaia_gmag'] - data['gaia_g_rpmag']
-
-
-        # #calculate extinction in Gaia bands
-        # return [data['A0'] * kX(data['bp_rp_int'], data['A0'], b) for b in ['gaia_gmag', 'gaia_g_bpmag', 'gaia_g_rpmag']]
+    def _text_extinction_coeff(self):
+        dummy_df = pd.DataFrame([], columns = self.ananke.galaxia_export_keys + self._extra_output_keys)  # TODO create a DataFrame subclass that intercepts __getitem__ and record every 'key' being used
+        dummy_df.loc[0] = np.nan
+        try:
+            dummy_ext = self._expand_and_apply_extinction_coeff(dummy_df, dummy_df[self._extinction_0])
+        except KeyError as KE:
+            raise KE  # TODO make it more informative
+        Gutils.compare_given_and_required(dummy_ext.keys(), self.ananke.galaxia_export_mag_names, error_message="Given extinction coeff function returns wrong set of keys")
+    
+    @property
+    def _extinction_keys(self):
+        return set(map(self._extinction_template, self.ananke.galaxia_export_mag_names))
 
     @property
     def extinctions(self):
-        return self.extinction
+        if self._extinction_keys.difference(self.galaxia_output.columns):
+            for mag_name, extinction in self._expand_and_apply_extinction_coeff(self.galaxia_output, self.extinction_0).items():
+                self.galaxia_output[self._extinction_template(mag_name)] = extinction
+        return self.__extinctions
 
     @property
     def parameters(self):
@@ -120,9 +141,18 @@ class Extinction:
     
     @property
     def qdust(self):
-        return self.parameters.get('qdust', QDUST)
+        return self.parameters.get('q_dust', Q_DUST)
         
     @property
     def three_p_one(self):
-        return self.parameters.get('three_p_one', THREE_P_ONE)
+        return self.parameters.get('total_to_selective', TOTAL_TO_SELECTIVE)
     
+    @property
+    def extinction_coeff(self):  # TODO have method that test prior to running ananke if function is well defined using a dummy vaex, capture error and adapt it with instructions
+        return self.parameters.get('extinction_coeff', [getattr(iso, 'default_extinction_coeff', self.__missing_default_extinction_coeff_for_isochrone(iso)) for iso in self.ananke.galaxia_isochrones])
+    
+    @staticmethod
+    def __missing_default_extinction_coeff_for_isochrone(isochrone):
+        def __raise_error_if_called(df):
+            raise Exception(f"Method default_extinction_coeff isn't defined for isochrone {isochrone.key}")
+        return __raise_error_if_called

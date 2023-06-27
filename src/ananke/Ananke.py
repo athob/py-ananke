@@ -53,6 +53,7 @@ class Ananke:
     _required_particles_keys = Galaxia.Input._required_keys_in_particles
     _optional_particles_keys = Galaxia.Input._optional_keys_in_particles
     _galaxia_particles_keys = _required_particles_keys.union(_optional_particles_keys)
+    _photo_sys = "photo_sys"
     __doc__ = __doc__.format(_pos=_pos, _vel=_vel)
 
     def __init__(self, particles, name, ngb=64, d_params={}, e_params={}, **kwargs) -> None:
@@ -61,9 +62,9 @@ class Ananke:
         self.__ngb = ngb
         self.__universe_proxy = self._prepare_universe_proxy(kwargs)
         self.__observer_proxy = self._prepare_observer_proxy(kwargs)
+        self.__parameters = kwargs
         self.__densities_proxy = self._prepare_densities_proxy(d_params)
         self.__extinction_proxy = self._prepare_extinction_proxy(e_params)
-        self.__parameters = kwargs
         self.__galaxia_output = None
 
     def _prepare_universe_proxy(self, kwargs):
@@ -97,7 +98,7 @@ class Ananke:
                 A dictionary of same-length arrays representing kernel density
                 estimates for the pipeline particles
         """
-        output = Galaxia.make_survey_from_particles(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], simname=self.name, ngb=self.ngb, **self._galaxia_kwargs)
+        output = Galaxia.make_survey_from_particles(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], simname=self.name, ngb=self.ngb, **self._galaxia_kwargs) # TODO don't use that function, use & save Galaxia objects instead (example improvement is direct access to isochrone objects)
         self.__galaxia_output = output
         return self._galaxia_output
     
@@ -115,7 +116,6 @@ class Ananke:
         """
         self._run_galaxia(self.densities)
         return self._run_extinction()
-        # return self._run_galaxia(self.densities)
 
     @property
     def particles(self):
@@ -169,6 +169,22 @@ class Ananke:
     def parameters(self):
         return self.__parameters
     
+    @property
+    def photo_sys(self):
+        return self.parameters.get(self._photo_sys, Galaxia.DEFAULT_PSYS)
+
+    @property
+    def galaxia_isochrones(self):
+        return Galaxia.Survey.set_isochrones_from_photosys(self.photo_sys)
+    
+    @property
+    def galaxia_export_mag_names(self):
+        return Galaxia.Output.Output._compile_export_mag_names(self.galaxia_isochrones)
+    
+    @property
+    def galaxia_export_keys(self):
+        return Galaxia.Output.Output._make_export_keys(self.galaxia_isochrones)
+
     @property
     def _galaxia_kwargs(self):
         return {**self.universe.to_galaxia_kwargs, **self.observer.to_galaxia_kwargs, **self.parameters}
