@@ -5,6 +5,7 @@ Contains the Extinction class definition
 Please note that this module is private. The Extinction class is
 available in the main ``ananke`` namespace - use that instead.
 """
+from warnings import warn
 from collections.abc import Iterable
 import numpy as np
 import scipy as sp
@@ -94,19 +95,19 @@ class Extinction:
 
     @property
     def interpolated_column_densities(self):
-        # TODO split between partid 0 and !=0, needed ?
+        # TODO split between partid 0 and !=0, needed ? and add this to the vaex table
         return self.column_density_interpolator(self.galaxia_pos)
     
     @property
     def reddening(self):
         if self._reddening not in self.galaxia_output.column_names:
-            self.galaxia_output[self._reddening] = self.qdust * 10**self.interpolated_column_densities
+            self.galaxia_output[self._reddening] = self.q_dust * 10**self.interpolated_column_densities
         return self.galaxia_output[self._reddening]
 
     @property
     def extinction_0(self):
         if self._extinction_0 not in self.galaxia_output.column_names:
-            self.galaxia_output[self._extinction_0] = self.three_p_one * self.reddening
+            self.galaxia_output[self._extinction_0] = self.total_to_selective * self.reddening
         return self.galaxia_output[self._extinction_0]
 
     def _expand_and_apply_extinction_coeff(self, df, A0):
@@ -140,11 +141,11 @@ class Extinction:
         return self.__parameters
     
     @property
-    def qdust(self):
+    def q_dust(self):
         return self.parameters.get('q_dust', Q_DUST)
         
     @property
-    def three_p_one(self):
+    def total_to_selective(self):
         return self.parameters.get('total_to_selective', TOTAL_TO_SELECTIVE)
     
     @property
@@ -153,6 +154,7 @@ class Extinction:
     
     @staticmethod
     def __missing_default_extinction_coeff_for_isochrone(isochrone):
-        def __raise_error_if_called(df):
-            raise Exception(f"Method default_extinction_coeff isn't defined for isochrone {isochrone.key}")
-        return __raise_error_if_called
+        def __return_nan_coeff_and_warn(df):
+            warn(f"Method default_extinction_coeff isn't defined for isochrone {isochrone.key}", UserWarning, stacklevel=2)
+            return {mag: np.nan for mag in isochrone.to_export_keys}
+        return __return_nan_coeff_and_warn
