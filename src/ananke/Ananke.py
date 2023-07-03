@@ -48,6 +48,7 @@ class Ananke:
         '{_vel}' that must be shaped as (Nx3) arrays of, respectively,
         position and velocity vectors.
     """
+    _mass = Galaxia.Input._mass
     _pos = Galaxia.Input._pos
     _vel = Galaxia.Input._vel
     _required_particles_keys = Galaxia.Input._required_keys_in_particles
@@ -61,10 +62,13 @@ class Ananke:
         self.__name = name
         self.__ngb = ngb
         self.__universe_proxy = self._prepare_universe_proxy(kwargs)
+        self.__photo_sys = kwargs.pop(self._photo_sys, Galaxia.DEFAULT_PSYS)
         self.__observer_proxy = self._prepare_observer_proxy(kwargs)
         self.__parameters = kwargs
         self.__densities_proxy = self._prepare_densities_proxy(d_params)
         self.__extinction_proxy = self._prepare_extinction_proxy(e_params)
+        self.__galaxia_input = None
+        self.__galaxia_survey = None
         self.__galaxia_output = None
 
     def _prepare_universe_proxy(self, kwargs):
@@ -87,7 +91,17 @@ class Ananke:
     def _prepare_extinction_proxy(self, e_params):
         return Extinction(self, **e_params)
 
-    def _run_galaxia(self, rho):
+    def _prep_galaxia_input(self, rho, knorm = 0.596831):
+        if self.__galaxia_input is None:
+            self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], name=self.name, knorm=knorm, ngb=self.ngb)
+        return self.__galaxia_input
+
+    def _prep_galaxia_survey(self, input, surveyname = 'survey'):
+        if self.__galaxia_survey is None:
+            self.__galaxia_survey = Galaxia.Survey(input, photo_sys=self.photo_sys, surveyname=surveyname)
+        return self.__galaxia_survey
+
+    def _run_galaxia(self, rho, **kwargs):
         """
             Method to generate the survey out of the pipeline particles given
             a dictionary of kernel density estimates
@@ -98,8 +112,10 @@ class Ananke:
                 A dictionary of same-length arrays representing kernel density
                 estimates for the pipeline particles
         """
-        output = Galaxia.make_survey_from_particles(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], simname=self.name, ngb=self.ngb, **self._galaxia_kwargs) # TODO don't use that function, use & save Galaxia objects instead (example improvement is direct access to isochrone objects)
-        self.__galaxia_output = output
+        input = self._prep_galaxia_input(rho, **{k:kwargs[k] for k in ['knorm'] if k in kwargs})
+        survey = self._prep_galaxia_survey(input, **{k:kwargs[k] for k in ['surveyname'] if k in kwargs})
+        self.__galaxia_output = survey.make_survey(**self._galaxia_kwargs)
+        # self.__galaxia_output = Galaxia.make_survey_from_particles(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], simname=self.name, ngb=self.ngb, **self._galaxia_kwargs) # TODO don't use that function, use & save Galaxia objects instead (example improvement is direct access to isochrone objects)
         return self._galaxia_output
     
     _run_galaxia.__doc__ = _run_galaxia.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG)
@@ -108,18 +124,23 @@ class Ananke:
         """
             Method
         """
-        return self._galaxia_output, self.extinctions
+        return self.extinctions
 
-    def run(self):
+    def run(self, **kwargs):
         """
             Run the pipeline
         """
-        self._run_galaxia(self.densities)
-        return self._run_extinction()
+        galaxia_output = self._run_galaxia(self.densities, **kwargs)
+        self._run_extinction()
+        return galaxia_output
 
     @property
     def particles(self):
         return self.__particles
+    
+    @property
+    def particle_masses(self):
+        return self.particles[self._mass]
     
     @property
     def particle_positions(self):
@@ -171,10 +192,10 @@ class Ananke:
     
     @property
     def photo_sys(self):
-        return self.parameters.get(self._photo_sys, Galaxia.DEFAULT_PSYS)
+        return self.__photo_sys
 
     @property
-    def galaxia_isochrones(self):
+    def galaxia_isochrones(self):  # TODO race condition with the implementation in extinction using the following 3 properties, requires rethinking Galaxia, maybe with the future photometryspecs implementation
         return Galaxia.Survey.set_isochrones_from_photosys(self.photo_sys)
     
     @property

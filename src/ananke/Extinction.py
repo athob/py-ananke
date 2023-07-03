@@ -30,9 +30,10 @@ class Extinction:
         **kwargs
             Additional parameters
     """
-    _col_density = "log10_NH_dustweighted"
+    _col_density = "log10_NH"
     _part_id = 'partid'  # TODO consolidate with export_keys in Output of Galaxia_ananke
     _galaxia_pos = ['px', 'py', 'pz']
+    _interp_col_dens = _col_density
     _reddening = 'E(B-V)'
     _extinction_template = staticmethod(lambda mag_name: f'A_{mag_name}')
     _extinction_0 = _extinction_template(0)
@@ -63,20 +64,22 @@ class Extinction:
         rmax *= 1.1
         sel_interp = (rmin<dhel_p) & (dhel_p<rmax)
         lognh = self.column_densities
-        self.__interpolator = sp.interpolate.LinearNDInterpolator(xhel_p[sel_interp],lognh[sel_interp],rescale=False)
+        self.__interpolator = sp.interpolate.LinearNDInterpolator(xhel_p[sel_interp],lognh[sel_interp],rescale=False)  # TODO investigate NaN outputs from interpolator
         return self.__interpolator
+
+    def __getattr__(self, item):
+        if (item in self.ananke.__dir__() and item.startswith('particle')):
+            return getattr(self.ananke, item)
+        else:
+            return self.__getattribute__(item)
 
     @property
     def ananke(self):
         return self.__ananke
 
     @property
-    def particles(self):
-        return self.ananke.particles
-    
-    @property
     def column_densities(self):
-        return self.particles[self._col_density]
+        return self.particles[self._col_density] if self._col_density in self.particles else np.nan*self.particle_masses
     
     @property
     def galaxia_output(self):
@@ -95,8 +98,9 @@ class Extinction:
 
     @property
     def interpolated_column_densities(self):
-        # TODO split between partid 0 and !=0, needed ? and add this to the vaex table
-        return self.column_density_interpolator(self.galaxia_pos)
+        if self._interp_col_dens not in self.galaxia_output.column_names:
+            self.galaxia_output[self._interp_col_dens] = self.column_density_interpolator(self.galaxia_pos)
+        return self.galaxia_output[self._interp_col_dens]
     
     @property
     def reddening(self):
@@ -134,7 +138,7 @@ class Extinction:
         if self._extinction_keys.difference(self.galaxia_output.columns):
             for mag_name, extinction in self._expand_and_apply_extinction_coeff(self.galaxia_output, self.extinction_0).items():
                 self.galaxia_output[self._extinction_template(mag_name)] = extinction
-        return self.__extinctions
+        return self.galaxia_output[list(self._extinction_keys)]
 
     @property
     def parameters(self):
@@ -149,7 +153,7 @@ class Extinction:
         return self.parameters.get('total_to_selective', TOTAL_TO_SELECTIVE)
     
     @property
-    def extinction_coeff(self):  # TODO have method that test prior to running ananke if function is well defined using a dummy vaex, capture error and adapt it with instructions
+    def extinction_coeff(self):
         return self.parameters.get('extinction_coeff', [getattr(iso, 'default_extinction_coeff', self.__missing_default_extinction_coeff_for_isochrone(iso)) for iso in self.ananke.galaxia_isochrones])
     
     @staticmethod
