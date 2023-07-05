@@ -16,15 +16,16 @@ __all__ = ['Densities']
 class Densities:
     """
         Store the particle kernel densities and compute them if necessary.
-
-        Parameters
-        ----------
-        ananke : Ananke object
-            The Ananke object that utilizes this Densities object
-        **kwargs
-            Additional parameters to be used by the density estimator
     """
     def __init__(self, ananke, **kwargs) -> None:
+        """
+            Parameters
+            ----------
+            ananke : Ananke object
+                The Ananke object that utilizes this Densities object
+            **kwargs
+                Additional parameters to be used by the density estimator
+        """
         self.__ananke = ananke
         self.__parameters = kwargs
         self.__densities = None

@@ -16,13 +16,6 @@ __all__ = ['Universe']
 class Universe:
     """
         Store the Universe parameters.
-
-        Parameters
-        ----------
-        ananke : Ananke object
-            The Ananke object that utilizes this Universe object
-        **kwargs
-            Additional parameters
     """
     _rmin = 'r_min'
     _rmax = 'r_max'
@@ -30,6 +23,17 @@ class Universe:
     _default_rshell = np.array([DEFAULTS_FOR_PARFILE[_p] for _p in _rshell])
 
     def __init__(self, ananke, rshell, **kwargs) -> None:
+        """
+        Parameters
+        ----------
+        ananke : Ananke object
+            The Ananke object that utilizes this Universe object
+        rshell : array-like shape (2,)
+            Range of distances from the observer position of the
+            particles that are to be considered.
+        **kwargs
+            Additional parameters
+        """
         self.__ananke = ananke
         self.__rshell = self.__prepare_rshell(rshell)
         self.__parameters = kwargs

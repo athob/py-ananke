@@ -22,15 +22,8 @@ __all__ = ['Extinction']
 class Extinction:
     """
         Proxy to the utilities for given extinction parameters.
-
-        Parameters
-        ----------
-        ananke : Ananke object
-            The Ananke object that utilizes this Extinction object
-        **kwargs
-            Additional parameters
     """
-    _col_density = "log10_NH"
+    _col_density = "log10_NH"  # log10 NH column densities between Observer position and particle
     _part_id = 'partid'  # TODO consolidate with export_keys in Output of Galaxia_ananke
     _galaxia_pos = ['px', 'py', 'pz']
     _interp_col_dens = _col_density
@@ -40,11 +33,38 @@ class Extinction:
     _extra_output_keys = [_reddening, _extinction_0]
 
     def __init__(self, ananke, **kwargs) -> None:
+        """
+            Parameters
+            ----------
+            ananke : Ananke object
+                The Ananke object that utilizes this Extinction object
+                
+            q_dust : float
+                Inverted conversion factor for dust efficiency represented by the
+                ratio between reddenning and column density E(B-V)/N_H. Default to
+                {Q_DUST}
+
+            total_to_selective : float
+                Optical total-to-selective extinction ratio between extinction and
+                reddenning A(V)/E(B-V). Default to {TOTAL_TO_SELECTIVE}
+
+            extinction_coeff : function [df --> dict(band: coefficient)]
+                Use to specify a function that returns extinction coefficients per
+                band from characterisitics of the extinguished star given in a
+                dataframe format. The function must return the coefficients per
+                band in a dictionary format with keys corresponding to the band
+                names returned by Galaxia (use property galaxia_export_mag_names
+                of the Ananke object). By default, the class will query the chosen
+                photometric system to check if it has a default function to use.
+                If it doesn't find one it will simply fill extinction with nan
+                values.
+        """
         self.__ananke = ananke
         self.__interpolator = None
-        self.__extinctions = None
         self.__parameters = kwargs
         self._text_extinction_coeff()
+    
+    __init__.__doc__ = __init__.__doc__.format(Q_DUST=Q_DUST, TOTAL_TO_SELECTIVE=TOTAL_TO_SELECTIVE)
     
     def _make_interpolator(self):  # TODO to review
         xvsun = self.ananke.observer_position

@@ -16,13 +16,6 @@ __all__ = ['Observer']
 class Observer:  # TODO SkyCoord for center point: SkyCoord(u=-rSun[0], v=-rSun[1], w=-rSun[2], unit='kpc', representation_type='cartesian', frame='galactic')
     """
         Store the observer parameters.
-
-        Parameters
-        ----------
-        ananke : Ananke object
-            The Ananke object that utilizes this Observer object
-        **kwargs
-            Additional parameters
     """
     _pos0 = 'rSun0'
     _pos1 = 'rSun1'
@@ -33,6 +26,16 @@ class Observer:  # TODO SkyCoord for center point: SkyCoord(u=-rSun[0], v=-rSun[
     _pha = _pos+_vel
 
     def __init__(self, ananke, pos, **kwargs) -> None:
+        """
+        Parameters
+        ----------
+        ananke : Ananke object
+            The Ananke object that utilizes this Observer object
+        pos : array-like shape (3,)
+            Position of the observer
+        **kwargs
+            Additional parameters
+        """
         self.__ananke = ananke
         self.__position = self.__prepare_position(pos)
         self.__velocity = []

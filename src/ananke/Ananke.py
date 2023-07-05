@@ -22,42 +22,109 @@ __all__ = ['Ananke']
 class Ananke:
     """
         Represents a single ananke pipeline.
-
-        Parameters
-        ----------
-        particles : dict
-            A dictionary of same-length arrays representing particles
-            data of a stellar population - see notes for formatting
-        name : str
-            Name for the pipeline
-        ngb : int
-            Number of neighbours to use in kernel density estimation
-        d_params : dict
-            Parameters to configure the kernel density estimation
-        e_params : dict
-            Parameters to configure the extinction pipeline
-        **kwargs
-            Additional parameters used by the function
-            make_survey_from_particles in Galaxia
-        
-        Notes
-        -----
-        The input particles must include same-length arrays for every key of
-        the list of keys return by property required_particles_keys.
-        Particular attention should be given to arrays of keys '{_pos}' and
-        '{_vel}' that must be shaped as (Nx3) arrays of, respectively,
-        position and velocity vectors.
     """
     _mass = Galaxia.Input._mass
-    _pos = Galaxia.Input._pos
-    _vel = Galaxia.Input._vel
+    _pos = Galaxia.Input._pos  # position in kpc
+    _vel = Galaxia.Input._vel  # velocity in km/s
+    _age = 'age'  # mass in solar masses
+    _feh = 'feh'  # log age in Gyr 
+    _alph = 'alpha'  # [Fe/H]
+    _mg = 'magnesium'  # [Mg/Fe]
+    _elem_list = ['helium', 'carbon', 'nitrogen', 'oxygen', 'neon', _mg, 'silicon', 'sulphur', 'calcium']  # other abundances in the list as [X/H]
+    _par_id = 'parentid'  # indices of parent particles in snapshot
+    _dform = 'dform'  # formation distance
     _required_particles_keys = Galaxia.Input._required_keys_in_particles
     _optional_particles_keys = Galaxia.Input._optional_keys_in_particles
     _galaxia_particles_keys = _required_particles_keys.union(_optional_particles_keys)
     _photo_sys = "photo_sys"
-    __doc__ = __doc__.format(_pos=_pos, _vel=_vel)
+    _def_obs_position = Observer._default_position
+    _def_uni_rshell = Universe._default_rshell
+    _def_photo_sys = Galaxia.DEFAULT_PSYS
+    _def_cmd_mags = Galaxia.DEFAULT_CMD
+    _def_cmd_box = Galaxia.DEFAULT_CMD_BOX
 
     def __init__(self, particles, name, ngb=64, d_params={}, e_params={}, **kwargs) -> None:
+        """
+            Parameters
+            ----------
+            particles : dict
+                A dictionary of same-length arrays representing particles
+                data of a stellar population - see notes for formatting
+
+            name : str
+                Name for the pipeline
+
+            ngb : int
+                Number of neighbours to use in kernel density estimation
+
+            d_params : dict
+                Parameters to configure the kernel density estimation
+
+            e_params : dict
+                Parameters to configure the extinction pipeline. Use class
+                method display_extinction_docs to find what parameters can be
+                defined
+
+            observer : array-like shape (3,)
+                Coordinates for the observer position in kpc. Default to
+                {_def_obs_position}.
+            
+            rshell : array-like shape (2,)
+                Range in kpc of distances from the observer position of the
+                particles that are to be considered. Default to
+                {_def_uni_rshell}.
+
+            photo_sys : string or list
+                Name(s) of the photometric system(s) Galaxia should use to
+                generate the survey. Default to {_def_photo_sys}.
+                Available photometric systems can be queried with the class
+                method display_available_photometric_systems.
+
+            cmd_magnames : string or dict
+                Names of the filters Galaxia should use for the color-magnitude
+                diagram box selection.
+                The input can be given as string in which case it must meet the
+                following format:
+                    "band1,band2-band3"
+                where band1 is the magnitude filter and (band2, band3) are the
+                filters that define the band2-band3 color index.
+                Alternatively, a dictionary can be passed with the following
+                format:
+                    dict('magnitude': band1,
+                         'color_minuend': band2,
+                         'color_subtrahend': band3)
+                The filter names must correspond to filters that are part of
+                the first chosen photometric system in photo_sys. Default to
+                {_def_cmd_mags}.
+                
+            app_mag_lim_lo : float
+            app_mag_lim_hi : float
+            abs_mag_lim_lo : float
+            abs_mag_lim_hi : float
+            color_lim_lo : float
+            color_lim_hi : float
+                These allow to specify the limits of the chosen color-magnitude
+                diagram box selection (lo for lower and hi for upper). app_mag,
+                abs_mag and color represent respectively limits in apparent
+                magnitudes, absolute magnitudes and color index. Default values
+                follow those set in:
+                {_def_cmd_box}.
+
+            fsample : float
+                Sampling rate from 0 to 1 for the resulting synthetic star
+                survey. 1 returns a full sample while any value below returns
+                partial surveys. Default to 1.
+            
+            Notes
+            -----
+            The input particles must include same-length arrays for every key of
+            the list of keys return by property required_particles_keys.
+            Particular attention should be given to arrays of keys '{_pos}' and
+            '{_vel}' that must be shaped as (Nx3) arrays of, respectively,
+            position and velocity vectors. Use the class method
+            make_dummy_particles_input to generate a dummy example of such input
+            dictionary.
+        """
         self.__particles = particles
         self.__name = name
         self.__ngb = ngb
@@ -70,6 +137,13 @@ class Ananke:
         self.__galaxia_input = None
         self.__galaxia_survey = None
         self.__galaxia_output = None
+
+    __init__.__doc__ = __init__.__doc__.format(_def_obs_position=_def_obs_position,
+                                               _def_uni_rshell=_def_uni_rshell,
+                                               _def_photo_sys=_def_photo_sys,
+                                               _def_cmd_mags=_def_cmd_mags,
+                                               _def_cmd_box=_def_cmd_box,
+                                               _pos=_pos, _vel=_vel)
 
     def _prepare_universe_proxy(self, kwargs):
         _rshell = kwargs.pop('rshell', None)
@@ -111,27 +185,54 @@ class Ananke:
             rho : dict({POS_TAG}=array_like, {VEL_TAG}=array_like)
                 A dictionary of same-length arrays representing kernel density
                 estimates for the pipeline particles
-        """
-        input = self._prep_galaxia_input(rho, **{k:kwargs[k] for k in ['knorm'] if k in kwargs})
-        survey = self._prep_galaxia_survey(input, **{k:kwargs[k] for k in ['surveyname'] if k in kwargs})
-        self.__galaxia_output = survey.make_survey(**self._galaxia_kwargs)
-        # self.__galaxia_output = Galaxia.make_survey_from_particles(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], simname=self.name, ngb=self.ngb, **self._galaxia_kwargs) # TODO don't use that function, use & save Galaxia objects instead (example improvement is direct access to isochrone objects)
+
+            knorm : float
+                TBD. Default to 0.596831.
+                        
+            surveyname : string
+                Optional name Galaxia should use for the output files. Default
+                to 'survey'.
+
+            **kwargs
+                Additional parameters used by the method make_survey of
+                Galaxia's Survey objects
+
+            Returns
+            -------
+            output : :obj:`Galaxia.Output`
+                Handler with utilities to utilize the output survey and its data.
+            """
+        input = self._prep_galaxia_input(rho, **{k:kwargs.pop(k) for k in ['knorm'] if k in kwargs})
+        survey = self._prep_galaxia_survey(input, **{k:kwargs.pop(k) for k in ['surveyname'] if k in kwargs})
+        self.__galaxia_output = survey.make_survey(**self._galaxia_kwargs, **kwargs)
         return self._galaxia_output
     
     _run_galaxia.__doc__ = _run_galaxia.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG)
     
-    def _run_extinction(self):
-        """
-            Method
-        """
-        return self.extinctions
-
     def run(self, **kwargs):
         """
-            Run the pipeline
+            Method to run the pipeline
+            
+            Parameters
+            ----------
+            knorm : float
+                TBD. Default to 0.596831.
+                        
+            surveyname : string
+                Optional name Galaxia should use for the output files. Default
+                to 'survey'.
+
+            **kwargs
+                Additional parameters used by the method make_survey of
+                Galaxia's Survey objects
+
+            Returns
+            -------
+            galaxia_output : :obj:`Galaxia.Output`
+                Handler with utilities to utilize the output survey and its data.
         """
         galaxia_output = self._run_galaxia(self.densities, **kwargs)
-        self._run_extinction()
+        _ = self.extinctions
         return galaxia_output
 
     @property
@@ -195,7 +296,7 @@ class Ananke:
         return self.__photo_sys
 
     @property
-    def galaxia_isochrones(self):  # TODO race condition with the implementation in extinction using the following 3 properties, requires rethinking Galaxia, maybe with the future photometryspecs implementation
+    def galaxia_isochrones(self):  # TODO race condition with the implementation in extinction using the following 3 properties, requires rethinking Galaxia, maybe with the future photometryspecs implementation: ultimate goal is to get isochrones from a Galaxia object without explicitely calling Galaxia class methods
         return Galaxia.Survey.set_isochrones_from_photosys(self.photo_sys)
     
     @property
@@ -225,6 +326,56 @@ class Ananke:
             raise RuntimeError("You must use the `run` method before accessing the catalogue")
         else:
             return self.__galaxia_output
+    
+    @classmethod
+    def make_dummy_particles_input(cls, n_parts=10**5):  # TODO consider moving part of that method to Galaxia Input?
+        """
+            Generate an example dummy input particles dictionary for Ananke
+            made of randomly generated arrays.
+
+            Parameters
+            ----------
+            n_parts : int
+                Number of particles the example include. Default to 10**5.
+
+            Returns
+            -------
+            p : dict
+                Dummy example input particles for Ananke.
+        """
+        p = {}
+        p[cls._pos] = 30*np.random.randn(n_parts, 3)
+        p[cls._vel] = 50*np.random.randn(n_parts, 3)
+        p[cls._mass] = 5500 + 700*np.random.randn(n_parts)
+        p[cls._age] = 9.7 + 0.4*np.random.randn(n_parts)
+        p[cls._feh] = -0.7 + 0.4*np.random.randn(n_parts)
+        for el in cls._elem_list:
+            p[el] = -0.6 + 0.4*np.random.randn(n_parts)
+        p[cls._alph] = p[cls._mg] - p[cls._feh]
+        p[cls._par_id] = np.arange(n_parts)
+        p[cls._dform] = np.zeros(n_parts, dtype='float32')
+        p[Extinction._col_density] = 22 + np.random.randn(n_parts)
+        return p
+    
+    @classmethod
+    def display_available_photometric_systems(cls):
+        """
+            Return a nested dictionary of all photometric systems that are
+            available in Galaxia.
+
+            Returns
+            -------
+            available_photo_systems : dict
+                Dictionary of dictionaries of Isochrone objects.
+        """
+        return Galaxia.photometry.available_photo_systems
+
+    @classmethod
+    def display_extinction_docs(cls):
+        """
+            Print the Extinction constructor docstring
+        """
+        print(Extinction.__init__.__doc__)
 
 
 if __name__ == '__main__':
