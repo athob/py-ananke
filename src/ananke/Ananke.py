@@ -232,7 +232,8 @@ class Ananke:
                 Handler with utilities to utilize the output survey and its data.
         """
         galaxia_output = self._run_galaxia(self.densities, **kwargs)
-        _ = self.extinctions
+        if self.__extinction_proxy._col_density in self.particles:
+            _ = self.extinctions
         return galaxia_output
 
     @property
