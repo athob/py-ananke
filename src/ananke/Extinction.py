@@ -9,6 +9,7 @@ from warnings import warn
 from collections.abc import Iterable
 import numpy as np
 import scipy as sp
+import scipy.interpolate  # needed for python==3.7
 import pandas as pd
 
 from Galaxia_ananke import utils as Gutils
@@ -28,7 +29,8 @@ class Extinction:
     _galaxia_pos = ['px', 'py', 'pz']
     _interp_col_dens = _col_density
     _reddening = 'E(B-V)'
-    _extinction_template = staticmethod(lambda mag_name: f'A_{mag_name}')
+    _extinction_formatter = 'A_{}'
+    _extinction_template = _extinction_formatter.format
     _extinction_0 = _extinction_template(0)
     _extra_output_keys = [_reddening, _extinction_0]
 
