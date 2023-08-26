@@ -25,7 +25,6 @@ class Extinction:
         Proxy to the utilities for given extinction parameters.
     """
     _col_density = "log10_NH"  # log10 NH column densities between Observer position and particle
-    _part_id = 'partid'  # TODO consolidate with export_keys in Output of Galaxia_ananke
     _galaxia_pos = ['px', 'py', 'pz']
     _interp_col_dens = _col_density
     _reddening = 'E(B-V)'
@@ -64,7 +63,7 @@ class Extinction:
         self.__ananke = ananke
         self.__interpolator = None
         self.__parameters = kwargs
-        self._text_extinction_coeff()
+        self._test_extinction_coeff()
     
     __init__.__doc__ = __init__.__doc__.format(Q_DUST=Q_DUST, TOTAL_TO_SELECTIVE=TOTAL_TO_SELECTIVE)
     
@@ -142,7 +141,7 @@ class Extinction:
             extinction_coeff = [extinction_coeff]
         return {key: A0 * coeff for coeff_dict in [(ext_coeff(df) if callable(ext_coeff) else ext_coeff) for ext_coeff in extinction_coeff] for key,coeff in coeff_dict.items()}  # TODO adapt to dataframe type of output?
 
-    def _text_extinction_coeff(self):
+    def _test_extinction_coeff(self):
         dummy_df = pd.DataFrame([], columns = self.ananke.galaxia_export_keys + self._extra_output_keys)  # TODO create a DataFrame subclass that intercepts __getitem__ and record every 'key' being used
         dummy_df.loc[0] = np.nan
         try:
@@ -160,6 +159,7 @@ class Extinction:
         if self._extinction_keys.difference(self.galaxia_output.columns):
             for mag_name, extinction in self._expand_and_apply_extinction_coeff(self.galaxia_output, self.extinction_0).items():
                 self.galaxia_output[self._extinction_template(mag_name)] = extinction
+        self._write_extra_columns_to_hdf5()
         return self.galaxia_output[list(self._extinction_keys)]
 
     @property
@@ -182,5 +182,24 @@ class Extinction:
     def __missing_default_extinction_coeff_for_isochrone(isochrone):
         def __return_nan_coeff_and_warn(df):
             warn(f"Method default_extinction_coeff isn't defined for isochrone {isochrone.key}", UserWarning, stacklevel=2)
-            return {mag: np.nan for mag in isochrone.to_export_keys}
+            return {mag: np.zeros(df.shape[0])*np.nan for mag in isochrone.to_export_keys}
         return __return_nan_coeff_and_warn
+
+    def _write_extra_columns_to_hdf5(self, with_columns=[]):  # temporary until vaex supports it
+        import h5py as h5
+        import vaex
+        hdf5_file = self.galaxia_output._hdf5
+        old_column_names = set(vaex.open(hdf5_file).column_names)
+        with h5.File(hdf5_file, 'r+') as f5:
+            extra_columns = [k for k in set(self.galaxia_output.column_names)-old_column_names if not k.startswith('__')]
+            for k in extra_columns:
+                f5.create_dataset(name=k, data=self.galaxia_output[k].to_numpy())
+            if extra_columns:
+                print(f"Exported the following quantities to {hdf5_file}")
+                print(extra_columns)
+            for k in with_columns:
+                f5[k][...] = self.galaxia_output[k].to_numpy()
+            if with_columns:
+                print(f"Overwritten the following quantities to {hdf5_file}")
+                print(with_columns)
+        self.galaxia_output.__vaex = vaex.open(hdf5_file)
