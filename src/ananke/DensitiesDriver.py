@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-Contains the Densities class definition
+Contains the DensitiesDriver class definition
 
-Please note that this module is private. The Densities class is
+Please note that this module is private. The DensitiesDriver class is
 available in the main ``ananke`` namespace - use that instead.
 """
 import pathlib
@@ -10,10 +10,10 @@ import EnBiD_ananke as EnBiD
 
 from .constants import *
 
-__all__ = ['Densities']
+__all__ = ['DensitiesDriver']
 
 
-class Densities:
+class DensitiesDriver:
     """
         Store the particle kernel densities and compute them if necessary.
     """
@@ -22,7 +22,7 @@ class Densities:
             Parameters
             ----------
             ananke : Ananke object
-                The Ananke object that utilizes this Densities object
+                The Ananke object that utilizes this DensitiesDriver object
             **kwargs
                 Additional parameters to be used by the density estimator
         """

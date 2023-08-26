@@ -13,7 +13,7 @@ import Galaxia_ananke as Galaxia
 from .constants import *
 from .Universe import Universe
 from .Observer import Observer
-from .Densities import Densities
+from .DensitiesDriver import DensitiesDriver
 from .ExtinctionDriver import ExtinctionDriver
 from .ErrorModelDriver import ErrorModelDriver
 
@@ -138,7 +138,7 @@ class Ananke:
         self.__photo_sys = kwargs.pop(self._photo_sys, Galaxia.DEFAULT_PSYS)
         self.__observer_proxy = self._prepare_observer_proxy(kwargs)
         self.__parameters = kwargs
-        self.__densities_proxy = self._prepare_densities_proxy(d_params)
+        self.__densitiesdriver_proxy = self._prepare_densitiesdriver_proxy(d_params)
         self.__extinctiondriver_proxy = self._prepare_extinctiondriver_proxy(e_params)
         self.__errormodeldriver_proxy = self._prepare_errormodeldriver_proxy(err_params)
         self.__galaxia_input = None
@@ -166,8 +166,8 @@ class Ananke:
             _obs = np.array([kwargs.pop('rSun0', np.nan), kwargs.pop('rSun1', np.nan), kwargs.pop('rSun2', np.nan)])
         return Observer(self, _obs)
 
-    def _prepare_densities_proxy(self, d_params):
-        return Densities(self, **d_params)
+    def _prepare_densitiesdriver_proxy(self, d_params):
+        return DensitiesDriver(self, **d_params)
 
     def _prepare_extinctiondriver_proxy(self, e_params):
         return ExtinctionDriver(self, **e_params)
@@ -248,8 +248,8 @@ class Ananke:
         return galaxia_output
 
     @property
-    def _densities_proxy(self):
-        return self.__densities_proxy
+    def _densitiesdriver_proxy(self):
+        return self.__densitiesdriver_proxy
 
     @property
     def _extinctiondriver_proxy(self):
@@ -305,7 +305,7 @@ class Ananke:
 
     @property
     def densities(self):
-        return self._densities_proxy.densities
+        return self._densitiesdriver_proxy.densities
     
     @property
     def extinctions(self):
