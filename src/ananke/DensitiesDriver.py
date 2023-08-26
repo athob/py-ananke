@@ -5,10 +5,15 @@ Contains the DensitiesDriver class definition
 Please note that this module is private. The DensitiesDriver class is
 available in the main ``ananke`` namespace - use that instead.
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import pathlib
 import EnBiD_ananke as EnBiD
 
 from .constants import *
+
+if TYPE_CHECKING:
+    from .Ananke import Ananke
 
 __all__ = ['DensitiesDriver']
 
@@ -17,7 +22,7 @@ class DensitiesDriver:
     """
         Store the particle kernel densities and compute them if necessary.
     """
-    def __init__(self, ananke, **kwargs) -> None:
+    def __init__(self, ananke: Ananke, **kwargs) -> None:
         """
             Parameters
             ----------

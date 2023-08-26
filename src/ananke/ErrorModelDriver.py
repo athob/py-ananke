@@ -5,6 +5,8 @@ Contains the ErrorModelDriver class definition
 Please note that this module is private. The ErrorModelDriver class is
 available in the main ``ananke`` namespace - use that instead.
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from warnings import warn
 from collections.abc import Iterable
 import numpy as np
@@ -13,6 +15,9 @@ import pandas as pd
 from Galaxia_ananke import utils as Gutils
 
 from .constants import *
+
+if TYPE_CHECKING:
+    from .Ananke import Ananke
 
 __all__ = ['ErrorModelDriver']
 
@@ -27,7 +32,7 @@ class ErrorModelDriver:
     _error_template = _error_formatter.format
     _extra_output_keys = []
 
-    def __init__(self, ananke, **kwargs) -> None:
+    def __init__(self, ananke: Ananke, **kwargs) -> None:
         """
             Parameters
             ----------

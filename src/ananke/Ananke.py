@@ -43,6 +43,8 @@ class Ananke:
     _def_photo_sys = Galaxia.DEFAULT_PSYS
     _def_cmd_mags = Galaxia.DEFAULT_CMD
     _def_cmd_box = Galaxia.DEFAULT_CMD_BOX
+    _observed_mag_formatter = '{}_Obs'
+    _observed_mag_template = _observed_mag_formatter.format
 
     def __init__(self, particles, name, ngb=64, d_params={}, e_params={}, err_params={}, **kwargs) -> None:
         """

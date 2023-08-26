@@ -5,10 +5,16 @@ Contains the Observer class definition
 Please note that this module is private. The Observer class is
 available in the main ``ananke`` namespace - use that instead.
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
+import numpy.typing
 from Galaxia_ananke.constants import DEFAULTS_FOR_PARFILE
 
 from .constants import *
+
+if TYPE_CHECKING:
+    from .Ananke import Ananke
 
 __all__ = ['Observer']
 
@@ -25,7 +31,7 @@ class Observer:  # TODO SkyCoord for center point: SkyCoord(u=-rSun[0], v=-rSun[
     _vel = []  # TODO
     _pha = _pos+_vel
 
-    def __init__(self, ananke, pos, **kwargs) -> None:
+    def __init__(self, ananke: Ananke, pos: np.typing.ArrayLike, **kwargs) -> None:
         """
         Parameters
         ----------
@@ -41,7 +47,7 @@ class Observer:  # TODO SkyCoord for center point: SkyCoord(u=-rSun[0], v=-rSun[
         self.__velocity = []
         self.__parameters = kwargs
     
-    def __prepare_position(self, pos):
+    def __prepare_position(self, pos: np.typing.ArrayLike):
         pos = np.array(pos)
         pos[np.isnan(pos)] = self._default_position[np.isnan(pos)]
         return pos

@@ -5,6 +5,8 @@ Contains the ExtinctionDriver class definition
 Please note that this module is private. The ExtinctionDriver class is
 available in the main ``ananke`` namespace - use that instead.
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from warnings import warn
 from collections.abc import Iterable
 import numpy as np
@@ -16,6 +18,9 @@ from Galaxia_ananke import utils as Gutils
 
 from ._default_extinction_coeff import *
 from .constants import *
+
+if TYPE_CHECKING:
+    from .Ananke import Ananke
 
 __all__ = ['ExtinctionDriver']
 
@@ -33,7 +38,7 @@ class ExtinctionDriver:
     _extinction_0 = _extinction_template(0)
     _extra_output_keys = [_reddening, _extinction_0]
 
-    def __init__(self, ananke, **kwargs) -> None:
+    def __init__(self, ananke: Ananke, **kwargs) -> None:
         """
             Parameters
             ----------
