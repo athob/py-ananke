@@ -15,6 +15,7 @@ from .Universe import Universe
 from .Observer import Observer
 from .Densities import Densities
 from .Extinction import Extinction
+from .ErrorModelDriver import ErrorModelDriver
 
 __all__ = ['Ananke']
 
@@ -23,13 +24,13 @@ class Ananke:
     """
         Represents a single ananke pipeline.
     """
-    _mass = Galaxia.Input._mass
+    _mass = Galaxia.Input._mass  # mass in solar masses
     _pos = Galaxia.Input._pos  # position in kpc
     _vel = Galaxia.Input._vel  # velocity in km/s
-    _age = 'age'  # mass in solar masses
-    _feh = 'feh'  # log age in Gyr 
-    _alph = 'alpha'  # [Fe/H]
-    _mg = 'magnesium'  # [Mg/Fe]
+    _age = 'age'  # log age in yr 
+    _feh = 'feh'  # [Fe/H] in dex relative to solar
+    _alph = 'alpha'  # [Mg/Fe]
+    _mg = 'magnesium'  # [Mg/H]
     _elem_list = ['helium', 'carbon', 'nitrogen', 'oxygen', 'neon', _mg, 'silicon', 'sulphur', 'calcium']  # other abundances in the list as [X/H]
     _par_id = 'parentid'  # indices of parent particles in snapshot
     _dform = 'dform'  # formation distance
@@ -43,7 +44,7 @@ class Ananke:
     _def_cmd_mags = Galaxia.DEFAULT_CMD
     _def_cmd_box = Galaxia.DEFAULT_CMD_BOX
 
-    def __init__(self, particles, name, ngb=64, d_params={}, e_params={}, **kwargs) -> None:
+    def __init__(self, particles, name, ngb=64, d_params={}, e_params={}, err_params={}, **kwargs) -> None:
         """
             Parameters
             ----------
@@ -63,6 +64,11 @@ class Ananke:
             e_params : dict
                 Parameters to configure the extinction pipeline. Use class
                 method display_extinction_docs to find what parameters can be
+                defined
+
+            err_params : dict
+                Parameters to configure the error model pipeline. Use class
+                method display_errormodel_docs to find what parameters can be
                 defined
 
             observer : array-like shape (3,)
@@ -134,6 +140,7 @@ class Ananke:
         self.__parameters = kwargs
         self.__densities_proxy = self._prepare_densities_proxy(d_params)
         self.__extinction_proxy = self._prepare_extinction_proxy(e_params)
+        self.__errormodeldriver_proxy = self._prepare_errormodeldriver_proxy(err_params)
         self.__galaxia_input = None
         self.__galaxia_survey = None
         self.__galaxia_output = None
@@ -164,6 +171,9 @@ class Ananke:
 
     def _prepare_extinction_proxy(self, e_params):
         return Extinction(self, **e_params)
+
+    def _prepare_errormodeldriver_proxy(self, err_params):
+        return ErrorModelDriver(self, **err_params)
 
     def _prep_galaxia_input(self, rho, knorm = 0.596831):
         if self.__galaxia_input is None:
@@ -232,9 +242,22 @@ class Ananke:
                 Handler with utilities to utilize the output survey and its data.
         """
         galaxia_output = self._run_galaxia(self.densities, **kwargs)
-        if self.__extinction_proxy._col_density in self.particles:
+        if self._extinction_proxy._col_density in self.particles:
             _ = self.extinctions
+        _ = self.errors
         return galaxia_output
+
+    @property
+    def _densities_proxy(self):
+        return self.__densities_proxy
+
+    @property
+    def _extinction_proxy(self):
+        return self.__extinction_proxy
+    
+    @property
+    def _errormodeldriver_proxy(self):
+        return self.__errormodeldriver_proxy
 
     @property
     def particles(self):
@@ -282,11 +305,15 @@ class Ananke:
 
     @property
     def densities(self):
-        return self.__densities_proxy.densities
+        return self._densities_proxy.densities
     
     @property
     def extinctions(self):
-        return self.__extinction_proxy.extinctions
+        return self._extinction_proxy.extinctions
+
+    @property
+    def errors(self):
+        return self._errormodeldriver_proxy.errors
 
     @property
     def parameters(self):
@@ -377,6 +404,13 @@ class Ananke:
             Print the Extinction constructor docstring
         """
         print(Extinction.__init__.__doc__)
+
+    @classmethod
+    def display_errormodel_docs(cls):
+        """
+            Print the ErrorModelDriver constructor docstring
+        """
+        print(ErrorModelDriver.__init__.__doc__)
 
 
 if __name__ == '__main__':
