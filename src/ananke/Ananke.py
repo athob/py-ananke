@@ -14,7 +14,7 @@ from .constants import *
 from .Universe import Universe
 from .Observer import Observer
 from .Densities import Densities
-from .Extinction import Extinction
+from .ExtinctionDriver import ExtinctionDriver
 from .ErrorModelDriver import ErrorModelDriver
 
 __all__ = ['Ananke']
@@ -139,7 +139,7 @@ class Ananke:
         self.__observer_proxy = self._prepare_observer_proxy(kwargs)
         self.__parameters = kwargs
         self.__densities_proxy = self._prepare_densities_proxy(d_params)
-        self.__extinction_proxy = self._prepare_extinction_proxy(e_params)
+        self.__extinctiondriver_proxy = self._prepare_extinctiondriver_proxy(e_params)
         self.__errormodeldriver_proxy = self._prepare_errormodeldriver_proxy(err_params)
         self.__galaxia_input = None
         self.__galaxia_survey = None
@@ -169,8 +169,8 @@ class Ananke:
     def _prepare_densities_proxy(self, d_params):
         return Densities(self, **d_params)
 
-    def _prepare_extinction_proxy(self, e_params):
-        return Extinction(self, **e_params)
+    def _prepare_extinctiondriver_proxy(self, e_params):
+        return ExtinctionDriver(self, **e_params)
 
     def _prepare_errormodeldriver_proxy(self, err_params):
         return ErrorModelDriver(self, **err_params)
@@ -242,7 +242,7 @@ class Ananke:
                 Handler with utilities to utilize the output survey and its data.
         """
         galaxia_output = self._run_galaxia(self.densities, **kwargs)
-        if self._extinction_proxy._col_density in self.particles:
+        if self._extinctiondriver_proxy._col_density in self.particles:
             _ = self.extinctions
         _ = self.errors
         return galaxia_output
@@ -252,8 +252,8 @@ class Ananke:
         return self.__densities_proxy
 
     @property
-    def _extinction_proxy(self):
-        return self.__extinction_proxy
+    def _extinctiondriver_proxy(self):
+        return self.__extinctiondriver_proxy
     
     @property
     def _errormodeldriver_proxy(self):
@@ -309,7 +309,7 @@ class Ananke:
     
     @property
     def extinctions(self):
-        return self._extinction_proxy.extinctions
+        return self._extinctiondriver_proxy.extinctions
 
     @property
     def errors(self):
@@ -382,7 +382,7 @@ class Ananke:
         p[cls._alph] = p[cls._mg] - p[cls._feh]
         p[cls._par_id] = np.arange(n_parts)
         p[cls._dform] = np.zeros(n_parts, dtype='float32')
-        p[Extinction._col_density] = 22 + np.random.randn(n_parts)
+        p[ExtinctionDriver._col_density] = 22 + np.random.randn(n_parts)
         return p
     
     @classmethod
@@ -401,9 +401,9 @@ class Ananke:
     @classmethod
     def display_extinction_docs(cls):
         """
-            Print the Extinction constructor docstring
+            Print the ExtinctionDriver constructor docstring
         """
-        print(Extinction.__init__.__doc__)
+        print(ExtinctionDriver.__init__.__doc__)
 
     @classmethod
     def display_errormodel_docs(cls):

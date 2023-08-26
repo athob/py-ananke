@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-Contains the Extinction class definition
+Contains the ExtinctionDriver class definition
 
-Please note that this module is private. The Extinction class is
+Please note that this module is private. The ExtinctionDriver class is
 available in the main ``ananke`` namespace - use that instead.
 """
 from warnings import warn
@@ -17,10 +17,10 @@ from Galaxia_ananke import utils as Gutils
 from ._default_extinction_coeff import *
 from .constants import *
 
-__all__ = ['Extinction']
+__all__ = ['ExtinctionDriver']
 
 
-class Extinction:
+class ExtinctionDriver:
     """
         Proxy to the utilities for given extinction parameters.
     """
@@ -38,7 +38,7 @@ class Extinction:
             Parameters
             ----------
             ananke : Ananke object
-                The Ananke object that utilizes this Extinction object
+                The Ananke object that utilizes this ExtinctionDriver object
                 
             q_dust : float
                 Inverted conversion factor for dust efficiency represented by the
