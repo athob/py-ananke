@@ -14,22 +14,25 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
+      id: pythonsetup
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Check python version
+      run: echo '${{ steps.pythonsetup.outputs.python-version }}'
     - name: Add conda to system path
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
-    - name: Change conda python version
-      run: |
-        conda install ${{ with.python-version }}
-    - name: Install pip
-      run: |
-        conda install pip
-    - name: Install package
-      run: |
-        pip install .
+    # - name: Change conda python version
+    #   run: |
+    #     conda install ${{ steps.pythonsetup.outputs.python-version }}
+    # - name: Install pip
+    #   run: |
+    #     conda install pip
+    # - name: Install package
+    #   run: |
+    #     pip install .
     # - name: Lint with flake8
     #   run: |
     #     conda install flake8
