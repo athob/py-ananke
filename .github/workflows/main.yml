@@ -27,12 +27,12 @@ jobs:
     - name: Change conda python version
       run: |
         conda install python=${{ steps.pythonsetup.outputs.python-version }}
-    # - name: Install pip
-    #   run: |
-    #     conda install pip
-    # - name: Install package
-    #   run: |
-    #     pip install .
+    - name: Install pip
+      run: |
+        conda install pip
+    - name: Install package
+      run: |
+        pip install .
     # - name: Lint with flake8
     #   run: |
     #     conda install flake8
