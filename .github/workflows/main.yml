@@ -23,7 +23,7 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Change conda python version
       run: |
-        conda install ${{ python-version }}
+        conda install ${{ with.python-version }}
     - name: Install pip
       run: |
         conda install pip
