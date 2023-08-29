@@ -3,15 +3,11 @@ name: CI/CD
 on:
   push:
     branches-ignore:
-      - master
-      - stable
-  pull_request:
-    branches-ignore:
-      - master
+      - main
       - stable
 
 jobs:
-  build:
+  install:
 
     runs-on: ubuntu-latest
     strategy:
@@ -50,3 +46,24 @@ jobs:
     #   run: |
     #     conda install pytest
     #     pytest
+  
+  develop-post-install:
+    runs-on: ubuntu-latest
+
+    needs: [install]
+
+    steps:
+    # - name: Open Journals PDF Generator
+    #   uses: openjournals/openjournals-draft-action@v.1.0
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Fetch all unshallow
+      run: git fetch --all --unshallow
+    - name: Checkout stable
+      run: git checkout stable
+    - name: Merge develop into stable
+      run: git merge develop
+    - name: Push merge to repository
+      run: git push
+
+    if: github.ref == 'refs/heads/develop'
