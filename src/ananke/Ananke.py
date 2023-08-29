@@ -182,7 +182,7 @@ class Ananke:
             self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], name=self.name, knorm=knorm, ngb=self.ngb)
         return self.__galaxia_input
 
-    def _prep_galaxia_survey(self, input, surveyname = 'survey'):
+    def _prep_galaxia_survey(self, input: Galaxia.Input, surveyname = 'survey'):
         if self.__galaxia_survey is None:
             self.__galaxia_survey = Galaxia.Survey(input, photo_sys=self.photo_sys, surveyname=surveyname)
         return self.__galaxia_survey
@@ -221,6 +221,12 @@ class Ananke:
     
     _run_galaxia.__doc__ = _run_galaxia.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG)
     
+    def _postprocess_observed_mags(self, galaxia_output: Galaxia.Output):
+        intrinsic, apparent = self.galaxia_export_mag_names, self.observed_export_mag_names
+        for i_key, a_key in zip(intrinsic, apparent):
+            galaxia_output[a_key] = galaxia_output[i_key] + galaxia_output[galaxia_output._dmod]
+        galaxia_output.flush_extra_columns_to_hdf5()
+
     def run(self, **kwargs):
         """
             Method to run the pipeline
@@ -244,6 +250,7 @@ class Ananke:
                 Handler with utilities to utilize the output survey and its data.
         """
         galaxia_output = self._run_galaxia(self.densities, **kwargs)
+        self._postprocess_observed_mags(galaxia_output)
         if self._extinctiondriver_proxy._col_density in self.particles:
             _ = self.extinctions
         _ = self.errors
@@ -331,11 +338,15 @@ class Ananke:
     
     @property
     def galaxia_export_mag_names(self):
-        return Galaxia.Output.Output._compile_export_mag_names(self.galaxia_isochrones)
+        return Galaxia.Output._compile_export_mag_names(self.galaxia_isochrones)
+    
+    @property
+    def observed_export_mag_names(self):
+        return list(map(self._observed_mag_template, self.galaxia_export_mag_names))
     
     @property
     def galaxia_export_keys(self):
-        return Galaxia.Output.Output._make_export_keys(self.galaxia_isochrones)
+        return Galaxia.Output._make_export_keys(self.galaxia_isochrones)
 
     @property
     def _galaxia_kwargs(self):

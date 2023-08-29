@@ -94,13 +94,17 @@ class ErrorModelDriver:
     @property
     def errors(self):
         if self._error_keys.difference(self.galaxia_output.columns):
+            magnitudes = self.ananke.galaxia_export_mag_names
             with_columns = []
             for prop_name, error in self._expand_and_apply_error_model(self.galaxia_output).items():
-                self.galaxia_output[self._sigma_template(prop_name)] = error
-                self.galaxia_output[self._error_template(prop_name)] = error*np.random.randn(self.galaxia_output.shape[0])
-                self.galaxia_output[prop_name] += self.galaxia_output[self._error_template(prop_name)]
+                prop_sig_name, prop_err_name = self._sigma_template(prop_name), self._error_template(prop_name)
+                self.galaxia_output[prop_sig_name] = error
+                self.galaxia_output[prop_err_name] = error*np.random.randn(self.galaxia_output.shape[0])
+                if prop_name in magnitudes:
+                    prop_name = self.ananke._observed_mag_template(prop_name)
+                self.galaxia_output[prop_name] += self.galaxia_output[prop_err_name]
                 with_columns.append(prop_name)
-        self._write_extra_columns_to_hdf5(with_columns=with_columns)
+        self.galaxia_output.flush_extra_columns_to_hdf5(with_columns=with_columns)
         return self.galaxia_output[list(self._error_keys)]
 
     @property
@@ -117,22 +121,3 @@ class ErrorModelDriver:
             warn(f"Method default_error_model isn't defined for isochrone {isochrone.key}", UserWarning, stacklevel=2)
             return {mag: np.zeros(df.shape[0]) for mag in isochrone.to_export_keys}
         return __return_zero_error_and_warn
-
-    def _write_extra_columns_to_hdf5(self, with_columns=[]):  # temporary until vaex supports it
-        import h5py as h5
-        import vaex
-        hdf5_file = self.galaxia_output._hdf5
-        old_column_names = set(vaex.open(hdf5_file).column_names)
-        with h5.File(hdf5_file, 'r+') as f5:
-            extra_columns = [k for k in set(self.galaxia_output.column_names)-old_column_names if not k.startswith('__')]
-            for k in extra_columns:
-                f5.create_dataset(name=k, data=self.galaxia_output[k].to_numpy())
-            if extra_columns:
-                print(f"Exported the following quantities to {hdf5_file}")
-                print(extra_columns)
-            for k in with_columns:
-                f5[k][...] = self.galaxia_output[k].to_numpy()
-            if with_columns:
-                print(f"Overwritten the following quantities to {hdf5_file}")
-                print(with_columns)
-        self.galaxia_output.__vaex = vaex.open(hdf5_file)
