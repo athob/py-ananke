@@ -26,15 +26,15 @@ jobs:
       id: pythonsetup
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Check python version
-      run: echo '${{ steps.pythonsetup.outputs.python-version }}'
+    # - name: Check python version
+    #   run: echo '${{ matrix.python-version }}'
     - name: Add conda to system path
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Change conda python version
       run: |
-        conda install python=${{ steps.pythonsetup.outputs.python-version }}
+        conda install python=${{ matrix.python-version }}
     - name: Install pip
       run: |
         conda install pip
