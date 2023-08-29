@@ -1,6 +1,14 @@
 name: Python Package using Conda
 
-on: [push]
+on:
+  push:
+    branches-ignore:
+      - master
+      - stable
+  pull_request:
+    branches-ignore:
+      - master
+      - stable
 
 jobs:
   build:
@@ -9,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
 
     steps:
     - uses: actions/checkout@v3
