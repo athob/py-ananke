@@ -161,7 +161,7 @@ class Ananke:
             _rshell = np.array([kwargs.pop('r_min', np.nan), kwargs.pop('r_max', np.nan)])
         return Universe(self, _rshell)
 
-    def _prepare_observer_proxy(self, kwargs):
+    def _prepare_observer_proxy(self, kwargs):  # TODO use a virtual solar system position as default, assuming (x,y) is the disc plane, might need to update Galaxia defaults
         _obs = kwargs.pop('observer', None)
         if _obs is None:
             warn('The use of kwargs rSun0, rSun1 & rSun2 will be deprecated, please use instead kwarg observer', DeprecationWarning, stacklevel=2)
@@ -222,7 +222,7 @@ class Ananke:
     _run_galaxia.__doc__ = _run_galaxia.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG)
     
     def _postprocess_observed_mags(self, galaxia_output: Galaxia.Output):
-        intrinsic, apparent = self.galaxia_export_mag_names, self.observed_export_mag_names
+        intrinsic, apparent = self.galaxia_catalogue_mag_names, self.observed_catalogue_mag_names
         for i_key, a_key in zip(intrinsic, apparent):
             galaxia_output[a_key] = galaxia_output[i_key] + galaxia_output[galaxia_output._dmod]
         galaxia_output.flush_extra_columns_to_hdf5()
@@ -337,16 +337,16 @@ class Ananke:
         return Galaxia.Survey.set_isochrones_from_photosys(self.photo_sys)
     
     @property
-    def galaxia_export_mag_names(self):
+    def galaxia_catalogue_mag_names(self):
         return Galaxia.Output._compile_export_mag_names(self.galaxia_isochrones)
     
     @property
-    def observed_export_mag_names(self):
-        return list(map(self._observed_mag_template, self.galaxia_export_mag_names))
+    def observed_catalogue_mag_names(self):
+        return list(map(self._observed_mag_template, self.galaxia_catalogue_mag_names))
     
     @property
-    def galaxia_export_keys(self):
-        return Galaxia.Output._make_export_keys(self.galaxia_isochrones)
+    def galaxia_catalogue_keys(self):
+        return Galaxia.Output._make_catalogue_keys(self.galaxia_isochrones)
 
     @property
     def _galaxia_kwargs(self):

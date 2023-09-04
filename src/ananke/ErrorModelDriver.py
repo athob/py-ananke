@@ -14,6 +14,7 @@ import pandas as pd
 
 from Galaxia_ananke import utils as Gutils
 
+# from ._default_error_model import *
 from .constants import *
 
 if TYPE_CHECKING:
@@ -75,26 +76,26 @@ class ErrorModelDriver:
         return {key: error for error_dict in [(err_model(df) if callable(err_model) else err_model) for err_model in error_model] for key,error in error_dict.items()}  # TODO adapt to dataframe type of output?
 
     def _test_error_model(self):
-        dummy_df = pd.DataFrame([], columns = self.ananke.galaxia_export_keys + self._extra_output_keys)  # TODO create a DataFrame subclass that intercepts __getitem__ and record every 'key' being used
+        dummy_df = pd.DataFrame([], columns = self.ananke.galaxia_catalogue_keys + self._extra_output_keys)  # TODO create a DataFrame subclass that intercepts __getitem__ and record every 'key' being used
         dummy_df.loc[0] = np.nan
         try:
             dummy_err = self._expand_and_apply_error_model(dummy_df)
         except KeyError as KE:
             raise KE  # TODO make it more informative
-        Gutils.compare_given_and_required(dummy_err.keys(), self.ananke.galaxia_export_mag_names, set(self.ananke.galaxia_export_keys)-set(self.ananke.galaxia_export_mag_names), error_message="Given error model function returns wrong set of keys")
+        Gutils.compare_given_and_required(dummy_err.keys(), self.ananke.galaxia_catalogue_mag_names, set(self.ananke.galaxia_catalogue_keys)-set(self.ananke.galaxia_catalogue_mag_names), error_message="Given error model function returns wrong set of keys")
     
     @property
     def _sigma_keys(self):
-        return set(map(self._sigma_template, self.ananke.galaxia_export_mag_names))
+        return set(map(self._sigma_template, self.ananke.galaxia_catalogue_mag_names))
 
     @property
     def _error_keys(self):
-        return set(map(self._error_template, self.ananke.galaxia_export_mag_names))
+        return set(map(self._error_template, self.ananke.galaxia_catalogue_mag_names))
 
     @property
     def errors(self):
         if self._error_keys.difference(self.galaxia_output.columns):
-            magnitudes = self.ananke.galaxia_export_mag_names
+            magnitudes = self.ananke.galaxia_catalogue_mag_names
             with_columns = []
             for prop_name, error in self._expand_and_apply_error_model(self.galaxia_output).items():
                 prop_sig_name, prop_err_name = self._sigma_template(prop_name), self._error_template(prop_name)

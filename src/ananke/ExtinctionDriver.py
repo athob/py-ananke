@@ -147,17 +147,17 @@ class ExtinctionDriver:
         return {key: A0 * coeff for coeff_dict in [(ext_coeff(df) if callable(ext_coeff) else ext_coeff) for ext_coeff in extinction_coeff] for key,coeff in coeff_dict.items()}  # TODO adapt to dataframe type of output?
 
     def _test_extinction_coeff(self):
-        dummy_df = pd.DataFrame([], columns = self.ananke.galaxia_export_keys + self._extra_output_keys)  # TODO create a DataFrame subclass that intercepts __getitem__ and record every 'key' being used
+        dummy_df = pd.DataFrame([], columns = self.ananke.galaxia_catalogue_keys + self._extra_output_keys)  # TODO create a DataFrame subclass that intercepts __getitem__ and record every 'key' being used
         dummy_df.loc[0] = np.nan
         try:
             dummy_ext = self._expand_and_apply_extinction_coeff(dummy_df, dummy_df[self._extinction_0])
         except KeyError as KE:
             raise KE  # TODO make it more informative
-        Gutils.compare_given_and_required(dummy_ext.keys(), self.ananke.galaxia_export_mag_names, error_message="Given extinction coeff function returns wrong set of keys")
+        Gutils.compare_given_and_required(dummy_ext.keys(), self.ananke.galaxia_catalogue_mag_names, error_message="Given extinction coeff function returns wrong set of keys")
     
     @property
     def _extinction_keys(self):
-        return set(map(self._extinction_template, self.ananke.galaxia_export_mag_names))
+        return set(map(self._extinction_template, self.ananke.galaxia_catalogue_mag_names))
 
     @property
     def extinctions(self):
@@ -165,7 +165,7 @@ class ExtinctionDriver:
             for mag_name, extinction in self._expand_and_apply_extinction_coeff(self.galaxia_output, self.extinction_0).items():
                 self.galaxia_output[self._extinction_template(mag_name)] = extinction
                 self.galaxia_output[self.ananke._observed_mag_template(mag_name)] += extinction
-        self.galaxia_output.flush_extra_columns_to_hdf5(with_columns=self.ananke.observed_export_mag_names)
+        self.galaxia_output.flush_extra_columns_to_hdf5(with_columns=self.ananke.observed_catalogue_mag_names)
         return self.galaxia_output[list(self._extinction_keys)]
 
     @property
