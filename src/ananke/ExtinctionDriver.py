@@ -59,7 +59,7 @@ class ExtinctionDriver:
                 band from characterisitics of the extinguished star given in a
                 dataframe format. The function must return the coefficients per
                 band in a dictionary format with keys corresponding to the band
-                names returned by Galaxia (use property galaxia_export_mag_names
+                names returned by Galaxia (use property galaxia_catalogue_mag_names
                 of the Ananke object). By default, the class will query the chosen
                 photometric system to check if it has a default function to use.
                 If it doesn't find one it will simply fill extinction with nan

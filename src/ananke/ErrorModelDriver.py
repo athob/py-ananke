@@ -40,16 +40,16 @@ class ErrorModelDriver:
             ananke : Ananke object
                 The Ananke object that utilizes this ErrorModel object
                 
-            error_model : function [df --> dict(band: coefficient)]  # TODO rewrite this
-                Use to specify a function that returns extinction coefficients per
-                band from characterisitics of the extinguished star given in a
-                dataframe format. The function must return the coefficients per
-                band in a dictionary format with keys corresponding to the band
-                names returned by Galaxia (use property galaxia_export_mag_names
-                of the Ananke object). By default, the class will query the chosen
-                photometric system to check if it has a default function to use.
-                If it doesn't find one it will simply fill extinction with nan
-                values.
+            error_model : function [df --> dict(prop: coefficient)]
+                Use to specify a model that returns error's standard deviations
+                per property from characterisitics of the mock star given in a
+                dataframe format. The function must return the standard deviations
+                per property in a dictionary format with keys corresponding to
+                the property names returned by Galaxia (use property
+                galaxia_catalogue_mag_and_astrometrics of the Ananke object).
+                By default, the class will query the chosen photometric system
+                to check if it has a default model to use. If it doesn't find one
+                it will simply fill errors with nan values.
         """
         self.__ananke = ananke
         self.__parameters = kwargs
