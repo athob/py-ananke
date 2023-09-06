@@ -43,8 +43,8 @@ class Ananke:
     _def_photo_sys = Galaxia.DEFAULT_PSYS
     _def_cmd_mags = Galaxia.DEFAULT_CMD
     _def_cmd_box = Galaxia.DEFAULT_CMD_BOX
-    _observed_mag_formatter = '{}_Obs'
-    _observed_mag_template = _observed_mag_formatter.format
+    _intrinsic_mag_formatter = '{}_Intrinsic'
+    _intrinsic_mag_template = _intrinsic_mag_formatter.format
 
     def __init__(self, particles, name, ngb=64, d_params={}, e_params={}, err_params={}, **kwargs) -> None:
         """
@@ -222,10 +222,11 @@ class Ananke:
     _run_galaxia.__doc__ = _run_galaxia.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG)
     
     def _postprocess_observed_mags(self, galaxia_output: Galaxia.Output):
-        intrinsic, apparent = self.galaxia_catalogue_mag_names, self.observed_catalogue_mag_names
-        for i_key, a_key in zip(intrinsic, apparent):
-            galaxia_output[a_key] = galaxia_output[i_key] + galaxia_output[galaxia_output._dmod]
-        galaxia_output.flush_extra_columns_to_hdf5()
+        mag_names = self.galaxia_catalogue_mag_names
+        for mag in mag_names:
+            galaxia_output[self._intrinsic_mag_template(mag)] = galaxia_output[mag]
+            galaxia_output[mag] += galaxia_output[galaxia_output._dmod]
+        galaxia_output.flush_extra_columns_to_hdf5(with_columns=mag_names)
 
     def run(self, **kwargs):
         """
@@ -341,8 +342,12 @@ class Ananke:
         return Galaxia.Output._compile_export_mag_names(self.galaxia_isochrones)
     
     @property
-    def observed_catalogue_mag_names(self):
-        return list(map(self._observed_mag_template, self.galaxia_catalogue_mag_names))
+    def intrinsic_catalogue_mag_names(self):
+        return list(map(self._intrinsic_mag_template, self.galaxia_catalogue_mag_names))
+    
+    @property
+    def galaxia_catalogue_mag_and_astrometrics(self):
+        return self.galaxia_catalogue_mag_names + [Galaxia.Output._pi] + Galaxia.Output._cel + Galaxia.Output._mu + [Galaxia.Output._vr]
     
     @property
     def galaxia_catalogue_keys(self):

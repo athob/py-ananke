@@ -14,7 +14,7 @@ import pandas as pd
 
 from Galaxia_ananke import utils as Gutils
 
-# from ._default_error_model import *
+from ._default_error_model import *
 from .constants import *
 
 if TYPE_CHECKING:
@@ -82,7 +82,7 @@ class ErrorModelDriver:
             dummy_err = self._expand_and_apply_error_model(dummy_df)
         except KeyError as KE:
             raise KE  # TODO make it more informative
-        Gutils.compare_given_and_required(dummy_err.keys(), self.ananke.galaxia_catalogue_mag_names, set(self.ananke.galaxia_catalogue_keys)-set(self.ananke.galaxia_catalogue_mag_names), error_message="Given error model function returns wrong set of keys")
+        Gutils.compare_given_and_required(dummy_err.keys(), self.ananke.galaxia_catalogue_mag_and_astrometrics, set(self.ananke.galaxia_catalogue_keys)-set(self.ananke.galaxia_catalogue_mag_and_astrometrics), error_message="Given error model function returns wrong set of keys")
     
     @property
     def _sigma_keys(self):
@@ -101,11 +101,10 @@ class ErrorModelDriver:
                 prop_sig_name, prop_err_name = self._sigma_template(prop_name), self._error_template(prop_name)
                 self.galaxia_output[prop_sig_name] = error
                 self.galaxia_output[prop_err_name] = error*np.random.randn(self.galaxia_output.shape[0])
-                if prop_name in magnitudes:
-                    prop_name = self.ananke._observed_mag_template(prop_name)
                 self.galaxia_output[prop_name] += self.galaxia_output[prop_err_name]
                 with_columns.append(prop_name)
         self.galaxia_output.flush_extra_columns_to_hdf5(with_columns=with_columns)
+        self.galaxia_output._pp_convert_icrs_to_galactic()
         return self.galaxia_output[list(self._error_keys)]
 
     @property

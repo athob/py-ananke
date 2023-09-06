@@ -164,8 +164,8 @@ class ExtinctionDriver:
         if self._extinction_keys.difference(self.galaxia_output.columns):
             for mag_name, extinction in self._expand_and_apply_extinction_coeff(self.galaxia_output, self.extinction_0).items():
                 self.galaxia_output[self._extinction_template(mag_name)] = extinction
-                self.galaxia_output[self.ananke._observed_mag_template(mag_name)] += extinction
-        self.galaxia_output.flush_extra_columns_to_hdf5(with_columns=self.ananke.observed_catalogue_mag_names)
+                self.galaxia_output[mag_name] += extinction
+        self.galaxia_output.flush_extra_columns_to_hdf5(with_columns=self.ananke.galaxia_catalogue_mag_names)
         return self.galaxia_output[list(self._extinction_keys)]
 
     @property
