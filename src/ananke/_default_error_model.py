@@ -37,7 +37,7 @@ def _temp(df):
         coeffs = {'gmag'    : [0.000214143, 1.07523e-7, 1.75147],
                   'bprpmag' : [0.00162729, 2.52848e-8, 1.25981],
                   'pospar'  : [0.0426028, 2.583e-10, 0.923162],
-                  'pm'      : [0.0861852,6.0771e-9, 1.05067],
+                  'pm'      : [0.0861852, 6.0771e-9, 1.05067],
                   'rv'      : [0.278939, 0.0000355589, 1.10179]
         }
         c=coeffs[errtype]
@@ -48,21 +48,15 @@ def _temp(df):
     errors = {k: np.zeros_like(gmag)*np.nan for k in [GMAG, RPMAG, BPMAG, PI, RA, DEC, PMRA, PMDEC, VR]}
     ################################
     maglims = (gmag>3.0) & (gmag<21.0)
-    # error on gmag
     errors[GMAG][maglims] = _model(gmag[maglims], 'gmag')
-    # error on rpmag and bpmag
     errors[RPMAG][maglims] = errors[BPMAG][maglims] = _model(gmag[maglims], 'bprpmag')
-    # error on astrometrics (in mas)
-    errors[PI][maglims] = errors[RA][maglims] = errors[DEC][maglims] = _model(gmag[maglims], 'pospar')
-    # error on proper motions (in mas/yr)
-    errors[PMRA][maglims] = errors[PMDEC][maglims] = _model(gmag[maglims], 'pm')
-    # #change units for ra,dec errors to degrees
+    errors[PI][maglims] = errors[RA][maglims] = errors[DEC][maglims] = _model(gmag[maglims], 'pospar')  # astrometrics (in mas)
+    errors[PMRA][maglims] = errors[PMDEC][maglims] = _model(gmag[maglims], 'pm')  # proper motions (in mas/yr)
     errors[RA][maglims] *= MAS_TO_DEG
     errors[DEC][maglims] *= MAS_TO_DEG
     ################################
     grvs = grvs_from_g_rp(gmag, rpmag)
     maglims = (grvs<14) & (3550<=teff) & (teff<=6900)
-    # error on radial velocities
     errors[VR][maglims] = _model(grvs[maglims], 'rv')
     errors[VR][maglims] = np.sqrt(errors[VR][maglims]**2 + 0.11**2) #systematic floor
     return errors
