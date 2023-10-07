@@ -121,11 +121,11 @@ Lastly, the ``galaxia-ananke`` ``C++`` submodule uses sets of pre-computed stell
 
 # Past and Ongoing Applications
 
-@Sanderson:2020's data have now been in public use for 5 years and have delivered on the promise of this technique, leading to the discovery of a new stellar stream [@Necib:2020], the development and validation of new machine learning methods for inferring the origins of stars [Ostdiek:2020], insights into the formation history of the MW [@Nikakhtar:2021], searches for dark matter subhalos [@Bazarov:2022], and inference of the MW's interstellar dust distribution [@Miller:2022].
+@Sanderson:2020's data have now been in public use for 5 years and have delivered on the promise of this technique, leading to the discovery of a new stellar stream [@Necib:2020], the development and validation of new machine learning methods for inferring the origins of stars [@Ostdiek:2020], insights into the formation history of the MW [@Nikakhtar:2021], searches for dark matter subhalos [@Bazarov:2022], and inference of the MW's interstellar dust distribution [@Miller:2022].
 
 In addition, a number of studies have also made use of the existing ``ananke`` pipeline that generated @Sanderson:2020's data, often through the extensive effort to adapt it to other photometric systems:
 
-- @Shipp:2023 investigated the detectability of MW stellar streams in the Dark Energy Survey [@DES:2015;DES:2018;DES:2021], for which they produced mock star catalogs mimicking DECam photometry from MW-like simulated galaxies
+- @Shipp:2023 investigated the detectability of MW stellar streams in the Dark Energy Survey [@DES:2015;@DES:2018;@DES:2021], for which they produced mock star catalogs mimicking DECam photometry from MW-like simulated galaxies
 - @Nguyen:2023 produced a synthetic survey mimicking the third data release of Gaia [@Gaia:2021;@Gaia:2023], similarly to how @Sanderson:2020 produced a synthetic survey of the second data release of Gaia [@Gaia:2018]
 
 These studies required significant effort caused by the challenges to use ``ananke``, which ``py-ananke`` is designed to alleviate. Current ongoing projects are already using the new ``py-ananke`` package, and are benefiting significantly from his ergonomicity.
