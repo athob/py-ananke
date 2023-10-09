@@ -69,15 +69,23 @@ The ``ananke`` pipeline by @Sanderson:2020, though powerful, lacks user-friendli
 
 # Code description
 
-The implementation of ``py-ananke`` is designed to streamline the ``ananke`` pipeline, and to prevent the need for the user to manually handle the interface between ``Python`` and the ``C++`` backend software. It notably introduces dedicated wrapper submodules, namely ``py-EnBiD-ananke`` and ``py-Galaxia-ananke``, specifically developed to handle the installation and utilization of these ``C++`` subroutines, namely ``EnBiD`` [@EnBiD:2011] and a modified version of ``Galaxia`` [@Galaxia:2011] called ``galaxia-ananke``. These submodules relieve users from the need to directly manage the ``C++`` software while isolating the ``C++`` wrapping process. This allows ``py-ananke`` to focus on processing inputs and outputs using pure ``Python``.
+The implementation of ``py-ananke`` is designed to streamline the ``ananke`` pipeline, and to prevent the need for the user to manually handle the interface between ``Python`` and the ``C++`` backend software. It notably introduces dedicated wrapper submodules (hosted in repositories that are separate from that of ``py-ananke``, but linked as ``git`` submodules), namely ``py-EnBiD-ananke`` and ``py-Galaxia-ananke``, specifically developed to handle the installation and utilization of these ``C++`` subroutines, namely ``EnBiD`` [@EnBiD:2011] and a modified version of ``Galaxia`` [@Galaxia:2011] called ``galaxia-ananke``. These submodules relieve users from the need to directly manage the ``C++`` software while isolating the ``C++`` wrapping process. This allows ``py-ananke`` to focus on processing inputs and outputs using pure ``Python``.
 
 ## ``py-EnBiD-ananke``
 
-To complete
+The ``py-EnBiD-ananke`` submodule handles the installation of ``EnBiD`` [@EnBiD:2011] and interfaces with its pipeline. The installation pulls the archived source code of ``EnBiD`` from its SourceForge repository and builds its executable which gets added to the packaged data. Note that for this version of ``py-ananke``, the ``EnBiD`` pipeline is configured to determine 3D space densities for a set of particles, which ``py-ananke`` uses twice to get separate estimates of the position and velocity densities. In this situation, ``py-ananke`` combines both densities into a 6D phase space density, but future versions will consider the native implementation for determining true 6D phase space densities.
+
+``py-EnBiD-ananke`` consists of a collection of functions that are combined into the pipeline-function ``enbid`` that takes particles 3D coordinates as input and returns their densities. The role of each sub-function is to write the files that are given as input to the ``EnBiD`` pipeline, to run the ``EnBiD`` pipeline and to read the pipeline's output files, for which various operational constants and templates are defined in a dedicated module file. 
 
 ## ``py-Galaxia-ananke``
 
-To complete
+The ``py-Galaxia-ananke`` submodule handles the installation of ``galaxia-ananke``, a modified version of ``Galaxia`` [@Galaxia:2011], and interfaces with its pipeline. The ``galaxia-ananke`` source code lives in a separate repository which is linked as a ``git`` submodule in the repository of ``py-Galaxia-ananke``. At installation, ``py-Galaxia-ananke`` builds and packages the executable of ``galaxia-ananke`` from its source code directly from its ``git`` submodule, as well as the operational data for ``galaxia-ananke`` which includes the collections of isochrones sets. All the resulting ``galaxia-ananke`` packaged data is eventually placed in a dedicated cache folder that is created in the site-specific directory of the running ``Python`` installation.
+
+``py-Galaxia-ananke`` consists of mainly three classes, with one function utilizing them to run the ``galaxia-ananke`` pipeline that returns synthetic stellar catalogues from the population of star particles given as input. It also includes a submodule that handles the collection of isochrones sets/photometric systems via dedicated objects. The three classes of ``py-Galaxia-ananke`` serves the following roles:
+
+- ``Input`` objects are used to store the input star particles data, and have methods that write the input files that ``galaxia-ananke`` requires
+- ``Survey`` objects receive ``Input`` objects and the selection of photometric systems to simulate, and have methods that run the ``galaxia-ananke`` pipeline and return ``Output`` objects
+- ``Output`` objects serves as the main interface with ``galaxia-ananke``'s output files, and have methods that turn them into `HDF5` files and associated `vaex` dataframes
 
 ## ``py-ananke``
 
