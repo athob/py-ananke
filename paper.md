@@ -67,7 +67,7 @@ This challenge was addressed by @Sanderson:2020 when producing a mock Gaia catal
 
 The ``ananke`` pipeline by @Sanderson:2020, though powerful, lacks user-friendliness and flexibility. It is challenging to integrate into other pipelines and expand beyond the Gaia photometric system. The development of ``py-ananke`` aims to make this framework more accessible to a wider community. By providing a self-contained and easily installable ``Python`` package, it streamlines the ``ananke`` pipeline, automating tasks previously requiring manual intervention. ``py-ananke`` also expands ``ananke``'s photometric system support and employs a modular implementation for future enhancements. It promises a smoother upgrade path for users.
 
-# Code description
+# Infrastructure
 
 The implementation of ``py-ananke`` is designed to streamline the ``ananke`` pipeline, and to prevent the need for the user to manually handle the interface between ``Python`` and the ``C++`` backend software. It notably introduces dedicated wrapper submodules (hosted in repositories that are separate from that of ``py-ananke``, but linked as ``git`` submodules), namely ``py-EnBiD-ananke`` and ``py-Galaxia-ananke``, specifically developed to handle the installation and utilization of these ``C++`` subroutines, namely ``EnBiD`` [@EnBiD:2006;@EnBiDCode:2011] and a modified version of ``Galaxia`` [@Galaxia:2011;@GalaxiaCode:2011] called ``galaxia-ananke``. These submodules relieve users from the need to directly manage the ``C++`` software while isolating the ``C++`` wrapping process. This allows ``py-ananke`` to focus on processing inputs and outputs using pure ``Python``.
 
@@ -87,22 +87,24 @@ The full descrption of ``Galaxia`` is detailed in @Galaxia:2011, but to summariz
 
 The ``py-Galaxia-ananke`` submodule handles the installation of ``galaxia-ananke``, a modified version of ``Galaxia``, and interfaces with its pipeline. The ``galaxia-ananke`` source code lives in a separate repository which is linked as a ``git`` submodule in the repository of ``py-Galaxia-ananke``. At installation, ``py-Galaxia-ananke`` builds and packages the executable of ``galaxia-ananke`` from its source code directly from its ``git`` submodule, as well as the operational data for ``galaxia-ananke`` which includes the collections of isochrones sets. All the resulting ``galaxia-ananke`` packaged data is eventually placed in a dedicated cache folder that is created in the site-specific directory of the running ``Python`` installation.
 
-``py-Galaxia-ananke`` consists of mainly three classes, with one function utilizing them to run the ``galaxia-ananke`` pipeline that returns synthetic stellar catalogues from the population of star particles given as input. It also includes a submodule that handles the collection of isochrones sets/photometric systems via dedicated objects. The three classes of ``py-Galaxia-ananke`` serves the following roles:
+``py-Galaxia-ananke`` consists of mainly three classes, with one function utilizing them to run the ``galaxia-ananke`` pipeline. It also includes a submodule that interfaces via dedicated objects with the data from the collection of isochrones sets/photometric systems. The three classes of ``py-Galaxia-ananke`` serve the following roles:
 
 - ``Input`` objects are used to store the input star particles data, and have methods that write the input files that ``galaxia-ananke`` requires
 - ``Survey`` objects receive ``Input`` objects and the selection of photometric systems to simulate, and have methods that run the ``galaxia-ananke`` pipeline and return ``Output`` objects
-- ``Output`` objects serves as the main interface with ``galaxia-ananke``'s output files, and have methods that turn them into `HDF5` files and associated `vaex` dataframes
+- ``Output`` objects serves as the main interface with ``galaxia-ananke``'s output files, and have methods that turn them into ``HDF5`` files and associated ``vaex`` dataframes
 
 ## ``py-ananke``
 
-The implementation of `py-ananke` involves six classes, with only one - ``Ananke`` - being relevant to the end user:
+The implementation of ``py-ananke`` involves six classes, with only one - ``Ananke`` - being relevant to the end user:
 
+- ``Ananke`` objects serve as the user interface, connecting all of ``py-ananke``'s classes and the ``py-Galaxia-ananke`` classes (described in the previous subsection) to execute the full pipeline via its method ``run``
 - ``Universe`` objects store the particle data and various parameters provided to ``Ananke``
 - ``Observer`` objects store the observing configuration, including the position in space
 - ``DensitiesDriver`` objects utilize the particle data from the ``Universe`` class to compute and store phase space densities, employing ``py-EnBiD-ananke``
-- ``Ananke`` objects serve as the user interface, connecting the three abovementioned classes and the ``py-Galaxia-ananke`` classes to execute the pipeline
-- ``ExtinctionDriver`` objects are utilized by ``Ananke`` objects to estimate and append extinctions in the outputs of ``py-Galaxia-ananke``
-- ``ErrorModelDriver`` objects are utilized by ``Ananke`` objects to determine and append errors on the quantities in the outputs of ``py-Galaxia-ananke``
+- ``ExtinctionDriver`` objects are utilized by ``Ananke`` objects for post-processing to estimate and append extinctions in the output catalogs of ``py-Galaxia-ananke``, only if the user specified dust column densities per star particle
+- ``ErrorModelDriver`` objects are utilized by ``Ananke`` objects for post-processing to determine and append errors on the quantities in the output catalogs of ``py-Galaxia-ananke``
+
+The latter two driver classes require respectively extinction coefficients and error models that are photometric-system-dependents, and can be specified by the user. Also, ``py-ananke`` is designed with dedicated source files to contain default implementations, which currently only hold default for the Gaia photometric system. Future updates will continue to expand this further.
 
 # Dependencies
 \ref{Sec:Dependencies}
@@ -159,7 +161,7 @@ Package development and testing was performed in part at the Aspen Center for Ph
 
 The authors are grateful to Anthony Brown and Jos de Bruijne for their cooperation in building the Gaia error models encoded in this package. We also gratefully acknowledge the input and encouragement of the many participants of the Gaia Sprints (2017--2019), and of the Gaia Challenge series (2012-2019).
 
-The authors thanks the extended [Galaxy Dynamics @ UPenn group](http://web.sas.upenn.edu/dynamics/) and the attendees of the "anankethon" workshops for the valuable feedback and suggestions they provided which have contributed to the refinement and enhancement of the package.
+The authors thank the extended [Galaxy Dynamics @ UPenn group](http://web.sas.upenn.edu/dynamics/) and the attendees of the "anankethon" workshops for the valuable feedback and suggestions they provided which have contributed to the refinement and enhancement of the package.
 
 
 # References
