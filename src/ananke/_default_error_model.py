@@ -15,9 +15,9 @@ def _temp(df):
     based on Table 3 of release paper
     returns uncertainty estimate in magnitudes, mas, mas/yr, km/s
     """
-    GMAG  = 'gaia_gmag'
-    RPMAG = 'gaia_g_rpmag'
-    BPMAG = 'gaia_g_bpmag'
+    GMAG  = 'gaiadr2_gmag'
+    RPMAG = 'gaiadr2_g_rpmag'
+    BPMAG = 'gaiadr2_g_bpmag'
     PI    = 'pi'
     RA    = 'ra'
     DEC   = 'dec'
@@ -61,4 +61,4 @@ def _temp(df):
     errors[VR][maglims] = np.sqrt(errors[VR][maglims]**2 + 0.11**2) #systematic floor
     return errors
 
-ph.available_photo_systems['padova/GAIA'].default_error_model = _temp
+ph.available_photo_systems['padova/GAIADR2'].default_error_model = _temp
