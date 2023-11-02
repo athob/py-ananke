@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Docstring
+Module miscellaneous utilities
 """
 import pandas as pd
 

@@ -8,7 +8,7 @@ available in the main ``ananke`` namespace - use that instead.
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
-import numpy.typing
+import numpy.typing  # needed for python==3.7
 from Galaxia_ananke.constants import DEFAULTS_FOR_PARFILE
 
 from .constants import *

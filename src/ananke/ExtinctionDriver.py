@@ -12,10 +12,8 @@ from collections.abc import Iterable
 import numpy as np
 import scipy as sp
 import scipy.interpolate  # needed for python==3.7
-import pandas as pd
 
-from Galaxia_ananke import utils as Gutils
-
+from . import utils
 from ._default_extinction_coeff import *
 from .constants import *
 
@@ -36,7 +34,7 @@ class ExtinctionDriver:
     _extinction_formatter = 'A_{}'
     _extinction_template = _extinction_formatter.format
     _extinction_0 = _extinction_template(0)
-    _extra_output_keys = [_reddening, _extinction_0]
+    _extra_output_keys = (_reddening, _extinction_0)
 
     def __init__(self, ananke: Ananke, **kwargs) -> None:
         """
@@ -72,24 +70,19 @@ class ExtinctionDriver:
     
     __init__.__doc__ = __init__.__doc__.format(Q_DUST=Q_DUST, TOTAL_TO_SELECTIVE=TOTAL_TO_SELECTIVE)
     
-    def _make_interpolator(self):  # TODO to review
-        xvsun = self.ananke.observer_position
-        pos_pa = self.ananke.particle_positions
-        xhel = pos_pa - xvsun[:3]
-        # TODO coordinates.SkyCoord(**dict(zip([*'uvw'], xhel.T)), unit='kpc', representation_type='cartesian', frame='galactic') ?
-        # phi = np.pi + np.arctan2(xvsun[1], xvsun[0])
-        # rot = np.array([
-        #     [np.cos(phi), np.sin(phi), 0.0],
-        #     [-np.sin(phi), np.cos(phi), 0.0],
-        #     [0.0, 0.0, 1.0]
-        #     ])
-        xhel_p = xhel  # np.dot(xhel,rot.T)
+    def _make_interpolator(self):
+        # center particle coordinates on the observer
+        xhel_p = self.ananke.particle_positions - self.ananke.observer_position[:3]
+        # TODO coordinates.SkyCoord(**dict(zip([*'uvw'], xhel_p.T)), unit='kpc', representation_type='cartesian', frame='galactic') ?
+        # return distances from observer to particles
         dhel_p = np.linalg.norm(xhel_p, axis=1)
-        rmin, rmax = self.ananke.universe_rshell
-        rmin *= 0.9
-        rmax *= 1.1
+        # return the min,max extent of the shell of particles used by Galaxia (with a +-0.1 margin factor)
+        rmin, rmax = self.ananke.universe_rshell * [0.9, 1.1]
+        # create a mask for the particles that are within the shell
         sel_interp = (rmin<dhel_p) & (dhel_p<rmax)
+        # get the array of column densities input by the user to each particle
         lognh = self.column_densities
+        # generate the interpolator to use to get the column densities at positions in and around the particles
         self.__interpolator = sp.interpolate.LinearNDInterpolator(xhel_p[sel_interp],lognh[sel_interp],rescale=False)  # TODO investigate NaN outputs from interpolator
         return self.__interpolator
 
@@ -147,13 +140,13 @@ class ExtinctionDriver:
         return {key: A0 * coeff for coeff_dict in [(ext_coeff(df) if callable(ext_coeff) else ext_coeff) for ext_coeff in extinction_coeff] for key,coeff in coeff_dict.items()}  # TODO adapt to dataframe type of output?
 
     def _test_extinction_coeff(self):
-        dummy_df = pd.DataFrame([], columns = self.ananke.galaxia_catalogue_keys + self._extra_output_keys)  # TODO create a DataFrame subclass that intercepts __getitem__ and record every 'key' being used
+        dummy_df = utils.RecordingDataFrame([], columns = self.ananke.galaxia_catalogue_keys + self._extra_output_keys)  # TODO make use of dummy_df.record_of_all_used_keys
         dummy_df.loc[0] = np.nan
         try:
             dummy_ext = self._expand_and_apply_extinction_coeff(dummy_df, dummy_df[self._extinction_0])
         except KeyError as KE:
             raise KE  # TODO make it more informative
-        Gutils.compare_given_and_required(dummy_ext.keys(), self.ananke.galaxia_catalogue_mag_names, error_message="Given extinction coeff function returns wrong set of keys")
+        utils.compare_given_and_required(dummy_ext.keys(), self.ananke.galaxia_catalogue_mag_names, error_message="Given extinction coeff function returns wrong set of keys")
     
     @property
     def _extinction_keys(self):
@@ -163,7 +156,9 @@ class ExtinctionDriver:
     def extinctions(self):
         if self._extinction_keys.difference(self.galaxia_output.columns):
             for mag_name, extinction in self._expand_and_apply_extinction_coeff(self.galaxia_output, self.extinction_0).items():
+                # assign the column of the extinction values for filter mag_name in the final catalogue output 
                 self.galaxia_output[self._extinction_template(mag_name)] = extinction
+                # add the extinction value to the existing photometric magnitude for filter mag_name
                 self.galaxia_output[mag_name] += extinction
         self.galaxia_output.flush_extra_columns_to_hdf5(with_columns=self.ananke.galaxia_catalogue_mag_names)
         return self.galaxia_output[list(self._extinction_keys)]

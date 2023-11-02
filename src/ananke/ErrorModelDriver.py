@@ -10,10 +10,8 @@ from typing import TYPE_CHECKING
 from warnings import warn
 from collections.abc import Iterable
 import numpy as np
-import pandas as pd
 
-from Galaxia_ananke import utils as Gutils
-
+from . import utils
 from ._default_error_model import *
 from .constants import *
 
@@ -31,7 +29,7 @@ class ErrorModelDriver:
     _sigma_template = _sigma_formatter.format
     _error_formatter = '{}_Err'
     _error_template = _error_formatter.format
-    _extra_output_keys = []
+    _extra_output_keys = ()
 
     def __init__(self, ananke: Ananke, **kwargs) -> None:
         """
@@ -76,13 +74,13 @@ class ErrorModelDriver:
         return {key: error for error_dict in [(err_model(df) if callable(err_model) else err_model) for err_model in error_model] for key,error in error_dict.items()}  # TODO adapt to dataframe type of output?
 
     def _test_error_model(self):
-        dummy_df = pd.DataFrame([], columns = self.ananke.galaxia_catalogue_keys + self._extra_output_keys)  # TODO create a DataFrame subclass that intercepts __getitem__ and record every 'key' being used
+        dummy_df = utils.RecordingDataFrame([], columns = self.ananke.galaxia_catalogue_keys + self._extra_output_keys)  # TODO make use of dummy_df.record_of_all_used_keys
         dummy_df.loc[0] = np.nan
         try:
             dummy_err = self._expand_and_apply_error_model(dummy_df)
         except KeyError as KE:
             raise KE  # TODO make it more informative
-        Gutils.compare_given_and_required(dummy_err.keys(), self.ananke.galaxia_catalogue_mag_and_astrometrics, set(self.ananke.galaxia_catalogue_keys)-set(self.ananke.galaxia_catalogue_mag_and_astrometrics), error_message="Given error model function returns wrong set of keys")
+        utils.compare_given_and_required(dummy_err.keys(), self.ananke.galaxia_catalogue_mag_and_astrometrics, set(self.ananke.galaxia_catalogue_keys)-set(self.ananke.galaxia_catalogue_mag_and_astrometrics), error_message="Given error model function returns wrong set of keys")
     
     @property
     def _sigma_keys(self):
@@ -98,12 +96,16 @@ class ErrorModelDriver:
             magnitudes = self.ananke.galaxia_catalogue_mag_names
             with_columns = []
             for prop_name, error in self._expand_and_apply_error_model(self.galaxia_output).items():
+                # pre-generate the keys to use for the standard error and its actual gaussian drawn error of property prop_name
                 prop_sig_name, prop_err_name = self._sigma_template(prop_name), self._error_template(prop_name)
+                # assign the column of the standard error values for property prop_name in the final catalogue output 
                 self.galaxia_output[prop_sig_name] = error
+                # assign the column of the actual gaussian drawn error values for property prop_name in the final catalogue output 
                 self.galaxia_output[prop_err_name] = error*np.random.randn(self.galaxia_output.shape[0])
+                # add the drawn error value to the existing quantity for property prop_name
                 self.galaxia_output[prop_name] += self.galaxia_output[prop_err_name]
                 with_columns.append(prop_name)
-        self.galaxia_output.flush_extra_columns_to_hdf5(with_columns=with_columns)
+        self.galaxia_output.flush_extra_columns_to_hdf5(with_columns=tuple(with_columns))
         self.galaxia_output._pp_convert_icrs_to_galactic()
         return self.galaxia_output[list(self._error_keys)]
 

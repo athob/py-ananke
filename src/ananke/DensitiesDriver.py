@@ -28,8 +28,12 @@ class DensitiesDriver:
             ----------
             ananke : Ananke object
                 The Ananke object that utilizes this DensitiesDriver object
+            
             **kwargs
-                Additional parameters to be used by the density estimator
+                Additional parameters to be used by the density estimator. In
+                the current implementation, these include all the configurable
+                parameters of EnBiD accessible through the class method
+                display_EnBiD_docs
         """
         self.__ananke = ananke
         self.__parameters = kwargs
@@ -85,3 +89,9 @@ class DensitiesDriver:
         else:
             return self.__densities
     
+    @classmethod
+    def display_EnBiD_docs(cls):
+        """
+            Print the EnBiD.run_enbid docstring
+        """
+        print(EnBiD.run_enbid.__doc__)

@@ -61,7 +61,9 @@ class Ananke:
                 Number of neighbours to use in kernel density estimation
 
             d_params : dict
-                Parameters to configure the kernel density estimation
+                Parameters to configure the kernel density estimation. Use
+                class method display_density_docs to find what parameters can
+                be defined
 
             e_params : dict
                 Parameters to configure the extinction pipeline. Use class
@@ -177,12 +179,12 @@ class Ananke:
     def _prepare_errormodeldriver_proxy(self, err_params):
         return ErrorModelDriver(self, **err_params)
 
-    def _prep_galaxia_input(self, rho, knorm = 0.596831):
+    def _prepare_galaxia_input(self, rho, knorm = 0.596831):
         if self.__galaxia_input is None:
             self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], name=self.name, knorm=knorm, ngb=self.ngb)
         return self.__galaxia_input
 
-    def _prep_galaxia_survey(self, input: Galaxia.Input, surveyname = 'survey'):
+    def _prepare_galaxia_survey(self, input: Galaxia.Input, surveyname = 'survey'):
         if self.__galaxia_survey is None:
             self.__galaxia_survey = Galaxia.Survey(input, photo_sys=self.photo_sys, surveyname=surveyname)
         return self.__galaxia_survey
@@ -214,8 +216,8 @@ class Ananke:
             output : :obj:`Galaxia.Output`
                 Handler with utilities to utilize the output survey and its data.
             """
-        input = self._prep_galaxia_input(rho, **{k:kwargs.pop(k) for k in ['knorm'] if k in kwargs})
-        survey = self._prep_galaxia_survey(input, **{k:kwargs.pop(k) for k in ['surveyname'] if k in kwargs})
+        input = self._prepare_galaxia_input(rho, **{k:kwargs.pop(k) for k in ['knorm'] if k in kwargs})
+        survey = self._prepare_galaxia_survey(input, **{k:kwargs.pop(k) for k in ['surveyname'] if k in kwargs})
         self.__galaxia_output = survey.make_survey(**self._galaxia_kwargs, **kwargs)
         return self._galaxia_output
     
@@ -343,11 +345,11 @@ class Ananke:
     
     @property
     def intrinsic_catalogue_mag_names(self):
-        return list(map(self._intrinsic_mag_template, self.galaxia_catalogue_mag_names))
+        return tuple(map(self._intrinsic_mag_template, self.galaxia_catalogue_mag_names))
     
     @property
     def galaxia_catalogue_mag_and_astrometrics(self):
-        return self.galaxia_catalogue_mag_names + [Galaxia.Output._pi] + Galaxia.Output._cel + Galaxia.Output._mu + [Galaxia.Output._vr]
+        return self.galaxia_catalogue_mag_names + (Galaxia.Output._pi,) + Galaxia.Output._cel + Galaxia.Output._mu + (Galaxia.Output._vr,)
     
     @property
     def galaxia_catalogue_keys(self):
@@ -415,6 +417,20 @@ class Ananke:
                 Dictionary of dictionaries of Isochrone objects.
         """
         return Galaxia.photometry.available_photo_systems
+
+    @classmethod
+    def display_density_docs(cls):
+        """
+            Print the DensitiesDriver constructor docstring
+        """
+        print(DensitiesDriver.__init__.__doc__)
+
+    @classmethod
+    def display_EnBiD_docs(cls):
+        """
+            Print the EnBiD.run_enbid docstring
+        """
+        DensitiesDriver.display_EnBiD_docs()
 
     @classmethod
     def display_extinction_docs(cls):

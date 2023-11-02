@@ -11,9 +11,14 @@ from Galaxia_ananke import photometry as ph
 
 def _temp(df):
     """
-    Approximate error model for DR2
-    based on Table 3 of release paper
-    returns uncertainty estimate in magnitudes, mas, mas/yr, km/s
+    Default error model function for the Gaia DR2 photometric system.
+
+    Notes
+    -----
+    Approximate error model is based on the Gaia DR2 release paper
+    (https://ui.adsabs.harvard.edu/abs/2018A%26A...616A...1G/abstract) and its
+    Table 3 which returns uncertainty estimates in magnitudes, mas, mas/yr,
+    km/s.
     """
     GMAG  = 'gaiadr2_gmag'
     RPMAG = 'gaiadr2_g_rpmag'
@@ -27,7 +32,7 @@ def _temp(df):
     TEFF  = 'teff'
     MAS_TO_DEG = (units.mas/units.deg).si.scale
     def grvs_from_g_rp(gmag, rpmag):
-        #from equations 2 and 3 of DR2 release paper
+        # from equations 2 and 3 of DR2 release paper
         ggrp = gmag - rpmag
         grvs = rpmag + 132.32 - 377.28*ggrp + 402.32*ggrp**2 - 190.97*ggrp**3 + 34.026*ggrp**4
         mask = ggrp < 1.4
