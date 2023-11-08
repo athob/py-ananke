@@ -9,6 +9,7 @@ import subprocess
 # from packaging import version
 
 from .constants import *
+from .__metadata__ import *
 
 __all__ = ['say', 'all_files', 'check_submodules']
 
@@ -44,5 +45,9 @@ def all_files(*paths, basedir='.'):
 def check_submodules(root_dir):
     # if not pathlib.os.listdir(PYENBID) or not pathlib.os.listdir(PYGALAXIA):
     say("\nChecking submodules, running git...")
-    subprocess.call(['git', 'submodule', 'update', '--init', '--recursive'], cwd=root_dir)
-
+    try:
+        _temp = subprocess.call(['git', 'submodule', 'update', '--init', '--recursive'], cwd=root_dir)
+    except FileNotFoundError:
+        raise OSError("Your system does not have git installed. Please install git before proceeding")
+    if _temp == 128:
+        raise OSError(f"The repository from which you are attempting to install this package is not a git repository.\nPlease follow the online instructions for proper installation ({__url__}/#installation).")
