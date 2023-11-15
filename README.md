@@ -1,5 +1,7 @@
 # `py-ananke` 
 
+[![Python package](https://github.com/jngaravitoc/py-ananke/actions/workflows/python-package.yml/badge.svg)](https://github.com/jngaravitoc/py-ananke/actions/workflows/python-package.yml)
+
 Welcome to `py-ananke`, a Python package that offers `ananke` which is a comprehensive pipeline designed to generate mock astrometric and photometric catalogs of synthetic stars derived from particle-based simulated star populations.
 
 ## Project genesis
