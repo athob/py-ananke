@@ -1,6 +1,6 @@
 # `py-ananke` 
 
-[![Python package](https://github.com/jngaravitoc/py-ananke/actions/workflows/main.yml/badge.svg)](https://github.com/jngaravitoc/py-ananke/actions/workflows/main.yml)
+[![Python package](https://github.com/athob/py-ananke/actions/workflows/main.yml/badge.svg)](https://github.com/athob/py-ananke/actions/workflows/main.yml)
 
 Welcome to `py-ananke`, a Python package that offers `ananke` which is a comprehensive pipeline designed to generate mock astrometric and photometric catalogs of synthetic stars derived from particle-based simulated star populations.
 
@@ -67,7 +67,7 @@ These upcoming updates signify our commitment to continuously improve `py-ananke
 
 ### Contributing
 
-You can readily access the code in this main GitHub repository, as well as its submodules repositories. We encourage users to utilize the [Github issues](https://github.com/athob/py-ananke/issues) feature to report any bugs encountered or suggest new ideas for improvement. Contributions to the project are highly valued and greatly appreciated. To contribute, we kindly request that you make your changes in a separate branch or fork of the repository. Once your contributions are ready, you can submit a [pull request](https://github.com/athob/py-ananke/pulls) to merge them into the [develop](https://github.com/athob/py-ananke/tree/develop) branch.
+You can readily access the code in this main GitHub repository, as well as its submodules repositories. We encourage users to utilize the [Github issues](https://github.com/athob/py-ananke/issues) feature to report any bugs encountered or suggest new ideas for improvement. Contributions to the project are highly valued and greatly appreciated. To contribute, we kindly request that you make your changes in a separate branch or fork of the repository. Once your contributions are ready, you can submit a [pull request](https://github.com/athob/py-ananke/pulls) to merge them into the [develop](https://github.com/athob/py-ananke/tree/develop) branch. If you choose to make your contributions in a branch, please make sure to base those changes from the develop branch in that fork, and have your pull requests originate from your forked develop branch and target this repository's develop branch. Additionally, you may need to confirm that the Workflow permissions in your fork settings are set to Read and write (Settings > Actions > General > Workflow permissions) in case the [CI/CD GitHub Action](https://github.com/athob/py-ananke/actions/workflows/main.yml) does't complete.
 
 ## `py-ananke` & the community
 
