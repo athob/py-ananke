@@ -179,9 +179,9 @@ class Ananke:
     def _prepare_errormodeldriver_proxy(self, err_params):
         return ErrorModelDriver(self, **err_params)
 
-    def _prepare_galaxia_input(self, rho, knorm = 0.596831):
+    def _prepare_galaxia_input(self, rho, k_factor=1):
         if self.__galaxia_input is None:
-            self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], name=self.name, knorm=knorm, ngb=self.ngb)
+            self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], name=self.name, k_factor=k_factor, ngb=self.ngb)
         return self.__galaxia_input
 
     def _prepare_galaxia_survey(self, input: Galaxia.Input, surveyname = 'survey'):
@@ -200,9 +200,12 @@ class Ananke:
                 A dictionary of same-length arrays representing kernel density
                 estimates for the pipeline particles
 
-            knorm : float
-                TBD. Default to 0.596831.
-                        
+            k_factor : float
+                Scaling factor applied to the kernels lengths to adjust all
+                the kernels sizes uniformly. Lower values reduces the kernels
+                extents, while higher values increases them.
+                Default to 1 (no adjustment).
+                 
             surveyname : string
                 Optional name Galaxia should use for the output files. Default
                 to 'survey'.
@@ -216,7 +219,7 @@ class Ananke:
             output : :obj:`Galaxia.Output`
                 Handler with utilities to utilize the output survey and its data.
             """
-        input = self._prepare_galaxia_input(rho, **{k:kwargs.pop(k) for k in ['knorm'] if k in kwargs})
+        input = self._prepare_galaxia_input(rho, **{k:kwargs.pop(k) for k in ['k_factor'] if k in kwargs})
         survey = self._prepare_galaxia_survey(input, **{k:kwargs.pop(k) for k in ['surveyname'] if k in kwargs})
         self.__galaxia_output = survey.make_survey(**self._galaxia_kwargs, **kwargs)
         return self._galaxia_output
@@ -236,9 +239,12 @@ class Ananke:
             
             Parameters
             ----------
-            knorm : float
-                TBD. Default to 0.596831.
-                        
+            k_factor : float
+                Scaling factor applied to the kernels lengths to adjust all
+                the kernels sizes uniformly. Lower values reduces the kernels
+                extents, while higher values increases them.
+                Default to 1 (no adjustment).
+                 
             surveyname : string
                 Optional name Galaxia should use for the output files. Default
                 to 'survey'.
