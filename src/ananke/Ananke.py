@@ -179,14 +179,16 @@ class Ananke:
     def _prepare_errormodeldriver_proxy(self, err_params):
         return ErrorModelDriver(self, **err_params)
 
-    def _prepare_galaxia_input(self, rho, k_factor=1):
+    def _prepare_galaxia_input(self, rho, **kwargs):
+        input_kwargs = {'name': self.name, 'ngb': self.ngb, **kwargs}  # input_dir, k_factor
         if self.__galaxia_input is None:
-            self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], name=self.name, k_factor=k_factor, ngb=self.ngb)
+            self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], **input_kwargs)
         return self.__galaxia_input
 
-    def _prepare_galaxia_survey(self, input: Galaxia.Input, surveyname = 'survey'):
+    def _prepare_galaxia_survey(self, input: Galaxia.Input, surveyname = 'survey', **kwargs):
+        survey_kwargs = {'photo_sys': self.photo_sys, **kwargs}  # surveyname
         if self.__galaxia_survey is None:
-            self.__galaxia_survey = Galaxia.Survey(input, photo_sys=self.photo_sys, surveyname=surveyname)
+            self.__galaxia_survey = Galaxia.Survey(input, **survey_kwargs)
         return self.__galaxia_survey
 
     def _run_galaxia(self, rho, **kwargs):
@@ -200,6 +202,11 @@ class Ananke:
                 A dictionary of same-length arrays representing kernel density
                 estimates for the pipeline particles
 
+            input_dir : string
+            output_dir : string
+                Optional arguments to specify paths for the directories where
+                ananke should generate input and output data.
+                
             k_factor : float
                 Scaling factor applied to the kernels lengths to adjust all
                 the kernels sizes uniformly. Lower values reduces the kernels
@@ -219,7 +226,7 @@ class Ananke:
             output : :obj:`Galaxia.Output`
                 Handler with utilities to utilize the output survey and its data.
             """
-        input = self._prepare_galaxia_input(rho, **{k:kwargs.pop(k) for k in ['k_factor'] if k in kwargs})
+        input = self._prepare_galaxia_input(rho, **{k:kwargs.pop(k) for k in ['input_dir', 'k_factor'] if k in kwargs})
         survey = self._prepare_galaxia_survey(input, **{k:kwargs.pop(k) for k in ['surveyname'] if k in kwargs})
         self.__galaxia_output = survey.make_survey(**self._galaxia_kwargs, **kwargs)
         return self._galaxia_output
@@ -239,6 +246,14 @@ class Ananke:
             
             Parameters
             ----------
+            input_dir : string
+            output_dir : string
+            i_o_dir : string
+                Optional arguments to specify paths for the directories where
+                ananke should generate input and output data. If the i_o_dir
+                keyword argument is provided, it overrides any path given to
+                the input_dir and output_dir keyword arguments.
+
             k_factor : float
                 Scaling factor applied to the kernels lengths to adjust all
                 the kernels sizes uniformly. Lower values reduces the kernels
@@ -258,6 +273,7 @@ class Ananke:
             galaxia_output : :obj:`Galaxia.Output`
                 Handler with utilities to utilize the output survey and its data.
         """
+        if 'i_o_dir' in kwargs:  kwargs['input_dir'] = kwargs['output_dir'] = kwargs.pop('i_o_dir')
         galaxia_output = self._run_galaxia(self.densities, **kwargs)
         self._postprocess_observed_mags(galaxia_output)
         if self._extinctiondriver_proxy._col_density in self.particles:
