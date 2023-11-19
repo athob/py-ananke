@@ -6,10 +6,12 @@ import pandas as pd
 
 from Galaxia_ananke import utils as Gutils
 
-__all__ = ['compare_given_and_required', 'RecordingDataFrame']
+__all__ = ['compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'RecordingDataFrame']
 
 
 compare_given_and_required = Gutils.compare_given_and_required
+
+confirm_equal_length_arrays_in_dict = Gutils.confirm_equal_length_arrays_in_dict
 
 
 class RecordingDataFrame(pd.DataFrame):
