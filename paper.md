@@ -72,11 +72,9 @@ This challenge was addressed by @Sanderson:2020 when producing a mock Gaia DR2 c
 
 The ``ananke`` pipeline by @Sanderson:2020, though powerful, lacks user-friendliness and flexibility. It is challenging to integrate into other pipelines and expand beyond the Gaia photometric system. The development of ``py-ananke`` aims to make this framework more accessible to a wider community. By providing a self-contained and easily installable ``Python`` package, it streamlines the ``ananke`` pipeline, automating tasks previously requiring manual intervention. ``py-ananke`` also expands ``ananke``'s photometric system support and employs a modular implementation for future enhancements, promising a smoother upgrade path for users.
 
-# Overview of the ``ananke`` framework
+# Overview of ``ananke``'s framework and infrastructure
 
-_add figure here that we are working on and write a description_
-
-# Infrastructure
+![This showcases the ananke framework](ananke_framework.pdf)
 
 The implementation of ``py-ananke`` is designed to streamline the ``ananke`` pipeline, and to prevent the need for the user to manually handle the interface between ``Python`` and the ``C++`` backend software. It notably introduces dedicated wrapper submodules (hosted in repositories that are separate from that of ``py-ananke``, but linked as ``git`` submodules), namely ``py-EnBiD-ananke`` and ``py-Galaxia-ananke``, specifically developed to handle the installation and utilization of these ``C++`` subroutines, namely ``EnBiD`` [@EnBiD:2006;@EnBiDCode:2011] and a modified version of ``Galaxia`` [@Galaxia:2011;@GalaxiaCode:2011] called ``galaxia-ananke``. These submodules relieve users from the need to directly manage the ``C++`` software while isolating the ``C++`` wrapping process. This allows ``py-ananke`` to focus on processing inputs and outputs using pure ``Python``.
 
