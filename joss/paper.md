@@ -124,7 +124,7 @@ The latter two driver classes require respectively extinction coefficients and e
 <!-- - ``matplotlib`` [@matplotlib:2007] -->
 - ``numpy`` [@numpy:2020]
 - ``pandas`` [@pandas:2023]
-<!-- - ``pytest`` [@pytest] -->
+- ``pytest`` [@pytest]
 - ``scipy`` [@scipy:2020]
 - ``vaex`` [@vaex:2018]
 
