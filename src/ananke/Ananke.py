@@ -27,13 +27,12 @@ class Ananke:
     _mass = Galaxia.Input._mass  # mass in solar masses
     _pos = Galaxia.Input._pos  # position in kpc
     _vel = Galaxia.Input._vel  # velocity in km/s
-    _age = Galaxia.Input._age  # log age in yr 
-    _feh = Galaxia.Input._feh  # [Fe/H] in dex relative to solar
-    _alph = 'alpha'  # [Mg/Fe]
-    _mg = 'magnesium'  # [Mg/H]
-    _elem_list = ['helium', 'carbon', 'nitrogen', 'oxygen', 'neon', _mg, 'silicon', 'sulphur', 'calcium']  # other abundances in the list as [X/H]
-    _par_id = Galaxia.Input._parentid  # indices of parent particles in snapshot
-    _dform = Galaxia.Input._dform  # formation distance
+    # _age = Galaxia.Input._age  # log age in yr 
+    # _feh = Galaxia.Input._feh  # [Fe/H] in dex relative to solar
+    # _alph = Galaxia.Input._alph  # [Mg/Fe]
+    # _elem_list = Galaxia.Input._elem_list  # other abundances in the list as [X/H]
+    # _par_id = Galaxia.Input._parentid  # indices of parent particles in snapshot
+    # _dform = Galaxia.Input._dform  # formation distance
     _rho_pos = DensitiesDriver._density_template(POS_TAG)
     _rho_vel = DensitiesDriver._density_template(VEL_TAG)
     _log10NH = ExtinctionDriver._col_density
@@ -401,7 +400,7 @@ class Ananke:
             return self.__galaxia_output
     
     @classmethod
-    def make_dummy_particles_input(cls, n_parts=10**5, with_densities=False):  # TODO consider moving part of that method to Galaxia Input?
+    def make_dummy_particles_input(cls, n_parts=10**5, with_densities=False):
         """
             Generate an example dummy input particles dictionary for Ananke
             made of randomly generated arrays.
@@ -416,21 +415,10 @@ class Ananke:
             p : dict
                 Dummy example input particles for Ananke.
         """
-        p = {}
-        p[cls._pos] = 30*np.random.randn(n_parts, 3)
-        p[cls._vel] = 50*np.random.randn(n_parts, 3)
-        p[cls._mass] = 5500 + 700*np.random.randn(n_parts)
-        p[cls._age] = 9.7 + 0.4*np.random.randn(n_parts)
-        p[cls._feh] = -0.7 + 0.4*np.random.randn(n_parts)
-        for el in cls._elem_list:
-            p[el] = -0.6 + 0.4*np.random.randn(n_parts)
-        p[cls._alph] = p[cls._mg] - p[cls._feh]
-        p[cls._par_id] = np.arange(n_parts)
-        p[cls._dform] = np.zeros(n_parts, dtype='float32')
+        p = Galaxia.make_dummy_particles_input(n_parts)
         p[cls._log10NH] = 22 + np.random.randn(n_parts)
         if with_densities:
-            p.update({cls._rho_pos: np.exp(-2.9 + 1.1*np.random.randn(n_parts)),
-                      cls._rho_vel: np.exp(-4.4 + 1.1*np.random.randn(n_parts))})
+            p[cls._rho_pos], p[cls._rho_vel] = Galaxia.make_dummy_densities_input(n_parts)
         return p
     
     @classmethod
