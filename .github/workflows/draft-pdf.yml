@@ -20,9 +20,9 @@ jobs:
           # # This should be the path to the paper within your repo.
           # paper-path: joss/paper.md
           args: '-k joss/paper.md'
-          env:
-            GIT_SHA: $GITHUB_SHA
-            JOURNAL: joss
+        env:
+          GIT_SHA: $GITHUB_SHA
+          JOURNAL: joss
       - name: Upload
         uses: actions/upload-artifact@v1
         with:
