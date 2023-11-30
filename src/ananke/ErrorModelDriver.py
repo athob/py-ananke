@@ -80,7 +80,7 @@ class ErrorModelDriver:
             dummy_err = self._expand_and_apply_error_model(dummy_df)
         except KeyError as KE:
             raise KE  # TODO make it more informative
-        utils.compare_given_and_required(dummy_err.keys(), self.ananke.galaxia_catalogue_mag_and_astrometrics, set(self.ananke.galaxia_catalogue_keys)-set(self.ananke.galaxia_catalogue_mag_and_astrometrics), error_message="Given error model function returns wrong set of keys")
+        utils.compare_given_and_required(dummy_err.keys(), set(), self.ananke.galaxia_catalogue_mag_and_astrometrics, error_message="Given error model function returns wrong set of keys")
     
     @property
     def _sigma_keys(self):

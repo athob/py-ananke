@@ -137,7 +137,16 @@ class ExtinctionDriver:
         extinction_coeff = self.extinction_coeff
         if not isinstance(extinction_coeff, Iterable):
             extinction_coeff = [extinction_coeff]
-        return {key: A0 * coeff for coeff_dict in [(ext_coeff(df) if callable(ext_coeff) else ext_coeff) for ext_coeff in extinction_coeff] for key,coeff in coeff_dict.items()}  # TODO adapt to dataframe type of output?
+        return {
+            key: (coeff * A0.to_numpy()
+                   if isinstance(coeff, np.ndarray)
+                   else coeff * A0)  # TODO temporary fix while waiting issue https://github.com/vaexio/vaex/issues/2405 to be fixed
+            for coeff_dict in [
+                (ext_coeff(df) if callable(ext_coeff) else ext_coeff)
+                for ext_coeff in extinction_coeff
+                ]
+            for key,coeff in coeff_dict.items()
+            }  # TODO adapt to dataframe type of output?
 
     def _test_extinction_coeff(self):
         dummy_df = utils.RecordingDataFrame([], columns = self.ananke.galaxia_catalogue_keys + self._extra_output_keys)  # TODO make use of dummy_df.record_of_all_used_keys
@@ -159,7 +168,7 @@ class ExtinctionDriver:
                 # assign the column of the extinction values for filter mag_name in the final catalogue output 
                 self.galaxia_output[self._extinction_template(mag_name)] = extinction
                 # add the extinction value to the existing photometric magnitude for filter mag_name
-                self.galaxia_output[mag_name] += extinction
+                self.galaxia_output[mag_name] += self.galaxia_output[self._extinction_template(mag_name)]
         self.galaxia_output.flush_extra_columns_to_hdf5(with_columns=self.ananke.galaxia_catalogue_mag_names)
         return self.galaxia_output[list(self._extinction_keys)]
 
