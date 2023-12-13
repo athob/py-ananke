@@ -51,7 +51,7 @@ Work in progress...
 
 ## On-going development
 
-`py-ananke` has recently entered its beta phase, and we are diligently working towards its submission to the [Journal of Open Source Software](https://joss.theoj.org).
+Currently in beta, `py-ananke` has been [submitted for publication to The Journal of Open Source Software](https://joss.theoj.org/papers/357c0445d891fc10e1b0ca4dba1e3cc0) and is presently [under peer review](https://github.com/openjournals/joss-reviews/issues/6092). Simultaneously, an early version has been deposited on arXiv, an open-access repository for electronic preprints and postprints. You can access the arXiv submission [here](https://arxiv.org/abs/2312.02268).
 
 ### Upcoming updates
 
@@ -75,20 +75,43 @@ You can readily access the code in this main GitHub repository, as well as its s
 
 `py-ananke` is distributed under the [GNU General Public License (GPL) version 3](LICENCE), offering you the freedom to utilize, modify, and distribute the software. The GPL v3 ensures that you have the flexibility to adapt py-ananke to suit your specific needs, while also contributing to the open-source community. We encourage you to read the full license text to understand your rights and responsibilities when using py-ananke. 
 
-<!-- ### Citing `py-ananke`
+### Citing `py-ananke`
 
 If py-ananke has played a role in your research project or software development, we kindly request that you acknowledge and cite the project. Citing py-ananke not only gives credit to the dedicated efforts of its creators but also helps others discover and benefit from this software.
 
-To cite py-ananke, please use the following DOI as a reference in your publications:
+To cite `py-ananke`, please use DOI `10.48550/arXiv.2312.02268` as a reference in your publications, or cite as the following:
 
-[DOI reference to be inserted] -->
+```
+Thob, Adrien C. R. et al. 2023, “Generating synthetic star catalogs from simulated data for next-gen observatories with py-ananke”, arXiv e-prints, doi:10.48550/arXiv.2312.02268.
+```
+
+Alternatively, you may use [one of the entries associated with `py-ananke` as listed by The SAO/NASA Astrophysics Data System](https://ui.adsabs.harvard.edu/abs/2023arXiv231202268T/exportcitation), such as the following BibTeX entry:
+
+```
+@ARTICLE{2023arXiv231202268T,
+       author = {{Thob}, Adrien C.~R. and {Sanderson}, Robyn E. and {Eden}, Andrew P. and {Nikakhtar}, Farnik and {Panithanpaisal}, Nondh and {Garavito-Camargo}, Nicol{\'a}s and {Sharma}, Sanjib},
+        title = "{Generating synthetic star catalogs from simulated data for next-gen observatories with py-ananke}",
+      journal = {arXiv e-prints},
+     keywords = {Astrophysics - Astrophysics of Galaxies, Astrophysics - Instrumentation and Methods for Astrophysics},
+         year = 2023,
+        month = dec,
+          eid = {arXiv:2312.02268},
+        pages = {arXiv:2312.02268},
+          doi = {10.48550/arXiv.2312.02268},
+archivePrefix = {arXiv},
+       eprint = {2312.02268},
+ primaryClass = {astro-ph.GA},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2023arXiv231202268T},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System},
+         note = {Submitted to The Journal of Open Source Software, in review}
+}
+```
 
 ### Dissemination
 
 <!-- Below, you will find a selection of scientific papers that showcase the potential and capabilities of py-ananke. These papers serve as valuable resources for understanding the practical implementation and impact of py-ananke in various domains. -->
 
-
-`py-ananke` was featured at [EAS 2023 in Krakow](https://eas2023programme.kuoni-congress.info/presentation/generating-mock-euclid-and-roman-surveys-of-stellar-halos-of-simulated-nearby-galaxies-using-the-py-ananke-pipeline) as an e-poster, check it at [this URL](https://k-poster.kuoni-congress.info/eas-2023/poster/5bf40113-efa9-4bfc-89a5-b67ebd81f7dd).
+[`py-ananke_v0.0.2-beta2`](https://github.com/athob/py-ananke/releases/tag/v0.0.2-beta2) was featured at [EAS 2023 in Krakow](https://eas2023programme.kuoni-congress.info/presentation/generating-mock-euclid-and-roman-surveys-of-stellar-halos-of-simulated-nearby-galaxies-using-the-py-ananke-pipeline) as an e-poster, check it at [this URL](https://k-poster.kuoni-congress.info/eas-2023/poster/5bf40113-efa9-4bfc-89a5-b67ebd81f7dd).
 
 ## Acknowledgements
 
