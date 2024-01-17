@@ -52,7 +52,7 @@ Work in progress...
 
 ## On-going development
 
-Currently in beta, `py-ananke` has been [submitted for publication to The Journal of Open Source Software](https://joss.theoj.org/papers/357c0445d891fc10e1b0ca4dba1e3cc0) and is presently [under peer review](https://github.com/openjournals/joss-reviews/issues/6092). Simultaneously, an early version has been deposited on arXiv, an open-access repository for electronic preprints and postprints. You can access the arXiv submission [here](https://arxiv.org/abs/2312.02268).
+Currently in beta, `py-ananke` has been [submitted for publication to The Journal of Open Source Software](https://joss.theoj.org/papers/357c0445d891fc10e1b0ca4dba1e3cc0) and is presently [under peer review](https://github.com/openjournals/joss-reviews/issues/6234). Simultaneously, an early version has been deposited on arXiv, an open-access repository for electronic preprints and postprints. You can access the arXiv submission [here](https://arxiv.org/abs/2312.02268).
 
 ### Upcoming updates
 
