@@ -2,6 +2,7 @@
 
 [![Python package](https://github.com/athob/py-ananke/actions/workflows/main.yml/badge.svg)](https://github.com/athob/py-ananke/actions/workflows/main.yml)
 [![status](https://joss.theoj.org/papers/357c0445d891fc10e1b0ca4dba1e3cc0/status.svg)](https://joss.theoj.org/papers/357c0445d891fc10e1b0ca4dba1e3cc0)
+[![arXiv](https://img.shields.io/badge/arXiv-2312.02268-b31b1b.svg?style=flat)](https://arxiv.org/abs/2312.02268)
 
 Welcome to `py-ananke`, a Python package that offers `ananke` which is a comprehensive pipeline designed to generate mock astrometric and photometric catalogs of synthetic stars derived from particle-based simulated star populations.
 
