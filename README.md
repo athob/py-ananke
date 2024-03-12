@@ -47,6 +47,8 @@ After installation, the module can be imported in Python under the name `ananke`
 
 The repository includes a Jupyter notebook that demonstrates a simplified use case utilizing a dummy set of randomly generated particle data. You can access the notebook directly at [jupyter/testing_ananke.ipynb](jupyter/testing_ananke.ipynb). This notebook provides a step-by-step example to help you understand the functionality and usage of `py-ananke` in a straightforward manner.
 
+Note that you will need Jupyter installed on the machine where you intend to test this notebook, which will not be automatically installed by the `py-ananke`'s installation as it is not required to run its modules. Please follow the [Project Jupyter dedicated instructions](https://jupyter.org/install) for installing its tools such as [JupyterLab](https://jupyter.org/install#jupyterlab) or [Jupyter Notebook](https://jupyter.org/install#jupyter-notebook).
+
 ## What's under the hood
 
 Work in progress...
