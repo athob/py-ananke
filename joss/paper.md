@@ -126,6 +126,7 @@ The latter two driver classes require respectively extinction coefficients and e
 - ``pandas`` [@pandas:2023]
 - ``pytest`` [@pytest]
 - ``scipy`` [@scipy:2020]
+- ``scikit-learn`` [@scikit-learn:2011]
 - ``vaex`` [@vaex:2018]
 
 It also uses adapted versions of the ``C++`` packages:
