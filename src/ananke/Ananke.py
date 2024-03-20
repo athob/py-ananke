@@ -400,6 +400,20 @@ class Ananke:
             return self.__galaxia_output
     
     @classmethod
+    def make_dummy_dictionary_description(cls):
+        description = """{particles_dictionary_description}
+                Ananke compute the phase space densities that are used to
+                determine particle smoothing lengths, but the dictionary can
+                include pre-computed densities with the following entries:
+                {density_properties}
+        """.format(particles_dictionary_description=Galaxia.Input.particles_dictionary_description,
+                   density_properties=''.join(
+                       [f"\n                 -{desc} via key `{str(key)}`"
+                        for key, desc in [Galaxia.Input._positiondensity_prop,
+                                          Galaxia.Input._velocitydensity_prop]]))
+        return description
+
+    @classmethod
     def make_dummy_particles_input(cls, n_parts=10**5, with_densities=False):
         """
             Generate an example dummy input particles dictionary for Ananke
@@ -409,11 +423,16 @@ class Ananke:
             ----------
             n_parts : int
                 Number of particles the example include. Default to 10**5.
+            
+            with_densities : bool
+                Flag to include dummy densities estimates in the returned
+                dictionary. Default to False
 
             Returns
             -------
             p : dict
-                Dummy example input particles for Ananke.
+                Dummy example input particles dictionary for Ananke.
+                {dummy_dictionary_description}
         """
         p = Galaxia.make_dummy_particles_input(n_parts)
         p[cls._log10NH] = 22 + np.random.randn(n_parts)
@@ -461,6 +480,10 @@ class Ananke:
             Print the ErrorModelDriver constructor docstring
         """
         print(ErrorModelDriver.__init__.__doc__)
+
+
+Ananke.make_dummy_particles_input.__func__.__doc__ = Ananke.make_dummy_particles_input.__doc__.format(
+    dummy_dictionary_description=Ananke.make_dummy_dictionary_description())
 
 
 if __name__ == '__main__':
