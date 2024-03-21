@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 import numpy.typing  # needed for python==3.7
-from Galaxia_ananke.constants import DEFAULTS_FOR_PARFILE
+from Galaxia_ananke.defaults import DEFAULTS_FOR_PARFILE
 
 from .constants import *
 
@@ -28,10 +28,14 @@ class Observer:  # TODO SkyCoord for center point: SkyCoord(u=-rSun[0], v=-rSun[
     _pos2 = 'rSun2'
     _pos = [_pos0,_pos1,_pos2]
     _default_position = np.array([DEFAULTS_FOR_PARFILE[_p] for _p in _pos])
-    _vel = []  # TODO
+    _vel0 = 'vSun0'
+    _vel1 = 'vSun1'
+    _vel2 = 'vSun2'
+    _vel = [_vel0,_vel1,_vel2]  # TODO
+    _default_velocity = np.array([DEFAULTS_FOR_PARFILE[_p] for _p in _vel])
     _pha = _pos+_vel
 
-    def __init__(self, ananke: Ananke, pos: np.typing.ArrayLike, **kwargs) -> None:
+    def __init__(self, ananke: Ananke, pos: np.typing.ArrayLike, vel: np.typing.ArrayLike = None, **kwargs) -> None:
         """
         Parameters
         ----------
@@ -39,18 +43,25 @@ class Observer:  # TODO SkyCoord for center point: SkyCoord(u=-rSun[0], v=-rSun[
             The Ananke object that utilizes this Observer object
         pos : array-like shape (3,)
             Position of the observer
+        vel : array-like shape (3,)
+            Velocity of the observer. Default to None
         **kwargs
             Additional parameters
         """
         self.__ananke = ananke
         self.__position = self.__prepare_position(pos)
-        self.__velocity = []
+        self.__velocity = self.__prepare_velocity(3*[np.nan] if vel is None else vel)
         self.__parameters = kwargs
     
     def __prepare_position(self, pos: np.typing.ArrayLike):
         pos = np.array(pos)
         pos[np.isnan(pos)] = self._default_position[np.isnan(pos)]
         return pos
+
+    def __prepare_velocity(self, vel: np.typing.ArrayLike):
+        vel = np.array(vel)
+        vel[np.isnan(vel)] = self._default_velocity[np.isnan(vel)]
+        return vel
 
     @property
     def ananke(self):

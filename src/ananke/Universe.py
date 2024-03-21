@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 import numpy.typing  # needed for python==3.7
-from Galaxia_ananke.constants import DEFAULTS_FOR_PARFILE
+from Galaxia_ananke.defaults import DEFAULTS_FOR_PARFILE
 
 from .constants import *
 
