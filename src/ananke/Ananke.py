@@ -6,6 +6,7 @@ Please note that this module is private. The Ananke class is
 available in the main ``ananke`` namespace - use that instead.
 """
 from warnings import warn
+import re
 import numpy as np
 
 import Galaxia_ananke as Galaxia
@@ -41,6 +42,7 @@ class Ananke:
     _galaxia_particles_keys = _required_particles_keys.union(_optional_particles_keys)
     _photo_sys = "photo_sys"
     _def_obs_position = Observer._default_position
+    _def_obs_velocity = Observer._default_velocity
     _def_uni_rshell = Universe._default_rshell
     _def_photo_sys = Galaxia.DEFAULT_PSYS
     _def_cmd_mags = Galaxia.DEFAULT_CMD
@@ -77,9 +79,18 @@ class Ananke:
                 method display_errormodel_docs to find what parameters can be
                 defined
 
-            observer : array-like shape (3,)
-                Coordinates for the observer position in kpc. Default to
-                {_def_obs_position}.
+            observer : array-like shape (3,) or dict of array-like shape (3,)
+                Coordinates for the observer in phase space. Position and
+                velocity quantities must respectively be given in kpc and km/s.
+                To only specify position, an array-like object of shape (3,) is
+                enough. If specifying both position and velocity, please
+                provide a dictionary containing both coordinates as array-like
+                objects of shape (3,), respectively denoting the position and
+                velocity coordinates with keys `{_pos}` and `{_vel}`.
+                Position coordinates default to
+                {_def_obs_position}
+                and velocity coordinates default to
+                {_def_obs_velocity}
             
             rshell : array-like shape (2,)
                 Range in kpc of distances from the observer position of the
@@ -152,6 +163,7 @@ class Ananke:
         self.__galaxia_output = None
 
     __init__.__doc__ = __init__.__doc__.format(_def_obs_position=_def_obs_position,
+                                               _def_obs_velocity=_def_obs_velocity,
                                                _def_uni_rshell=_def_uni_rshell,
                                                _def_photo_sys=_def_photo_sys,
                                                _def_cmd_mags=_def_cmd_mags,
@@ -165,12 +177,14 @@ class Ananke:
             _rshell = np.array([kwargs.pop('r_min', np.nan), kwargs.pop('r_max', np.nan)])
         return Universe(self, _rshell)
 
-    def _prepare_observer_proxy(self, kwargs):  # TODO use a virtual solar system position as default, assuming (x,y) is the disc plane, might need to update Galaxia defaults
+    def _prepare_observer_proxy(self, kwargs):
         _obs = kwargs.pop('observer', None)
-        if _obs is None:
+        if _obs is None and re.match(',rSun[012],', ',,'.join(kwargs.keys())):
+            _obs = {self._pos: np.array([kwargs.pop('rSun0', np.nan), kwargs.pop('rSun1', np.nan), kwargs.pop('rSun2', np.nan)])}
             warn('The use of kwargs rSun0, rSun1 & rSun2 will be deprecated, please use instead kwarg observer', DeprecationWarning, stacklevel=2)
-            _obs = np.array([kwargs.pop('rSun0', np.nan), kwargs.pop('rSun1', np.nan), kwargs.pop('rSun2', np.nan)])
-        return Observer(self, _obs)
+        elif not isinstance(_obs, dict):
+            _obs = {self._pos: _obs}
+        return Observer(self, **_obs)
 
     def _prepare_densitiesdriver_proxy(self, d_params):
         return DensitiesDriver(self, **d_params)
