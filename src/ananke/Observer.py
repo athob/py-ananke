@@ -31,37 +31,39 @@ class Observer:  # TODO SkyCoord for center point: SkyCoord(u=-rSun[0], v=-rSun[
     _vel0 = 'vSun0'
     _vel1 = 'vSun1'
     _vel2 = 'vSun2'
-    _vel = [_vel0,_vel1,_vel2]  # TODO
+    _vel = [_vel0,_vel1,_vel2]
     _default_velocity = np.array([DEFAULTS_FOR_PARFILE[_p] for _p in _vel])
     _pha = _pos+_vel
 
-    def __init__(self, ananke: Ananke, pos: np.typing.ArrayLike, vel: np.typing.ArrayLike = None, **kwargs) -> None:
+    def __init__(self, ananke: Ananke, pos3: np.typing.ArrayLike = None, vel3: np.typing.ArrayLike = None, **kwargs) -> None:
         """
         Parameters
         ----------
         ananke : Ananke object
             The Ananke object that utilizes this Observer object
-        pos : array-like shape (3,)
-            Position of the observer
-        vel : array-like shape (3,)
+        pos3 : array-like shape (3,)
+            Position of the observer. Default to None
+        vel3 : array-like shape (3,)
             Velocity of the observer. Default to None
         **kwargs
             Additional parameters
         """
         self.__ananke = ananke
-        self.__position = self.__prepare_position(pos)
-        self.__velocity = self.__prepare_velocity(3*[np.nan] if vel is None else vel)
+        self.__position = self.__prepare_position(pos3)
+        self.__velocity = self.__prepare_velocity(vel3)
         self.__parameters = kwargs
+
+    @classmethod
+    def __prepare_against_default(cls, vector: np.typing.ArrayLike, default: np.typing.NDArray):
+        vector = np.array(len(default)*[np.nan] if vector is None else vector)
+        vector[np.isnan(vector)] = default[np.isnan(vector)]
+        return vector
     
     def __prepare_position(self, pos: np.typing.ArrayLike):
-        pos = np.array(pos)
-        pos[np.isnan(pos)] = self._default_position[np.isnan(pos)]
-        return pos
+        return self.__prepare_against_default(pos, self._default_position)
 
     def __prepare_velocity(self, vel: np.typing.ArrayLike):
-        vel = np.array(vel)
-        vel[np.isnan(vel)] = self._default_velocity[np.isnan(vel)]
-        return vel
+        return self.__prepare_against_default(vel, self._default_velocity)
 
     @property
     def ananke(self):
