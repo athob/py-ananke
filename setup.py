@@ -35,7 +35,7 @@ setup(name=NAME,
           "Topic :: Scientific/Engineering :: Astronomy",
           "Topic :: Software Development :: Version Control :: Git"
       ],
-      python_requires='>=3.7.12',
+      python_requires='>=3.8',
       packages=[NAME],
       package_dir={'': SRC_DIR},
       install_requires=["numpy>=1.22,<2", "scipy>=1.7.2,<2", "pandas>=2,<3",
