@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Contains the definition of default extinction coefficient estimators for
-existing isochrones of Galaxia.
+existing photometric systems of Galaxia.
 
 Please note that this module is private.
 """
