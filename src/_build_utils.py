@@ -63,4 +63,8 @@ def check_submodules(root_dir):
         raise OSError(f"The repository from which you are attempting to install this package is not a git repository.\nPlease follow the online instructions for proper installation ({__url__}/#installation).")
     EnBiD_meta = import_source_file("EnBiD_meta", root_dir / PYENBID / SRC_DIR / '__metadata__.py')
     Galaxia_meta = import_source_file("Galaxia_meta", root_dir / PYGALAXIA / SRC_DIR / '__metadata__.py')
+    #### TODO: below's fix is ugly, there must be something better to do!
+    if pathlib.Path(sys.argv[0]).name == 'setup.py' and sys.argv[1] == 'egg_info' and 'pip' in sys.argv[-1]:
+        subprocess.call(['pip', 'cache', 'remove', '*_ananke'])
+    ####
     return EnBiD_meta, Galaxia_meta
