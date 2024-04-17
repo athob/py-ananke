@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import pathlib
-from distutils.core import setup
+from setuptools import setup
 
 from src._build_utils import *
 from src.constants import NAME, SRC_DIR, PYENBID, PYGALAXIA
@@ -10,8 +10,7 @@ ROOT_DIR = pathlib.Path(__file__).parent
 
 long_description = ""
 
-check_submodules(ROOT_DIR)
-
+EnBiD_meta, Galaxia_meta = check_submodules(ROOT_DIR)
 
 setup(name=NAME,
       version=__version__,

@@ -3,8 +3,9 @@
 Contains the ananke module building utility tools. Credit to
 https://github.com/GalacticDynamics-Oxford/Agama/blob/master/setup.py.
 """
-import pathlib
+import importlib.util
 import sys
+import pathlib
 import subprocess
 # from packaging import version
 
@@ -42,6 +43,15 @@ def all_files(*paths, basedir='.'):
             for f in files]
 
 
+def import_source_file(module_name, file_path):
+    # based on https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 def check_submodules(root_dir):
     # if not pathlib.os.listdir(PYENBID) or not pathlib.os.listdir(PYGALAXIA):
     say("\nChecking submodules, running git...")
@@ -51,3 +61,6 @@ def check_submodules(root_dir):
         raise OSError("Your system does not have git installed. Please install git before proceeding")
     if _temp == 128:
         raise OSError(f"The repository from which you are attempting to install this package is not a git repository.\nPlease follow the online instructions for proper installation ({__url__}/#installation).")
+    EnBiD_meta = import_source_file("EnBiD_meta", root_dir / PYENBID / SRC_DIR / '__metadata__.py')
+    Galaxia_meta = import_source_file("Galaxia_meta", root_dir / PYGALAXIA / SRC_DIR / '__metadata__.py')
+    return EnBiD_meta, Galaxia_meta
