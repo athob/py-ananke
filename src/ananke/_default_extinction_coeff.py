@@ -5,7 +5,44 @@ existing photometric systems of Galaxia.
 
 Please note that this module is private.
 """
+import numpy as np
+from astropy.units import Quantity
+
 from Galaxia_ananke import photometry as ph
+
+
+__all__ = ['universal_extinction_law']
+
+
+def _wang_and_chen_2019_eq_9(lambda_eff):
+    # for optical 0.3 to 1 micron
+    lambda_eff = Quantity(lambda_eff, unit='micron').value
+    coefficients = np.array([[1.0, 0.7499, -0.1086, -0.08909, 0.02905, 0.01069, 0.001707, -0.001002]]).T
+    Y = 1/lambda_eff - 1.82
+    return np.matmul(Y[...,np.newaxis]**np.arange(coefficients.shape[0])[np.newaxis], coefficients)[...,0]
+
+
+def _wang_and_chen_2019_eq_10(lambda_eff):
+    # for near IR 1 to 3.33 micron
+    lambda_eff = Quantity(lambda_eff, unit='micron').value
+    coefficient = 0.3722
+    exponent = -2.070
+    return coefficient * lambda_eff**exponent
+
+
+def universal_extinction_law(lambda_eff):
+    # return extinction coefficient A_lambda/A_V at lambda effective
+    lambda_eff = Quantity(lambda_eff, unit='micron').value
+    choose = np.vstack([
+        np.nan * lambda_eff,
+        _wang_and_chen_2019_eq_9(lambda_eff),
+        _wang_and_chen_2019_eq_10(lambda_eff)
+        ]).T
+    choice = np.zeros(lambda_eff.shape[0]).astype('int')
+    choice[(0.3 < lambda_eff) & (lambda_eff < 1)] = 1  # optical
+    choice[(1 < lambda_eff) & (lambda_eff < 3.33)] = 2  # NIR
+    return choose[np.arange(choose.shape[0]), choice]
+
 
 def _temp(df):
     """
@@ -30,3 +67,51 @@ def _temp(df):
     return {b: c[1] + c[2]*bp_rp_int + c[3]*bp_rp_int**2 + c[4]*bp_rp_int**3 +c[5]*A_0 +c[6]*A_0**2 +c[7]*bp_rp_int*A_0 for b,c in consts.items()}
 
 ph.available_photo_systems['padova/GAIADR2'].default_extinction_coeff = _temp
+
+# def _temp():
+#     """
+#     Default extinction coefficient function for the JWST NIRCam photometric
+#     system.
+
+#     Notes
+#     -----
+#     Extinction coefficients are adapted from Table 2 of Wang et al. 2024
+#     (ui.adsabs.harvard.edu/abs/2024ApJ...964L...3W) assuming an average alpha
+#     value of 1.98, and using the V-band to F200W relative extinction
+#     coefficient showcased in Table 5 of Wang et al. 2019
+#     (ui.adsabs.harvard.edu/abs/2019ApJ...877..116W)
+#     """
+#     # Extinction coefficients from Table 2 of Wang et al. 2024
+#     coeffs_vs_f200w = {
+#         'jwst.nircam_f070w': 7.321,
+#         'jwst.nircam_f090w': 4.791,
+#         'jwst.nircam_f115w': 2.965,
+#         'jwst.nircam_f150w': 1.75,
+#         'jwst.nircam_f200w': 1.0,
+#         'jwst.nircam_f277w': 0.524,
+#         'jwst.nircam_f356w': 0.306,
+#         'jwst.nircam_f444w': 0.193,
+#         'jwst.nircam_f150w2': 1.772,
+#         'jwst.nircam_f322w2': 0.422,
+#         'jwst.nircam_f140m': 1.972,
+#         'jwst.nircam_f162m': 1.48,
+#         'jwst.nircam_f182m': 1.154,
+#         'jwst.nircam_f210m': 0.874,
+#         'jwst.nircam_f250m': 0.623,
+#         'jwst.nircam_f300m': 0.45,
+#         'jwst.nircam_f335m': 0.349,
+#         'jwst.nircam_f360m': 0.288,
+#         'jwst.nircam_f410m': 0.225,
+#         'jwst.nircam_f430m': 0.199,
+#         'jwst.nircam_f460m': 0.18,
+#         'jwst.nircam_f480m': 0.166
+#     }
+#     # V-band to F200W coefficient from Table 5 of Wang et al. 2019
+#     V_to_f200w_coeff = 0.0919
+#     return {b: V_to_f200w_coeff*c for b,c in coeffs_vs_f200w.items()}
+
+# ph.available_photo_systems['padova/JWST.NIRCam'].default_extinction_coeff = _temp()
+
+
+if __name__ == '__main__':
+    raise NotImplementedError()
