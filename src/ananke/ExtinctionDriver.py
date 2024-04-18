@@ -192,7 +192,7 @@ class ExtinctionDriver:
     def __missing_default_extinction_coeff_for_photosystem(photosystem):
         def __return_nan_coeff_and_warn(df):
             warn(f"Method default_extinction_coeff isn't defined for photometric system {photosystem.key}", UserWarning, stacklevel=2)
-            return {mag: np.zeros(df.shape[0])*0. for mag in photosystem.to_export_keys}
+            return {mag: np.zeros(df.shape[0])*0. + coeff for mag, coeff in zip(photosystem.to_export_keys, universal_extinction_law(photosystem.effective_wavelengths))}
         return __return_nan_coeff_and_warn
 
     @staticmethod

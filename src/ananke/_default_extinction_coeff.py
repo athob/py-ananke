@@ -34,11 +34,11 @@ def universal_extinction_law(lambda_eff):
     # return extinction coefficient A_lambda/A_V at lambda effective
     lambda_eff = Quantity(lambda_eff, unit='micron').value
     choose = np.vstack([
-        np.nan * lambda_eff,
+        np.zeros(lambda_eff.shape[0]),
         _wang_and_chen_2019_eq_9(lambda_eff),
         _wang_and_chen_2019_eq_10(lambda_eff)
         ]).T
-    choice = np.zeros(lambda_eff.shape[0]).astype('int')
+    choice = choose[:,0].astype('int')
     choice[(0.3 < lambda_eff) & (lambda_eff < 1)] = 1  # optical
     choice[(1 < lambda_eff) & (lambda_eff < 3.33)] = 2  # NIR
     return choose[np.arange(choose.shape[0]), choice]
