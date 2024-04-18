@@ -115,11 +115,20 @@ class ErrorModelDriver:
     
     @property
     def error_model(self):  # TODO design
-        return self.parameters.get('error_model', [getattr(iso, 'default_error_model', self.__missing_default_error_model_for_isochrone(iso)) for iso in self.ananke.galaxia_isochrones])
+        return self.parameters.get('error_model', [getattr(psys, 'default_error_model', self.__missing_default_error_model_for_photosystem(psys)) for psys in self.ananke.galaxia_photosystems])
     
     @staticmethod
-    def __missing_default_error_model_for_isochrone(isochrone):
+    def __missing_default_error_model_for_photosystem(photosystem):
         def __return_zero_error_and_warn(df):
-            warn(f"Method default_error_model isn't defined for isochrone {isochrone.key}", UserWarning, stacklevel=2)
-            return {mag: np.zeros(df.shape[0]) for mag in isochrone.to_export_keys}
+            warn(f"Method default_error_model isn't defined for photometric system {photosystem.key}", UserWarning, stacklevel=2)
+            return {mag: np.zeros(df.shape[0]) for mag in photosystem.to_export_keys}
         return __return_zero_error_and_warn
+
+    @staticmethod
+    def __missing_default_error_model_for_isochrone(photosystem):
+        warn('This static method will be deprecated, please use instead static method __missing_default_error_model_for_photosystem', DeprecationWarning, stacklevel=2)
+        return ErrorModelDriver.__missing_default_error_model_for_photosystem(photosystem)
+
+
+if __name__ == '__main__':
+    raise NotImplementedError()

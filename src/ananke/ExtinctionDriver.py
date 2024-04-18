@@ -186,11 +186,20 @@ class ExtinctionDriver:
     
     @property
     def extinction_coeff(self):
-        return self.parameters.get('extinction_coeff', [getattr(iso, 'default_extinction_coeff', self.__missing_default_extinction_coeff_for_isochrone(iso)) for iso in self.ananke.galaxia_isochrones])
+        return self.parameters.get('extinction_coeff', [getattr(psys, 'default_extinction_coeff', self.__missing_default_extinction_coeff_for_photosystem(psys)) for psys in self.ananke.galaxia_photosystems])
     
     @staticmethod
-    def __missing_default_extinction_coeff_for_isochrone(isochrone):
+    def __missing_default_extinction_coeff_for_photosystem(photosystem):
         def __return_nan_coeff_and_warn(df):
-            warn(f"Method default_extinction_coeff isn't defined for isochrone {isochrone.key}", UserWarning, stacklevel=2)
-            return {mag: np.zeros(df.shape[0])*0. for mag in isochrone.to_export_keys}
+            warn(f"Method default_extinction_coeff isn't defined for photometric system {photosystem.key}", UserWarning, stacklevel=2)
+            return {mag: np.zeros(df.shape[0])*0. for mag in photosystem.to_export_keys}
         return __return_nan_coeff_and_warn
+
+    @staticmethod
+    def __missing_default_extinction_coeff_for_isochrone(photosystem):
+        warn('This static method will be deprecated, please use instead static method __missing_default_extinction_coeff_for_photosystem', DeprecationWarning, stacklevel=2)
+        return ExtinctionDriver.__missing_default_extinction_coeff_for_photosystem(photosystem)
+
+
+if __name__ == '__main__':
+    raise NotImplementedError()

@@ -374,12 +374,17 @@ class Ananke:
         return self.__photo_sys
 
     @property
-    def galaxia_isochrones(self):  # TODO race condition with the implementation in extinction using the following 3 properties, requires rethinking Galaxia, maybe with the future photometryspecs implementation: ultimate goal is to get isochrones from a Galaxia object without explicitely calling Galaxia class methods
-        return Galaxia.Survey.set_isochrones_from_photosys(self.photo_sys)
+    def galaxia_photosystems(self):  # TODO race condition with the implementation in extinction using the following 3 properties, requires rethinking Galaxia, maybe with the future photometryspecs implementation: ultimate goal is to get isochrones from a Galaxia object without explicitely calling Galaxia class methods
+        return Galaxia.Survey.prepare_photosystems(self.photo_sys)
+   
+    @property
+    def galaxia_isochrones(self):
+        warn('This property will be deprecated, please use instead property galaxia_photosystems', DeprecationWarning, stacklevel=2)
+        return self.galaxia_photosystems
     
     @property
     def galaxia_catalogue_mag_names(self):
-        return Galaxia.Output._compile_export_mag_names(self.galaxia_isochrones)
+        return Galaxia.Output._compile_export_mag_names(self.galaxia_photosystems)
     
     @property
     def intrinsic_catalogue_mag_names(self):
@@ -391,7 +396,7 @@ class Ananke:
     
     @property
     def galaxia_catalogue_keys(self):
-        return Galaxia.Output._make_catalogue_keys(self.galaxia_isochrones)
+        return Galaxia.Output._make_catalogue_keys(self.galaxia_photosystems)
 
     @property
     def _galaxia_kwargs(self):
@@ -501,4 +506,4 @@ Ananke.make_dummy_particles_input.__func__.__doc__ = Ananke.make_dummy_particles
 
 
 if __name__ == '__main__':
-    pass
+    raise NotImplementedError()
