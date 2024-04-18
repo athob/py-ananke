@@ -57,16 +57,16 @@ def _temp(df):
     """
     # Constants for the empirical extinction model from Table of Babusiaux et al. 2018
     consts = {
-        'gaiadr2_gmag': [0.0, 0.9761,-0.1704,0.0086,0.0011,-0.0438,0.0013,0.0099],
-        'gaiadr2_g_bpmag':[0.0, 1.1517,-0.0871,-0.0333,0.0173,-0.0230,0.0006,0.0043],
-        'gaiadr2_g_rpmag':[0.0, 0.6104,-0.0170,-0.0026,-0.0017,-0.0078,0.00005,0.0006]
+        'gaia__dr2_g': [0.0, 0.9761,-0.1704,0.0086,0.0011,-0.0438,0.0013,0.0099],
+        'gaia__dr2_gbp':[0.0, 1.1517,-0.0871,-0.0333,0.0173,-0.0230,0.0006,0.0043],
+        'gaia__dr2_grp':[0.0, 0.6104,-0.0170,-0.0026,-0.0017,-0.0078,0.00005,0.0006]
     }
-    bp_rp_int = df['gaiadr2_g_bpmag'] - df['gaiadr2_g_rpmag']
+    bp_rp_int = df['gaia__dr2_gbp'] - df['gaia__dr2_grp']
     A_0 = df['A_0']
     # Coeffients from Equation 1 of Babusiaux et al. 2018
     return {b: c[1] + c[2]*bp_rp_int + c[3]*bp_rp_int**2 + c[4]*bp_rp_int**3 +c[5]*A_0 +c[6]*A_0**2 +c[7]*bp_rp_int*A_0 for b,c in consts.items()}
 
-ph.available_photo_systems['padova/GAIADR2'].default_extinction_coeff = _temp
+ph.available_photo_systems['padova/GAIA__DR2'].default_extinction_coeff = _temp
 
 # def _temp():
 #     """
@@ -83,34 +83,34 @@ ph.available_photo_systems['padova/GAIADR2'].default_extinction_coeff = _temp
 #     """
 #     # Extinction coefficients from Table 2 of Wang et al. 2024
 #     coeffs_vs_f200w = {
-#         'jwst.nircam_f070w': 7.321,
-#         'jwst.nircam_f090w': 4.791,
-#         'jwst.nircam_f115w': 2.965,
-#         'jwst.nircam_f150w': 1.75,
-#         'jwst.nircam_f200w': 1.0,
-#         'jwst.nircam_f277w': 0.524,
-#         'jwst.nircam_f356w': 0.306,
-#         'jwst.nircam_f444w': 0.193,
-#         'jwst.nircam_f150w2': 1.772,
-#         'jwst.nircam_f322w2': 0.422,
-#         'jwst.nircam_f140m': 1.972,
-#         'jwst.nircam_f162m': 1.48,
-#         'jwst.nircam_f182m': 1.154,
-#         'jwst.nircam_f210m': 0.874,
-#         'jwst.nircam_f250m': 0.623,
-#         'jwst.nircam_f300m': 0.45,
-#         'jwst.nircam_f335m': 0.349,
-#         'jwst.nircam_f360m': 0.288,
-#         'jwst.nircam_f410m': 0.225,
-#         'jwst.nircam_f430m': 0.199,
-#         'jwst.nircam_f460m': 0.18,
-#         'jwst.nircam_f480m': 0.166
+#         'jwst__nircam_f070w': 7.321,
+#         'jwst__nircam_f090w': 4.791,
+#         'jwst__nircam_f115w': 2.965,
+#         'jwst__nircam_f150w': 1.75,
+#         'jwst__nircam_f200w': 1.0,
+#         'jwst__nircam_f277w': 0.524,
+#         'jwst__nircam_f356w': 0.306,
+#         'jwst__nircam_f444w': 0.193,
+#         'jwst__nircam_f150w2': 1.772,
+#         'jwst__nircam_f322w2': 0.422,
+#         'jwst__nircam_f140m': 1.972,
+#         'jwst__nircam_f162m': 1.48,
+#         'jwst__nircam_f182m': 1.154,
+#         'jwst__nircam_f210m': 0.874,
+#         'jwst__nircam_f250m': 0.623,
+#         'jwst__nircam_f300m': 0.45,
+#         'jwst__nircam_f335m': 0.349,
+#         'jwst__nircam_f360m': 0.288,
+#         'jwst__nircam_f410m': 0.225,
+#         'jwst__nircam_f430m': 0.199,
+#         'jwst__nircam_f460m': 0.18,
+#         'jwst__nircam_f480m': 0.166
 #     }
 #     # V-band to F200W coefficient from Table 5 of Wang et al. 2019
 #     V_to_f200w_coeff = 0.0919
 #     return {b: V_to_f200w_coeff*c for b,c in coeffs_vs_f200w.items()}
 
-# ph.available_photo_systems['padova/JWST.NIRCam'].default_extinction_coeff = _temp()
+# ph.available_photo_systems['padova/JWST__NIRCam'].default_extinction_coeff = _temp()
 
 
 if __name__ == '__main__':
