@@ -184,6 +184,11 @@ class Ananke:
             warn('The use of kwargs rSun0, rSun1 & rSun2 will be deprecated, please use instead kwarg observer', DeprecationWarning, stacklevel=2)
         elif not isinstance(_obs, dict):
             _obs = {self._pos: _obs}
+        for key in ['pos', 'vel']:
+            if key in _obs.keys():
+                new_key = getattr(self, f'_{key}')
+                warn(f"The use of key '{key}' in the observer dictionary will be deprecated, please use instead key '{new_key}'", DeprecationWarning, stacklevel=2)
+                _obs[new_key] = _obs.pop(key)
         return Observer(self, **_obs)
 
     def _prepare_densitiesdriver_proxy(self, d_params):
@@ -398,6 +403,14 @@ class Ananke:
     def galaxia_catalogue_keys(self):
         return Galaxia.Output._make_catalogue_keys(self.galaxia_photosystems)
 
+    @property
+    def photosystems_zeropoints(self):
+        return np.hstack([ps.zeropoints for ps in self.galaxia_photosystems])
+
+    @property
+    def photosystems_zeropoints_dict(self):
+        return dict(zip(self.galaxia_catalogue_mag_names, self.photosystems_zeropoints))
+    
     @property
     def _galaxia_kwargs(self):
         return {**self.universe.to_galaxia_kwargs, **self.observer.to_galaxia_kwargs, **self.parameters}
