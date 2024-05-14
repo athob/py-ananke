@@ -133,8 +133,8 @@ class ExtinctionDriver:
             self.galaxia_output[self._extinction_0] = self.total_to_selective * self.reddening
         return self.galaxia_output[self._extinction_0]
 
-    def _expand_and_apply_extinction_coeff(self, df, A0):
-        extinction_coeff = self.extinction_coeff
+    @staticmethod
+    def _expand_and_apply_extinction_coeff(df, A0, extinction_coeff):
         if not isinstance(extinction_coeff, Iterable):
             extinction_coeff = [extinction_coeff]
         return {
@@ -152,7 +152,7 @@ class ExtinctionDriver:
         dummy_df = utils.RecordingDataFrame([], columns = self.ananke.galaxia_catalogue_keys + self._extra_output_keys)  # TODO make use of dummy_df.record_of_all_used_keys
         dummy_df.loc[0] = np.nan
         try:
-            dummy_ext = self._expand_and_apply_extinction_coeff(dummy_df, dummy_df[self._extinction_0])
+            dummy_ext = self._expand_and_apply_extinction_coeff(dummy_df, dummy_df[self._extinction_0], self.extinction_coeff)
         except KeyError as KE:
             raise KE  # TODO make it more informative
         utils.compare_given_and_required(dummy_ext.keys(), self.ananke.galaxia_catalogue_mag_names, error_message="Given extinction coeff function returns wrong set of keys")
@@ -164,7 +164,7 @@ class ExtinctionDriver:
     @property
     def extinctions(self):
         if self._extinction_keys.difference(self.galaxia_output.columns):
-            for mag_name, extinction in self._expand_and_apply_extinction_coeff(self.galaxia_output, self.extinction_0).items():
+            for mag_name, extinction in self._expand_and_apply_extinction_coeff(self.galaxia_output, self.extinction_0, self.extinction_coeff).items():
                 # assign the column of the extinction values for filter mag_name in the final catalogue output 
                 self.galaxia_output[self._extinction_template(mag_name)] = extinction
                 # add the extinction value to the existing photometric magnitude for filter mag_name

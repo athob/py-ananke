@@ -67,8 +67,8 @@ class ErrorModelDriver:
     def galaxia_output(self):
         return self.ananke._galaxia_output
 
-    def _expand_and_apply_error_model(self, df):
-        error_model = self.error_model
+    @staticmethod
+    def _expand_and_apply_error_model(df, error_model):
         if not isinstance(error_model, Iterable):
             error_model = [error_model]
         return {key: error for error_dict in [(err_model(df) if callable(err_model) else err_model) for err_model in error_model] for key,error in error_dict.items()}  # TODO adapt to dataframe type of output?
@@ -77,7 +77,7 @@ class ErrorModelDriver:
         dummy_df = utils.RecordingDataFrame([], columns = self.ananke.galaxia_catalogue_keys + self._extra_output_keys)  # TODO make use of dummy_df.record_of_all_used_keys
         dummy_df.loc[0] = np.nan
         try:
-            dummy_err = self._expand_and_apply_error_model(dummy_df)
+            dummy_err = self._expand_and_apply_error_model(dummy_df, self.error_model)
         except KeyError as KE:
             raise KE  # TODO make it more informative
         utils.compare_given_and_required(dummy_err.keys(), set(), self.ananke.galaxia_catalogue_mag_and_astrometrics, error_message="Given error model function returns wrong set of keys")
@@ -95,7 +95,7 @@ class ErrorModelDriver:
         if self._error_keys.difference(self.galaxia_output.columns):
             magnitudes = self.ananke.galaxia_catalogue_mag_names
             with_columns = []
-            for prop_name, error in self._expand_and_apply_error_model(self.galaxia_output).items():
+            for prop_name, error in self._expand_and_apply_error_model(self.galaxia_output, self.error_model).items():
                 # pre-generate the keys to use for the standard error and its actual gaussian drawn error of property prop_name
                 prop_sig_name, prop_err_name = self._sigma_template(prop_name), self._error_template(prop_name)
                 # assign the column of the standard error values for property prop_name in the final catalogue output 

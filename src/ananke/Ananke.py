@@ -8,6 +8,7 @@ available in the main ``ananke`` namespace - use that instead.
 from warnings import warn
 import re
 import numpy as np
+import pandas as pd
 
 import Galaxia_ananke as Galaxia
 
@@ -200,19 +201,19 @@ class Ananke:
     def _prepare_errormodeldriver_proxy(self, err_params):
         return ErrorModelDriver(self, **err_params)
 
-    def _prepare_galaxia_input(self, rho, **kwargs):
+    def _prepare_galaxia_input(self, rho, **kwargs) -> Galaxia.Input:
         input_kwargs = {'name': self.name, 'ngb': self.ngb, **kwargs}  # input_dir, k_factor
         if self.__galaxia_input is None:
             self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], **input_kwargs)
         return self.__galaxia_input
 
-    def _prepare_galaxia_survey(self, input: Galaxia.Input, surveyname = 'survey', **kwargs):
+    def _prepare_galaxia_survey(self, input: Galaxia.Input, surveyname = 'survey', **kwargs) -> Galaxia.Survey:  # TODO why is kwarg surveyname unused?
         survey_kwargs = {'photo_sys': self.photo_sys, **kwargs}  # surveyname
         if self.__galaxia_survey is None:
             self.__galaxia_survey = Galaxia.Survey(input, **survey_kwargs)
         return self.__galaxia_survey
 
-    def _run_galaxia(self, rho, **kwargs):
+    def _run_galaxia(self, rho, **kwargs) -> Galaxia.Output:
         """
             Method to generate the survey out of the pipeline particles given
             a dictionary of kernel density estimates
@@ -254,14 +255,24 @@ class Ananke:
     
     _run_galaxia.__doc__ = _run_galaxia.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG)
     
-    def _postprocess_observed_mags(self, galaxia_output: Galaxia.Output):
-        mag_names = self.galaxia_catalogue_mag_names
+    @classmethod
+    def __pp_observed_mags(cls, df: pd.DataFrame, mag_names, _dmod):
         for mag in mag_names:
-            galaxia_output[self._intrinsic_mag_template(mag)] = galaxia_output[mag]
-            galaxia_output[mag] += galaxia_output[galaxia_output._dmod]
-        galaxia_output.flush_extra_columns_to_hdf5(with_columns=mag_names)
+            df[cls._intrinsic_mag_template(mag)] = df[mag]
+            df[mag] += df[_dmod]
 
-    def run(self, **kwargs):
+    def _pp_observed_mags(self, galaxia_output: Galaxia.Output) -> None:
+        mag_names = self.galaxia_catalogue_mag_names
+        galaxia_output.apply_post_process_pipeline_and_flush(self.__pp_observed_mags, mag_names, galaxia_output._dmod, flush_with_columns=mag_names)
+
+    def _pp_extinctions(self) -> None:
+        if self._extinctiondriver_proxy._col_density in self.particles:
+            _ = self.extinctions
+
+    def _pp_errors(self) -> None:
+        _ = self.errors
+
+    def run(self, **kwargs) -> Galaxia.Output:
         """
             Method to run the pipeline
             
@@ -296,10 +307,9 @@ class Ananke:
         """
         if 'i_o_dir' in kwargs:  kwargs['input_dir'] = kwargs['output_dir'] = kwargs.pop('i_o_dir')
         galaxia_output = self._run_galaxia(self.densities, **kwargs)
-        self._postprocess_observed_mags(galaxia_output)
-        if self._extinctiondriver_proxy._col_density in self.particles:
-            _ = self.extinctions
-        _ = self.errors
+        self._pp_observed_mags(galaxia_output)
+        self._pp_extinctions()
+        self._pp_errors()
         return galaxia_output
 
     @property
