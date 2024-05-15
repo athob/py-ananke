@@ -6,12 +6,15 @@ Please note that this module is private. The ExtinctionDriver class is
 available in the main ``ananke`` namespace - use that instead.
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union, Set, List, Dict, Callable
+from numpy.typing import ArrayLike, NDArray
 from warnings import warn
+from functools import cached_property
 from collections.abc import Iterable
 import numpy as np
 import scipy as sp
-import scipy.interpolate  # needed for python==3.7
+from scipy.interpolate import LinearNDInterpolator
+import pandas as pd
 
 from . import utils
 from ._default_extinction_coeff import *
@@ -19,6 +22,7 @@ from .constants import *
 
 if TYPE_CHECKING:
     from .Ananke import Ananke
+    import Galaxia_ananke as Galaxia
 
 __all__ = ['ExtinctionDriver']
 
@@ -69,8 +73,27 @@ class ExtinctionDriver:
         self._test_extinction_coeff()
     
     __init__.__doc__ = __init__.__doc__.format(Q_DUST=Q_DUST, TOTAL_TO_SELECTIVE=TOTAL_TO_SELECTIVE)
+
+    def __getattr__(self, item):
+        if (item in self.ananke.__dir__() and item.startswith('particle')):
+            return getattr(self.ananke, item)
+        else:
+            return self.__getattribute__(item)
+
+    @property
+    def ananke(self) -> Ananke:
+        return self.__ananke
+
+    @property
+    def particle_column_densities(self) -> NDArray:
+        return self.particles[self._col_density] if self._col_density in self.particles else np.nan*self.particle_masses
     
-    def _make_interpolator(self):
+    @property
+    def galaxia_output(self) -> Galaxia.Output:
+        return self.ananke._galaxia_output
+    
+    @cached_property
+    def column_density_interpolator(self) -> LinearNDInterpolator:
         # center particle coordinates on the observer
         xhel_p = self.ananke.particle_positions - self.ananke.observer_position[:3]
         # TODO coordinates.SkyCoord(**dict(zip([*'uvw'], xhel_p.T)), unit='kpc', representation_type='cartesian', frame='galactic') ?
@@ -81,65 +104,18 @@ class ExtinctionDriver:
         # create a mask for the particles that are within the shell
         sel_interp = (rmin<dhel_p) & (dhel_p<rmax)
         # get the array of column densities input by the user to each particle
-        lognh = self.column_densities
+        lognh = self.particle_column_densities
         # generate the interpolator to use to get the column densities at positions in and around the particles
-        self.__interpolator = sp.interpolate.LinearNDInterpolator(xhel_p[sel_interp],lognh[sel_interp],rescale=False)  # TODO investigate NaN outputs from interpolator
+        self.__interpolator = LinearNDInterpolator(xhel_p[sel_interp],lognh[sel_interp],rescale=False)  # TODO investigate NaN outputs from interpolator
         return self.__interpolator
 
-    def __getattr__(self, item):
-        if (item in self.ananke.__dir__() and item.startswith('particle')):
-            return getattr(self.ananke, item)
-        else:
-            return self.__getattribute__(item)
-
-    @property
-    def ananke(self):
-        return self.__ananke
-
-    @property
-    def column_densities(self):
-        return self.particles[self._col_density] if self._col_density in self.particles else np.nan*self.particle_masses
-    
-    @property
-    def galaxia_output(self):
-        return self.ananke._galaxia_output
-    
-    @property
-    def galaxia_pos(self):
-        return np.array(self.galaxia_output[self._galaxia_pos])
-    
-    @property
-    def column_density_interpolator(self):
-        if self.__interpolator is None:
-            return self._make_interpolator()
-        else:
-            return self.__interpolator
-
-    @property
-    def interpolated_column_densities(self):
-        if self._interp_col_dens not in self.galaxia_output.column_names:
-            self.galaxia_output[self._interp_col_dens] = self.column_density_interpolator(self.galaxia_pos)
-        return self.galaxia_output[self._interp_col_dens]
-    
-    @property
-    def reddening(self):
-        if self._reddening not in self.galaxia_output.column_names:
-            self.galaxia_output[self._reddening] = self.q_dust * 10**self.interpolated_column_densities
-        return self.galaxia_output[self._reddening]
-
-    @property
-    def extinction_0(self):
-        if self._extinction_0 not in self.galaxia_output.column_names:
-            self.galaxia_output[self._extinction_0] = self.total_to_selective * self.reddening
-        return self.galaxia_output[self._extinction_0]
-
     @staticmethod
-    def _expand_and_apply_extinction_coeff(df, A0, extinction_coeff):
+    def _expand_and_apply_extinction_coeff(df, A0, extinction_coeff) -> Dict[str, ArrayLike]:
         if not isinstance(extinction_coeff, Iterable):
             extinction_coeff = [extinction_coeff]
         return {
             key: (coeff * A0.to_numpy()
-                   if isinstance(coeff, np.ndarray)
+                   if isinstance(coeff, np.ndarray) and not isinstance(A0, np.ndarray)
                    else coeff * A0)  # TODO temporary fix while waiting issue https://github.com/vaexio/vaex/issues/2405 to be fixed
             for coeff_dict in [
                 (ext_coeff(df) if callable(ext_coeff) else ext_coeff)
@@ -148,7 +124,7 @@ class ExtinctionDriver:
             for key,coeff in coeff_dict.items()
             }  # TODO adapt to dataframe type of output?
 
-    def _test_extinction_coeff(self):
+    def _test_extinction_coeff(self) -> None:
         dummy_df = utils.RecordingDataFrame([], columns = self.ananke.galaxia_catalogue_keys + self._extra_output_keys)  # TODO make use of dummy_df.record_of_all_used_keys
         dummy_df.loc[0] = np.nan
         try:
@@ -158,38 +134,53 @@ class ExtinctionDriver:
         utils.compare_given_and_required(dummy_ext.keys(), self.ananke.galaxia_catalogue_mag_names, error_message="Given extinction coeff function returns wrong set of keys")
     
     @property
-    def _extinction_keys(self):
+    def _extinction_keys(self) -> Set[str]:
         return set(map(self._extinction_template, self.ananke.galaxia_catalogue_mag_names))
+
+    @classmethod
+    def __pp_pipeline(cls, df: pd.DataFrame, column_density_interpolator: LinearNDInterpolator,
+                           q_dust: float, total_to_selective: float, extinction_keys: Set[str],
+                           extinction_coeff: List[Union[Callable[[pd.DataFrame],
+                                                                 Dict[str, NDArray]],
+                                                        Dict[str, float]]]) -> None:
+        column_densities = df[cls._interp_col_dens] = column_density_interpolator(np.array(df[cls._galaxia_pos]))
+        reddening        = df[cls._reddening]       = q_dust * 10**column_densities
+        extinction_0     = df[cls._extinction_0]    = total_to_selective * reddening
+        if extinction_keys.difference(df.columns):
+            for mag_name, extinction in cls._expand_and_apply_extinction_coeff(df, extinction_0, extinction_coeff).items():
+                # assign the column of the extinction values for filter mag_name in the final catalogue output 
+                df[cls._extinction_template(mag_name)] = extinction
+                # add the extinction value to the existing photometric magnitude for filter mag_name
+                df[mag_name] += df[cls._extinction_template(mag_name)]
 
     @property
     def extinctions(self):
-        if self._extinction_keys.difference(self.galaxia_output.columns):
-            for mag_name, extinction in self._expand_and_apply_extinction_coeff(self.galaxia_output, self.extinction_0, self.extinction_coeff).items():
-                # assign the column of the extinction values for filter mag_name in the final catalogue output 
-                self.galaxia_output[self._extinction_template(mag_name)] = extinction
-                # add the extinction value to the existing photometric magnitude for filter mag_name
-                self.galaxia_output[mag_name] += self.galaxia_output[self._extinction_template(mag_name)]
-        self.galaxia_output.flush_extra_columns_to_hdf5(with_columns=self.ananke.galaxia_catalogue_mag_names)
-        return self.galaxia_output[list(self._extinction_keys)]
+        galaxia_output = self.galaxia_output
+        coldens_interpolator = self.column_density_interpolator
+        extinction_keys = self._extinction_keys
+        galaxia_output.apply_post_process_pipeline_and_flush(self.__pp_pipeline, coldens_interpolator,
+                                                             self.q_dust, self.total_to_selective, extinction_keys,
+                                                             self.extinction_coeff, flush_with_columns=self.ananke.galaxia_catalogue_mag_names)
+        return galaxia_output[list(extinction_keys)]
 
     @property
     def parameters(self):
         return self.__parameters
     
     @property
-    def q_dust(self):
+    def q_dust(self) -> float:
         return self.parameters.get('q_dust', Q_DUST)
         
     @property
-    def total_to_selective(self):
+    def total_to_selective(self) -> float:
         return self.parameters.get('total_to_selective', TOTAL_TO_SELECTIVE)
     
     @property
-    def extinction_coeff(self):
+    def extinction_coeff(self) -> List[Union[Callable[[pd.DataFrame], Dict[str, NDArray]], Dict[str, float]]]:
         return self.parameters.get('extinction_coeff', [getattr(psys, 'default_extinction_coeff', self.__missing_default_extinction_coeff_for_photosystem(psys)) for psys in self.ananke.galaxia_photosystems])
     
     @staticmethod
-    def __missing_default_extinction_coeff_for_photosystem(photosystem):
+    def __missing_default_extinction_coeff_for_photosystem(photosystem) -> Callable[[pd.DataFrame], Dict[str, NDArray]]:
         def __return_nan_coeff_and_warn(df):
             warn(f"Method default_extinction_coeff isn't defined for photometric system {photosystem.key}", UserWarning, stacklevel=2)
             return {mag: np.zeros(df.shape[0])*0. + coeff for mag, coeff in zip(photosystem.to_export_keys, universal_extinction_law(photosystem.effective_wavelengths))}
