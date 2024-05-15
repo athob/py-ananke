@@ -6,7 +6,8 @@ Please note that this module is private. The DensitiesDriver class is
 available in the main ``ananke`` namespace - use that instead.
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict
+from numpy.typing import NDArray
 import pathlib
 import EnBiD_ananke as EnBiD
 
@@ -25,7 +26,7 @@ class DensitiesDriver:
     """
     _density_formatter = 'rho_{}'
     _density_template = _density_formatter.format
-    def __init__(self, ananke: Ananke, **kwargs) -> None:
+    def __init__(self, ananke: Ananke, **kwargs: Dict[str, Any]) -> None:
         """
             Parameters
             ----------
@@ -38,8 +39,8 @@ class DensitiesDriver:
                 parameters of EnBiD accessible through the class method
                 display_EnBiD_docs
         """
-        self.__ananke = ananke
-        self.__parameters = kwargs
+        self.__ananke: Ananke = ananke
+        self.__parameters: Dict[str, Any] = kwargs
         self.densities = self.particle_densities
     
     def _run_enbid(self):
@@ -82,7 +83,7 @@ class DensitiesDriver:
         return self.ananke.particle_velocities
 
     @property
-    def particle_densities(self):
+    def particle_densities(self) -> Dict[str, NDArray]:
         return {key: self.ananke.particles[self._density_template(key)]
                 for key in [POS_TAG, VEL_TAG]
                 if self._density_template(key) in self.ananke.particles}
@@ -96,7 +97,7 @@ class DensitiesDriver:
         return self.ananke.ngb
 
     @property
-    def parameters(self):
+    def parameters(self) -> Dict[str, Any]:
         return self.__parameters
     
     @property

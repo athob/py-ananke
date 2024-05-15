@@ -6,7 +6,7 @@ Please note that this module is private. The ErrorModelDriver class is
 available in the main ``ananke`` namespace - use that instead.
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, Union, Set, List, Dict, Callable
+from typing import TYPE_CHECKING, Any, Union, Set, List, Dict, Callable
 from numpy.typing import ArrayLike, NDArray
 from warnings import warn
 from collections.abc import Iterable
@@ -34,7 +34,7 @@ class ErrorModelDriver:
     _error_template = _error_formatter.format
     _extra_output_keys = ()
 
-    def __init__(self, ananke: Ananke, **kwargs) -> None:
+    def __init__(self, ananke: Ananke, **kwargs: Dict[str, Any]) -> None:
         """
             Parameters
             ----------
@@ -52,8 +52,8 @@ class ErrorModelDriver:
                 to check if it has a default model to use. If it doesn't find one
                 it will simply fill errors with nan values.
         """
-        self.__ananke = ananke
-        self.__parameters = kwargs
+        self.__ananke: Ananke = ananke
+        self.__parameters: Dict[str, Any] = kwargs
         self._test_error_model()
     
     def __getattr__(self, item):
@@ -111,7 +111,7 @@ class ErrorModelDriver:
                 # with_columns.append(prop_name)
 
     @property
-    def errors(self):
+    def errors(self):  # TODO figure out output typing
         galaxia_output = self.galaxia_output
         error_keys = self._error_keys
         galaxia_output.apply_post_process_pipeline_and_flush(self.__pp_pipeline, error_keys, self.error_model, flush_with_columns=tuple(self._error_prop_names))
@@ -125,7 +125,7 @@ class ErrorModelDriver:
         return set(self._expand_and_apply_error_model(dummy_df, self.error_model).keys())
 
     @property
-    def parameters(self):
+    def parameters(self) -> Dict[str, Any]:
         return self.__parameters
     
     @property

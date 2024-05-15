@@ -6,9 +6,9 @@ Please note that this module is private. The Observer class is
 available in the main ``ananke`` namespace - use that instead.
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict
+from numpy.typing import ArrayLike, NDArray
 import numpy as np
-import numpy.typing  # needed for python==3.7
 from Galaxia_ananke.defaults import DEFAULTS_FOR_PARFILE
 
 from .constants import *
@@ -35,7 +35,7 @@ class Observer:  # TODO SkyCoord for center point: SkyCoord(u=-rSun[0], v=-rSun[
     _default_velocity = np.array([DEFAULTS_FOR_PARFILE[_p] for _p in _vel])
     _pha = _pos+_vel
 
-    def __init__(self, ananke: Ananke, pos3: np.typing.ArrayLike = None, vel3: np.typing.ArrayLike = None, **kwargs) -> None:
+    def __init__(self, ananke: Ananke, pos3: ArrayLike = None, vel3: ArrayLike = None, **kwargs: Dict[str, Any]) -> None:
         """
         Parameters
         ----------
@@ -48,44 +48,44 @@ class Observer:  # TODO SkyCoord for center point: SkyCoord(u=-rSun[0], v=-rSun[
         **kwargs
             Additional parameters
         """
-        self.__ananke = ananke
-        self.__position = self.__prepare_position(pos3)
-        self.__velocity = self.__prepare_velocity(vel3)
-        self.__parameters = kwargs
+        self.__ananke: Ananke = ananke
+        self.__position: NDArray = self.__prepare_position(pos3)
+        self.__velocity: NDArray = self.__prepare_velocity(vel3)
+        self.__parameters: Dict[str, Any] = kwargs
 
     @classmethod
-    def __prepare_against_default(cls, vector: np.typing.ArrayLike, default: np.typing.NDArray):
+    def __prepare_against_default(cls, vector: ArrayLike, default: NDArray) -> NDArray:
         vector = np.array(len(default)*[np.nan] if vector is None else vector)
         vector[np.isnan(vector)] = default[np.isnan(vector)]
         return vector
     
-    def __prepare_position(self, pos: np.typing.ArrayLike):
+    def __prepare_position(self, pos: ArrayLike) -> NDArray:
         return self.__prepare_against_default(pos, self._default_position)
 
-    def __prepare_velocity(self, vel: np.typing.ArrayLike):
+    def __prepare_velocity(self, vel: ArrayLike) -> NDArray:
         return self.__prepare_against_default(vel, self._default_velocity)
 
     @property
-    def ananke(self):
+    def ananke(self) -> Ananke:
         return self.__ananke
 
     @property
-    def position(self):
+    def position(self) -> NDArray:
         return self.__position
     
     @property
-    def velocity(self):
+    def velocity(self) -> NDArray:
         return self.__velocity
     
     @property
-    def phase_space(self):
+    def phase_space(self) -> NDArray:
         return np.hstack([self.position, self.velocity])
     
     @property
-    def to_galaxia_kwargs(self):
+    def to_galaxia_kwargs(self) -> Dict[str, float]:
         return dict(zip(self._pha, self.phase_space))
         
     @property
-    def parameters(self):
+    def parameters(self) -> Dict[str, Any]:
         return self.__parameters
     

@@ -5,12 +5,15 @@ Contains the Ananke class definition
 Please note that this module is private. The Ananke class is
 available in the main ``ananke`` namespace - use that instead.
 """
+from typing import TYPE_CHECKING, Any, Union, Tuple, List, Dict
+from numpy.typing import NDArray
 from warnings import warn
 import re
 import numpy as np
 import pandas as pd
 
 import Galaxia_ananke as Galaxia
+import Galaxia_ananke.photometry as Galaxia_photo
 
 from .constants import *
 from .Universe import Universe
@@ -18,6 +21,10 @@ from .Observer import Observer
 from .DensitiesDriver import DensitiesDriver
 from .ExtinctionDriver import ExtinctionDriver
 from .ErrorModelDriver import ErrorModelDriver
+
+if TYPE_CHECKING:
+    from Galaxia_ananke.photometry.PhotoSystem import PhotoSystem
+    from astropy.units import Quantity
 
 __all__ = ['Ananke']
 
@@ -51,7 +58,8 @@ class Ananke:
     _intrinsic_mag_formatter = '{}_Intrinsic'
     _intrinsic_mag_template = _intrinsic_mag_formatter.format
 
-    def __init__(self, particles, name, ngb=64, d_params={}, e_params={}, err_params={}, **kwargs) -> None:
+    def __init__(self, particles: Dict[str, NDArray], name: str, ngb: int = 64,
+                 d_params: Dict[str, Any] = {}, e_params: Dict[str, Any] = {}, err_params: Dict[str, Any] = {}, **kwargs: Dict[str, Any]) -> None:
         """
             Parameters
             ----------
@@ -149,19 +157,19 @@ class Ananke:
             make_dummy_particles_input to generate a dummy example of such input
             dictionary.
         """
-        self.__particles = particles
-        self.__name = name
-        self.__ngb = ngb
-        self.__universe_proxy = self._prepare_universe_proxy(kwargs)
-        self.__photo_sys = kwargs.pop(self._photo_sys, Galaxia.DEFAULT_PSYS)
-        self.__observer_proxy = self._prepare_observer_proxy(kwargs)
-        self.__parameters = kwargs
-        self.__densitiesdriver_proxy = self._prepare_densitiesdriver_proxy(d_params)
-        self.__extinctiondriver_proxy = self._prepare_extinctiondriver_proxy(e_params)
-        self.__errormodeldriver_proxy = self._prepare_errormodeldriver_proxy(err_params)
-        self.__galaxia_input = None
-        self.__galaxia_survey = None
-        self.__galaxia_output = None
+        self.__particles: Dict[str, NDArray] = particles
+        self.__name: str = name
+        self.__ngb: int = ngb
+        self.__universe_proxy: Universe = self._prepare_universe_proxy(kwargs)
+        self.__photo_sys: str = kwargs.pop(self._photo_sys, Galaxia.DEFAULT_PSYS)
+        self.__observer_proxy: Observer = self._prepare_observer_proxy(kwargs)
+        self.__parameters: Dict[str, Any] = kwargs
+        self.__densitiesdriver_proxy: DensitiesDriver = self._prepare_densitiesdriver_proxy(d_params)
+        self.__extinctiondriver_proxy: ExtinctionDriver = self._prepare_extinctiondriver_proxy(e_params)
+        self.__errormodeldriver_proxy: ErrorModelDriver = self._prepare_errormodeldriver_proxy(err_params)
+        self.__galaxia_input: Union[Galaxia.Input, None] = None
+        self.__galaxia_survey: Union[Galaxia.Survey, None] = None
+        self.__galaxia_output: Union[Galaxia.Output, None] = None
 
     __init__.__doc__ = __init__.__doc__.format(_def_obs_position=_def_obs_position,
                                                _def_obs_velocity=_def_obs_velocity,
@@ -171,14 +179,14 @@ class Ananke:
                                                _def_cmd_box=_def_cmd_box,
                                                _pos=_pos, _vel=_vel)
 
-    def _prepare_universe_proxy(self, kwargs):
+    def _prepare_universe_proxy(self, kwargs: Dict[str, Any]) -> Universe:
         _rshell = kwargs.pop('rshell', None)
         if _rshell is None:
             warn('The use of kwargs r_min & r_max will be deprecated, please use instead kwarg observer', DeprecationWarning, stacklevel=2)
             _rshell = np.array([kwargs.pop('r_min', np.nan), kwargs.pop('r_max', np.nan)])
         return Universe(self, _rshell)
 
-    def _prepare_observer_proxy(self, kwargs):
+    def _prepare_observer_proxy(self, kwargs: Dict[str, Any]) -> Observer:
         _obs = kwargs.pop('observer', None)
         if _obs is None and re.match(',rSun[012],', ',,'.join(kwargs.keys())):
             _obs = {self._pos: np.array([kwargs.pop('rSun0', np.nan), kwargs.pop('rSun1', np.nan), kwargs.pop('rSun2', np.nan)])}
@@ -192,13 +200,13 @@ class Ananke:
                 _obs[new_key] = _obs.pop(key)
         return Observer(self, **_obs)
 
-    def _prepare_densitiesdriver_proxy(self, d_params):
+    def _prepare_densitiesdriver_proxy(self, d_params: Dict[str, Any]) -> DensitiesDriver:
         return DensitiesDriver(self, **d_params)
 
-    def _prepare_extinctiondriver_proxy(self, e_params):
+    def _prepare_extinctiondriver_proxy(self, e_params: Dict[str, Any]) -> ExtinctionDriver:
         return ExtinctionDriver(self, **e_params)
 
-    def _prepare_errormodeldriver_proxy(self, err_params):
+    def _prepare_errormodeldriver_proxy(self, err_params: Dict[str, Any]) -> ErrorModelDriver:
         return ErrorModelDriver(self, **err_params)
 
     def _prepare_galaxia_input(self, rho, **kwargs) -> Galaxia.Input:
@@ -248,15 +256,15 @@ class Ananke:
             output : :obj:`Galaxia.Output`
                 Handler with utilities to utilize the output survey and its data.
             """
-        input = self._prepare_galaxia_input(rho, **{k:kwargs.pop(k) for k in ['input_dir', 'k_factor'] if k in kwargs})
-        survey = self._prepare_galaxia_survey(input, **{k:kwargs.pop(k) for k in ['surveyname'] if k in kwargs})
-        self.__galaxia_output = survey.make_survey(**self._galaxia_kwargs, **kwargs)
+        input: Galaxia.Input = self._prepare_galaxia_input(rho, **{k:kwargs.pop(k) for k in ['input_dir', 'k_factor'] if k in kwargs})
+        survey: Galaxia.Survey = self._prepare_galaxia_survey(input, **{k:kwargs.pop(k) for k in ['surveyname'] if k in kwargs})
+        self.__galaxia_output: Galaxia.Output = survey.make_survey(**self._galaxia_kwargs, **kwargs)
         return self._galaxia_output
     
     _run_galaxia.__doc__ = _run_galaxia.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG)
     
     @classmethod
-    def __pp_observed_mags(cls, df: pd.DataFrame, mag_names, _dmod):
+    def __pp_observed_mags(cls, df: pd.DataFrame, mag_names, _dmod) -> None:
         for mag in mag_names:
             df[cls._intrinsic_mag_template(mag)] = df[mag]
             df[mag] += df[_dmod]
@@ -306,90 +314,90 @@ class Ananke:
                 Handler with utilities to utilize the output survey and its data.
         """
         if 'i_o_dir' in kwargs:  kwargs['input_dir'] = kwargs['output_dir'] = kwargs.pop('i_o_dir')
-        galaxia_output = self._run_galaxia(self.densities, **kwargs)
+        galaxia_output: Galaxia.Output = self._run_galaxia(self.densities, **kwargs)
         self._pp_observed_mags(galaxia_output)
         self._pp_extinctions()
         self._pp_errors()
         return galaxia_output
 
     @property
-    def _densitiesdriver_proxy(self):
+    def _densitiesdriver_proxy(self) -> DensitiesDriver:
         return self.__densitiesdriver_proxy
 
     @property
-    def _extinctiondriver_proxy(self):
+    def _extinctiondriver_proxy(self) -> ExtinctionDriver:
         return self.__extinctiondriver_proxy
     
     @property
-    def _errormodeldriver_proxy(self):
+    def _errormodeldriver_proxy(self) -> ErrorModelDriver:
         return self.__errormodeldriver_proxy
 
     @property
-    def particles(self):
+    def particles(self) -> Dict[str, NDArray]:
         return self.__particles
     
     @property
-    def particle_masses(self):
+    def particle_masses(self) -> NDArray:
         return self.particles[self._mass]
     
     @property
-    def particle_positions(self):
+    def particle_positions(self) -> NDArray:
         return self.particles[self._pos]
     
     @property
-    def particle_velocities(self):
+    def particle_velocities(self) -> NDArray:
         return self.particles[self._vel]
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.__name
 
     @property
-    def ngb(self):
+    def ngb(self) -> int:
         return self.__ngb
     
     @property
-    def universe(self):
+    def universe(self) -> Universe:
         return self.__universe_proxy
     
     @property
-    def universe_rshell(self):
+    def universe_rshell(self) -> NDArray:
         return self.universe.rshell
 
     @property
-    def observer(self):
+    def observer(self) -> Observer:
         return self.__observer_proxy
     
     @property
-    def observer_position(self):
+    def observer_position(self) -> NDArray:
         return self.observer.position
     
     @property
-    def observer_velocity(self):
+    def observer_velocity(self) -> NDArray:
         return self.observer.velocity
 
     @property
-    def densities(self):
+    def densities(self) -> Dict[str, NDArray]:
         return self._densitiesdriver_proxy.densities
     
     @property
-    def extinctions(self):
+    def extinctions(self):  # TODO figure out output typing
         return self._extinctiondriver_proxy.extinctions
 
     @property
-    def errors(self):
+    def errors(self):  # TODO figure out output typing
         return self._errormodeldriver_proxy.errors
 
     @property
-    def parameters(self):
+    def parameters(self) -> Dict[str, Any]:
         return self.__parameters
     
     @property
-    def photo_sys(self):
+    def photo_sys(self) -> str:
         return self.__photo_sys
 
     @property
-    def galaxia_photosystems(self):  # TODO race condition with the implementation in extinction using the following 3 properties, requires rethinking Galaxia, maybe with the future photometryspecs implementation: ultimate goal is to get isochrones from a Galaxia object without explicitely calling Galaxia class methods
+    def galaxia_photosystems(self) -> List[PhotoSystem]:  # TODO race condition with the implementation in extinction using the following 3 properties, requires rethinking Galaxia, maybe with the future photometryspecs implementation: ultimate goal is to get isochrones from a Galaxia object without explicitely calling Galaxia class methods
         return Galaxia.Survey.prepare_photosystems(self.photo_sys)
    
     @property
@@ -398,35 +406,35 @@ class Ananke:
         return self.galaxia_photosystems
     
     @property
-    def galaxia_catalogue_mag_names(self):
+    def galaxia_catalogue_mag_names(self) -> Tuple[str]:
         return Galaxia.Output._compile_export_mag_names(self.galaxia_photosystems)
     
     @property
-    def intrinsic_catalogue_mag_names(self):
+    def intrinsic_catalogue_mag_names(self) -> Tuple[str]:
         return tuple(map(self._intrinsic_mag_template, self.galaxia_catalogue_mag_names))
     
     @property
-    def galaxia_catalogue_mag_and_astrometrics(self):
+    def galaxia_catalogue_mag_and_astrometrics(self) -> Tuple[str]:
         return self.galaxia_catalogue_mag_names + (Galaxia.Output._pi,) + Galaxia.Output._cel + Galaxia.Output._mu + (Galaxia.Output._vr,)
     
     @property
-    def galaxia_catalogue_keys(self):
+    def galaxia_catalogue_keys(self) -> Tuple[str]:
         return Galaxia.Output._make_catalogue_keys(self.galaxia_photosystems)
 
     @property
-    def photosystems_zeropoints(self):
+    def photosystems_zeropoints(self) -> Quantity:
         return np.hstack([ps.zeropoints for ps in self.galaxia_photosystems])
 
     @property
-    def photosystems_zeropoints_dict(self):
+    def photosystems_zeropoints_dict(self) -> Dict[str, Quantity]:
         return dict(zip(self.galaxia_catalogue_mag_names, self.photosystems_zeropoints))
     
     @property
-    def _galaxia_kwargs(self):
+    def _galaxia_kwargs(self) -> Dict[str, Any]:
         return {**self.universe.to_galaxia_kwargs, **self.observer.to_galaxia_kwargs, **self.parameters}
 
     @property
-    def _galaxia_particles(self):
+    def _galaxia_particles(self) -> Dict[str, NDArray]:
         return {key: self.particles[key] for key in self._galaxia_particles_keys if key in self.particles}
 
     @property
@@ -435,14 +443,14 @@ class Ananke:
         return self._galaxia_output
 
     @property
-    def _galaxia_output(self):
+    def _galaxia_output(self) -> Galaxia.Output:
         if self.__galaxia_output is None:
             raise RuntimeError("You must use the `run` method before accessing the catalogue")
         else:
             return self.__galaxia_output
     
     @classmethod
-    def make_dummy_dictionary_description(cls):
+    def make_dummy_dictionary_description(cls) -> str:
         description = """{particles_dictionary_description}
                 Ananke compute the phase space densities that are used to
                 determine particle smoothing lengths, but the dictionary can
@@ -456,7 +464,7 @@ class Ananke:
         return description
 
     @classmethod
-    def make_dummy_particles_input(cls, n_parts=10**5, with_densities=False):
+    def make_dummy_particles_input(cls, n_parts=10**5, with_densities=False) -> Dict[str, NDArray]:
         """
             Generate an example dummy input particles dictionary for Ananke
             made of randomly generated arrays.
@@ -493,31 +501,31 @@ class Ananke:
             available_photo_systems : dict
                 Dictionary of dictionaries of Isochrone objects.
         """
-        return Galaxia.photometry.available_photo_systems
+        return Galaxia_photo.available_photo_systems
 
     @classmethod
-    def display_density_docs(cls):
+    def display_density_docs(cls) -> None:
         """
             Print the DensitiesDriver constructor docstring
         """
         print(DensitiesDriver.__init__.__doc__)
 
     @classmethod
-    def display_EnBiD_docs(cls):
+    def display_EnBiD_docs(cls) -> None:
         """
             Print the EnBiD.run_enbid docstring
         """
         DensitiesDriver.display_EnBiD_docs()
 
     @classmethod
-    def display_extinction_docs(cls):
+    def display_extinction_docs(cls) -> None:
         """
             Print the ExtinctionDriver constructor docstring
         """
         print(ExtinctionDriver.__init__.__doc__)
 
     @classmethod
-    def display_errormodel_docs(cls):
+    def display_errormodel_docs(cls) -> None:
         """
             Print the ErrorModelDriver constructor docstring
         """

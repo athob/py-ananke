@@ -6,9 +6,9 @@ Please note that this module is private. The Universe class is
 available in the main ``ananke`` namespace - use that instead.
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict
+from numpy.typing import ArrayLike, NDArray
 import numpy as np
-import numpy.typing  # needed for python==3.7
 from Galaxia_ananke.defaults import DEFAULTS_FOR_PARFILE
 
 from .constants import *
@@ -28,7 +28,7 @@ class Universe:
     _rshell = [_rmin,_rmax]
     _default_rshell = np.array([DEFAULTS_FOR_PARFILE[_p] for _p in _rshell])
 
-    def __init__(self, ananke: Ananke, rshell: np.typing.ArrayLike, **kwargs) -> None:
+    def __init__(self, ananke: Ananke, rshell: ArrayLike, **kwargs: Dict[str, Any]) -> None:
         """
         Parameters
         ----------
@@ -40,28 +40,28 @@ class Universe:
         **kwargs
             Additional parameters
         """
-        self.__ananke = ananke
-        self.__rshell = self.__prepare_rshell(rshell)
-        self.__parameters = kwargs
+        self.__ananke: Ananke = ananke
+        self.__rshell: NDArray = self.__prepare_rshell(rshell)
+        self.__parameters: Dict[str, Any] = kwargs
     
-    def __prepare_rshell(self, rshell: np.typing.ArrayLike):
+    def __prepare_rshell(self, rshell: ArrayLike) -> NDArray:
         rshell = np.array(rshell)
         rshell[np.isnan(rshell)] = self._default_rshell[np.isnan(rshell)]
         return rshell
 
     @property
-    def ananke(self):
+    def ananke(self) -> Ananke:
         return self.__ananke
 
     @property
-    def rshell(self):
+    def rshell(self) -> NDArray:
         return self.__rshell
     
     @property
-    def to_galaxia_kwargs(self):
+    def to_galaxia_kwargs(self) -> Dict[str, float]:
         return dict(zip(self._rshell, self.rshell))
         
     @property
-    def parameters(self):
+    def parameters(self) -> Dict[str, Any]:
         return self.__parameters
     

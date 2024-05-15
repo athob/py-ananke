@@ -6,7 +6,7 @@ Please note that this module is private. The ExtinctionDriver class is
 available in the main ``ananke`` namespace - use that instead.
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, Union, Set, List, Dict, Callable
+from typing import TYPE_CHECKING, Any, Union, Set, List, Dict, Callable
 from numpy.typing import ArrayLike, NDArray
 from warnings import warn
 from functools import cached_property
@@ -40,7 +40,7 @@ class ExtinctionDriver:
     _extinction_0 = _extinction_template(0)
     _extra_output_keys = (_reddening, _extinction_0)
 
-    def __init__(self, ananke: Ananke, **kwargs) -> None:
+    def __init__(self, ananke: Ananke, **kwargs: Dict[str, Any]) -> None:
         """
             Parameters
             ----------
@@ -67,9 +67,9 @@ class ExtinctionDriver:
                 If it doesn't find one it will simply fill extinction with nan
                 values.
         """
-        self.__ananke = ananke
-        self.__interpolator = None
-        self.__parameters = kwargs
+        self.__ananke: Ananke = ananke
+        self.__interpolator: Union[LinearNDInterpolator, None] = None
+        self.__parameters: Dict[str, Any] = kwargs
         self._test_extinction_coeff()
     
     __init__.__doc__ = __init__.__doc__.format(Q_DUST=Q_DUST, TOTAL_TO_SELECTIVE=TOTAL_TO_SELECTIVE)
@@ -154,7 +154,7 @@ class ExtinctionDriver:
                 df[mag_name] += df[cls._extinction_template(mag_name)]
 
     @property
-    def extinctions(self):
+    def extinctions(self):  # TODO figure out output typing
         galaxia_output = self.galaxia_output
         coldens_interpolator = self.column_density_interpolator
         extinction_keys = self._extinction_keys
@@ -164,7 +164,7 @@ class ExtinctionDriver:
         return galaxia_output[list(extinction_keys)]
 
     @property
-    def parameters(self):
+    def parameters(self) -> Dict[str, Any]:
         return self.__parameters
     
     @property
