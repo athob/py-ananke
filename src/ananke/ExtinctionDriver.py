@@ -107,6 +107,7 @@ class ExtinctionDriver:
         lognh = self.particle_column_densities
         # generate the interpolator to use to get the column densities at positions in and around the particles
         self.__interpolator = LinearNDInterpolator(xhel_p[sel_interp],lognh[sel_interp],rescale=False)  # TODO investigate NaN outputs from interpolator
+        self.__interpolator(3*(0,))
         return self.__interpolator
 
     @staticmethod
