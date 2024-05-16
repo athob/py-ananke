@@ -7,6 +7,7 @@ available in the main ``ananke`` namespace - use that instead.
 """
 from typing import TYPE_CHECKING, Any, Union, Tuple, List, Dict
 from numpy.typing import NDArray
+from Galaxia_ananke.photometry.PhotoSystem import PhotoSystem
 from warnings import warn
 import re
 import numpy as np
@@ -23,7 +24,6 @@ from .ExtinctionDriver import ExtinctionDriver
 from .ErrorModelDriver import ErrorModelDriver
 
 if TYPE_CHECKING:
-    from Galaxia_ananke.photometry.PhotoSystem import PhotoSystem
     from astropy.units import Quantity
 
 __all__ = ['Ananke']
