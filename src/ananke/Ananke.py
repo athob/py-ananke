@@ -270,14 +270,20 @@ class Ananke:
             df[mag] += df[_dmod]
 
     def _pp_observed_mags(self, galaxia_output: Galaxia.Output) -> None:
+        pipeline_name = "observed_magnitudes"
+        print(f"Running {pipeline_name} post-processing pipeline")
         mag_names = self.galaxia_catalogue_mag_names
         galaxia_output.apply_post_process_pipeline_and_flush(self.__pp_observed_mags, mag_names, galaxia_output._dmod, flush_with_columns=mag_names)
 
     def _pp_extinctions(self) -> None:
+        pipeline_name = "extinctions"
+        print(f"Running {pipeline_name} post-processing pipeline")
         if self._extinctiondriver_proxy._col_density in self.particles:
             _ = self.extinctions
 
     def _pp_errors(self) -> None:
+        pipeline_name = "error_modeling"
+        print(f"Running {pipeline_name} post-processing pipeline")
         _ = self.errors
 
     def run(self, **kwargs) -> Galaxia.Output:
