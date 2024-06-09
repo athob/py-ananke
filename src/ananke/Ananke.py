@@ -283,7 +283,8 @@ class Ananke:
     def _pp_errors(self) -> None:
         pipeline_name = "error_modeling"
         print(f"Running {pipeline_name} post-processing pipeline")
-        _ = self.errors
+        if not self._errormodeldriver_proxy.ignore:
+            _ = self.errors
 
     def run(self, **kwargs) -> Galaxia.Output:
         """

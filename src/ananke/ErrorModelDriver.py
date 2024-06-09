@@ -129,6 +129,10 @@ class ErrorModelDriver:
         return self.__parameters
     
     @property
+    def ignore(self) -> bool:
+        return self.parameters.get('ignore', False)
+    
+    @property
     def error_model(self) -> List[Union[Callable[[pd.DataFrame], Dict[str, NDArray]], Dict[str, float]]]:  # TODO design
         return self.parameters.get('error_model', [getattr(psys, 'default_error_model', self.__missing_default_error_model_for_photosystem(psys)) for psys in self.ananke.galaxia_photosystems])
     
