@@ -115,9 +115,8 @@ class ExtinctionDriver:
         if not isinstance(extinction_coeff, Iterable):
             extinction_coeff = [extinction_coeff]
         return {
-            key: (coeff * A0.to_numpy()
-                   if isinstance(coeff, np.ndarray) and not isinstance(A0, np.ndarray)
-                   else coeff * A0)  # TODO temporary fix while waiting issue https://github.com/vaexio/vaex/issues/2405 to be fixed
+            key: ((coeff if isinstance(coeff, np.ndarray) else coeff.to_numpy())*
+                  (A0 if isinstance(A0, np.ndarray) else A0.to_numpy()))  # TODO temporary fix while waiting issue https://github.com/vaexio/vaex/issues/2405 to be fixed
             for coeff_dict in [
                 (ext_coeff(df) if callable(ext_coeff) else ext_coeff)
                 for ext_coeff in extinction_coeff
