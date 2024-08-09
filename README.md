@@ -116,7 +116,12 @@ archivePrefix = {arXiv},
 <!-- Below, you will find a selection of scientific papers that showcase the potential and capabilities of py-ananke. These papers serve as valuable resources for understanding the practical implementation and impact of py-ananke in various domains. -->
 
 - [`py-ananke_v0.0.2-beta2`](https://github.com/athob/py-ananke/releases/tag/v0.0.2-beta2) was featured at [EAS 2023 in Krakow](https://eas2023programme.kuoni-congress.info/presentation/generating-mock-euclid-and-roman-surveys-of-stellar-halos-of-simulated-nearby-galaxies-using-the-py-ananke-pipeline) as an e-poster, check it at [this URL](https://k-poster.kuoni-congress.info/eas-2023/poster/5bf40113-efa9-4bfc-89a5-b67ebd81f7dd).
-- [`py-ananke_v0.1.0-beta2`](https://github.com/athob/py-ananke/releases/tag/v0.1.0-beta2) was featured at the 243rd AAS meeting in New Orleans
+- [`py-ananke_v0.1.0-beta2`](https://github.com/athob/py-ananke/releases/tag/v0.1.0-beta2) was featured at the 243rd AAS meeting in New Orleans.
+- an application of `py-ananke` was featured at the [Roman@Yerkes workshop on Galactic Science with the Nancy Grace Roman Space Telescope](https://sites.google.com/cfa.harvard.edu/romanyerkes/home).
+- an application of `py-ananke` was featured at [EAS 2024 in Padova](https://eas2024programme.kuoni-congress.info/presentation/synthetic-survey-catalogs-for-the-galactic-roman-infrared-plane-survey-grips-using-py-ananke) as an e-poster.
+- an application of `py-ananke` was featured at the [Challenging Theory with Roman meeting at Caltech](https://conference.ipac.caltech.edu/roman2024/), recording available [here](https://youtu.be/93hF1ZCDzw8).
+- an application of `py-ananke` was featured at the [2024 IAU GA in Cape Town](https://astronomy2024.org/).
+
 
 ## Acknowledgements
 
