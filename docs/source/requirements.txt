@@ -1,0 +1,3 @@
+sphinx-copybutton
+myst-nb
+furo
