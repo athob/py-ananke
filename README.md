@@ -117,10 +117,11 @@ archivePrefix = {arXiv},
 
 - [`py-ananke_v0.0.2-beta2`](https://github.com/athob/py-ananke/releases/tag/v0.0.2-beta2) was featured at [EAS 2023 in Krakow](https://eas2023programme.kuoni-congress.info/presentation/generating-mock-euclid-and-roman-surveys-of-stellar-halos-of-simulated-nearby-galaxies-using-the-py-ananke-pipeline) as an e-poster, check it at [this URL](https://k-poster.kuoni-congress.info/eas-2023/poster/5bf40113-efa9-4bfc-89a5-b67ebd81f7dd).
 - [`py-ananke_v0.1.0-beta2`](https://github.com/athob/py-ananke/releases/tag/v0.1.0-beta2) was featured at the 243rd AAS meeting in New Orleans.
-- an application of `py-ananke` was featured at the [Roman@Yerkes workshop on Galactic Science with the Nancy Grace Roman Space Telescope](https://sites.google.com/cfa.harvard.edu/romanyerkes/home).
-- an application of `py-ananke` was featured at [EAS 2024 in Padova](https://eas2024programme.kuoni-congress.info/presentation/synthetic-survey-catalogs-for-the-galactic-roman-infrared-plane-survey-grips-using-py-ananke) as an e-poster.
-- an application of `py-ananke` was featured at the [Challenging Theory with Roman meeting at Caltech](https://conference.ipac.caltech.edu/roman2024/), recording available [here](https://youtu.be/93hF1ZCDzw8).
-- an application of `py-ananke` was featured at the [2024 IAU GA in Cape Town](https://astronomy2024.org/).
+- a Galactic Plane survey application of `py-ananke` was featured at:
+    1. the [Roman@Yerkes workshop on Galactic Science with the Nancy Grace Roman Space Telescope](https://sites.google.com/cfa.harvard.edu/romanyerkes/home),
+    2. [EAS 2024 in Padova](https://eas2024programme.kuoni-congress.info/presentation/synthetic-survey-catalogs-for-the-galactic-roman-infrared-plane-survey-grips-using-py-ananke) as an e-poster (available [here](https://k-poster.kuoni-congress.info/eas-2024/poster/749fd8f1-ec4c-4167-911f-914e2215eeab)),
+    3. the [Challenging Theory with Roman meeting at Caltech](https://conference.ipac.caltech.edu/roman2024/) (recording available [here](https://youtu.be/93hF1ZCDzw8)),
+    4. the [2024 IAU GA in Cape Town](https://astronomy2024.org/) (live streamed [here](https://m.youtube.com/watch?v=8R-Wc9tGWcg&t=7218s)).
 
 
 ## Acknowledgements
