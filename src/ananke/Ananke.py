@@ -214,7 +214,7 @@ class Ananke:
             self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], **input_kwargs)
         return self.__galaxia_input
 
-    def _prepare_galaxia_survey(self, input: Galaxia.Input, **kwargs) -> Galaxia.Survey:  # TODO why is kwarg surveyname unused?
+    def _prepare_galaxia_survey(self, input: Galaxia.Input, **kwargs) -> Galaxia.Survey:
         survey_kwargs = {'photo_sys': self.photo_sys, **kwargs}  # surveyname
         if self.__galaxia_survey is None:
             self.__galaxia_survey = Galaxia.Survey(input, **survey_kwargs)

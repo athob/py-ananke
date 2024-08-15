@@ -1,9 +1,7 @@
 API reference
 =============
 
-.. autosummary::
-	:toctree: _autosummary
-	:template: custom-module-template.rst
-	:recursive:
-	
-	ananke
+.. toctree::
+	:maxdepth: 2
+
+	modules/ananke
