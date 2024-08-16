@@ -10,6 +10,6 @@ py-ananke documentation
    :maxdepth: 2
    :caption: Contents:
 
-   README.md
+   Introduction <README.md>
    testing_ananke.ipynb
    reference.rst
