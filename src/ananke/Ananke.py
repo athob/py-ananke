@@ -17,7 +17,7 @@ import pandas as pd
 import Galaxia_ananke as Galaxia
 import Galaxia_ananke.photometry as Galaxia_photo
 
-from .constants import *
+from ._constants import *
 from .Universe import Universe
 from .Observer import Observer
 from .DensitiesDriver import DensitiesDriver

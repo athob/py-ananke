@@ -12,7 +12,7 @@ import pathlib
 import EnBiD_ananke as EnBiD
 
 from . import utils
-from .constants import *
+from ._constants import *
 
 if TYPE_CHECKING:
     from .Ananke import Ananke

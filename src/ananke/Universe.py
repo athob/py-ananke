@@ -11,7 +11,7 @@ from numpy.typing import ArrayLike, NDArray
 import numpy as np
 from Galaxia_ananke.defaults import DEFAULTS_FOR_PARFILE
 
-from .constants import *
+from ._constants import *
 
 if TYPE_CHECKING:
     from .Ananke import Ananke
