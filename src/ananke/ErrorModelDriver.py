@@ -15,7 +15,7 @@ import pandas as pd
 
 from . import utils
 from ._default_error_model import *
-from .constants import *
+from ._constants import *
 
 if TYPE_CHECKING:
     from .Ananke import Ananke

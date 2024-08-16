@@ -9,7 +9,7 @@ import pathlib
 import subprocess
 # from packaging import version
 
-from .constants import *
+from ._constants import *
 from .__metadata__ import *
 
 __all__ = ['say', 'all_files', 'check_submodules']

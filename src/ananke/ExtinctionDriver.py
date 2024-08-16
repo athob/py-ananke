@@ -18,7 +18,7 @@ import pandas as pd
 
 from . import utils
 from ._default_extinction_coeff import *
-from .constants import *
+from ._constants import *
 
 if TYPE_CHECKING:
     from .Ananke import Ananke

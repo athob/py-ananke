@@ -3,7 +3,7 @@ import pathlib
 from setuptools import setup
 
 from src._build_utils import *
-from src.constants import NAME, SRC_DIR, PYENBID, PYGALAXIA
+from src._constants import NAME, SRC_DIR, PYENBID, PYGALAXIA
 from src.__metadata__ import *
 
 ROOT_DIR = pathlib.Path(__file__).parent

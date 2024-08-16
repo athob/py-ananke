@@ -13,7 +13,7 @@ ananke comes with the class Ananke, please refer to its documentation
 for further help.
 """
 from .__metadata__ import *
-from .constants import *
+from ._constants import *
 from .Ananke import Ananke
 
 __all__ = ['Ananke', 'make_dummy_particles_input', 'display_available_photometric_systems', 'display_density_docs', 'display_EnBiD_docs', 'display_extinction_docs', 'display_errormodel_docs']
