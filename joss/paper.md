@@ -170,7 +170,7 @@ Package development and testing was performed in part at the Aspen Center for Ph
 
 The authors are grateful to Anthony Brown and Jos de Bruijne for their cooperation in building the Gaia error models encoded in this package. We also gratefully acknowledge the input and encouragement of the many participants of the Gaia Sprints (2017--2019), and of the Gaia Challenge series (2012-2019).
 
-The authors thank the extended [Galaxy Dynamics @ UPenn group](http://web.sas.upenn.edu/dynamics/) and the attendees of the "anankethon" workshops for the valuable feedback and suggestions they provided which have contributed to the refinement and enhancement of the package. We also thank the developers of ``swiftsimio`` [@swiftsimio:2020] for their help in preparing our documentation.
+The authors thank the extended [Galaxy Dynamics @ UPenn group](http://web.sas.upenn.edu/dynamics/) and the attendees of the "anankethon" workshops for the valuable feedback and suggestions they provided which have contributed to the refinement and enhancement of the package. We also thank Josh Borrow and the other developers of ``swiftsimio`` [@swiftsimio:2020] for their help in preparing our documentation inspired by the latter.
 
 
 # References
