@@ -23,14 +23,14 @@ release = md.__version__
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-	'sphinx.ext.duration',
-	'sphinx.ext.doctest',
-	'sphinx.ext.autodoc',
-	'sphinx.ext.inheritance_diagram',
-	'sphinx.ext.napoleon',
-	'sphinx.ext.viewcode',
-	'sphinx.ext.autosectionlabel',
-	'sphinx_copybutton',
+    'sphinx.ext.duration',
+    'sphinx.ext.doctest',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.inheritance_diagram',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.autosectionlabel',
+    'sphinx_copybutton',
     'myst_nb',
 ]
 
