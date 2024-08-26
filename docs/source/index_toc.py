@@ -41,4 +41,4 @@ index_toc_lines_list = [
     "reference.rst"
     ]
 
-(tmp_dir / "index_toc.rst").write_text(("\n"+rst_indent).join(index_toc_lines_list))
+(tmp_dir / "index_toc").write_text(("\n"+rst_indent).join(index_toc_lines_list))
