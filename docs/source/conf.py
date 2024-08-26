@@ -7,8 +7,10 @@ package_name = 'ananke'
 
 import os
 import sys
+sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../..'))
 
+import index_toc
 from src import __metadata__ as md
 
 # -- Project information -----------------------------------------------------
