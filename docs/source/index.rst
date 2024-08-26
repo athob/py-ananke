@@ -6,10 +6,4 @@
 py-ananke documentation
 =======================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-   Introduction <README.md>
-   testing_ananke.ipynb
-   reference.rst
+.. include:: temp/index_toc
