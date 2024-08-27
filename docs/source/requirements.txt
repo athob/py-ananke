@@ -2,5 +2,6 @@ sphinx-math-dollar
 sphinx-copybutton
 myst-nb
 furo
+sphinx_rtd_theme
 markdown
 lxml
