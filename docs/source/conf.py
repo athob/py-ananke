@@ -25,6 +25,8 @@ release = md.__version__
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    'sphinx_math_dollar',
+    'sphinx.ext.mathjax',
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
@@ -42,7 +44,7 @@ exclude_patterns = ['.ipynb_checkpoints/*']
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'furo'
+html_theme = 'sphinx_rtd_theme' # 'furo'
 
 # -- Options for automatic API doc
 
