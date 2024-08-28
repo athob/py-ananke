@@ -447,10 +447,10 @@ class Ananke:
     @classmethod
     def make_dummy_dictionary_description(cls) -> str:
         description = """{particles_dictionary_description}
-                Ananke compute the phase space densities that are used to
-                determine particle smoothing lengths, but the dictionary can
-                include pre-computed densities with the following entries:
-                {density_properties}
+            Ananke compute the phase space densities that are used to
+            determine particle smoothing lengths, but the dictionary can
+            include pre-computed densities with the following entries:
+            {density_properties}
         """.format(particles_dictionary_description=Galaxia.Input.particles_dictionary_description,
                    density_properties=''.join(
                        [f"\n            * {desc} via key `{str(key)}`"
@@ -477,7 +477,10 @@ class Ananke:
             -------
             p : dict
                 Dummy example input particles dictionary for Ananke.
-                {dummy_dictionary_description}
+            
+            Notes
+            -----
+            {dummy_dictionary_description}
         """
         p = Galaxia.make_dummy_particles_input(n_parts)
         p[cls._log10NH] = 22 + np.random.randn(n_parts)
