@@ -1,8 +1,8 @@
 sphinx-math-dollar
 sphinx-copybutton
-myst-nb
+myst-parser>=3
+myst-nb>=1
 linkify-it-py
-furo
-sphinx_rtd_theme
+pydata-sphinx-theme
 markdown
 lxml
