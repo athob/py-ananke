@@ -453,7 +453,7 @@ class Ananke:
             {density_properties}
         """.format(particles_dictionary_description=Galaxia.Input.particles_dictionary_description,
                    density_properties=''.join(
-                       [f"\n            * {desc} via key `{str(key)}`"
+                       [f"\n            * {desc} via key ``{str(key)}``"
                         for key, desc in [Galaxia.Input._positiondensity_prop,
                                           Galaxia.Input._velocitydensity_prop]]))
         return description

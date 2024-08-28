@@ -1,6 +1,7 @@
 sphinx-math-dollar
 sphinx-copybutton
 myst-nb
+linkify-it-py
 furo
 sphinx_rtd_theme
 markdown

@@ -1,4 +1,4 @@
-# `py-ananke` 
+# `py-ananke`
 
 [![Documentation Status](https://readthedocs.org/projects/py-ananke/badge/?version=latest)](https://py-ananke.readthedocs.io/en/latest/?badge=latest)
 [![Python package](https://github.com/athob/py-ananke/actions/workflows/main.yml/badge.svg)](https://github.com/athob/py-ananke/actions/workflows/main.yml)
@@ -72,13 +72,13 @@ These upcoming updates signify our commitment to continuously improve `py-ananke
 
 ### Contributing
 
-You can readily access the code in this main GitHub repository, as well as its submodules repositories. We encourage users to utilize the [Github issues](https://github.com/athob/py-ananke/issues) feature to report any bugs encountered or suggest new ideas for improvement. Contributions to the project are highly valued and greatly appreciated. To contribute, we kindly request that you make your changes in a separate branch or fork of the repository. Once your contributions are ready, you can submit a [pull request](https://github.com/athob/py-ananke/pulls) to merge them into the [develop](https://github.com/athob/py-ananke/tree/develop) branch. If you choose to make your contributions in a branch, please make sure to base those changes from the develop branch in that fork, and have your pull requests originate from your forked develop branch and target this repository's develop branch. Additionally, you may need to confirm that the Workflow permissions in your fork settings are set to Read and write (Settings > Actions > General > Workflow permissions) in case the [CI/CD GitHub Action](https://github.com/athob/py-ananke/actions/workflows/main.yml) does't complete.
+You can readily access the code in the [main GitHub repository](https://github.com/athob/py-ananke), as well as its submodules repositories. We encourage users to utilize the [Github issues](https://github.com/athob/py-ananke/issues) feature to report any bugs encountered or suggest new ideas for improvement. Contributions to the project are highly valued and greatly appreciated. To contribute, we kindly request that you make your changes in a separate branch or fork of the repository. Once your contributions are ready, you can submit a [pull request](https://github.com/athob/py-ananke/pulls) to merge them into the [develop](https://github.com/athob/py-ananke/tree/develop) branch. If you choose to make your contributions in a fork, please make sure to base those changes from the develop branch in that fork, and have your pull requests originate from your forked develop branch and target this repository's develop branch. Additionally, you may need to confirm that the Workflow permissions in your fork settings are set to Read and write (Settings > Actions > General > Workflow permissions) in case the [CI/CD GitHub Action](https://github.com/athob/py-ananke/actions/workflows/main.yml) doesn't complete.
 
 ## `py-ananke` & the community
 
 ### License
 
-`py-ananke` is distributed under the [GNU General Public License (GPL) version 3](LICENSE), offering you the freedom to utilize, modify, and distribute the software. The GPL v3 ensures that you have the flexibility to adapt py-ananke to suit your specific needs, while also contributing to the open-source community. We encourage you to read the full license text to understand your rights and responsibilities when using py-ananke. 
+`py-ananke` is distributed under the [GNU General Public License (GPL) version 3](LICENSE), offering you the freedom to utilize, modify, and distribute the software. The GPL v3 ensures that you have the flexibility to adapt py-ananke to suit your specific needs, while also contributing to the open-source community. We encourage you to read the full license text to understand your rights and responsibilities when using py-ananke.
 
 ### Citing `py-ananke`
 
@@ -86,13 +86,13 @@ If py-ananke has played a role in your research project or software development,
 
 To cite `py-ananke`, please use DOI `10.48550/arXiv.2312.02268` as a reference in your publications, or cite as the following:
 
-```
+```text
 Thob, Adrien C. R. et al. 2023, “Generating synthetic star catalogs from simulated data for next-gen observatories with py-ananke”, arXiv e-prints, doi:10.48550/arXiv.2312.02268.
 ```
 
 Alternatively, you may use [one of the entries associated with `py-ananke` as listed by The SAO/NASA Astrophysics Data System](https://ui.adsabs.harvard.edu/abs/2023arXiv231202268T/exportcitation), such as the following BibTeX entry:
 
-```
+```text
 @ARTICLE{2023arXiv231202268T,
        author = {{Thob}, Adrien C.~R. and {Sanderson}, Robyn E. and {Eden}, Andrew P. and {Nikakhtar}, Farnik and {Panithanpaisal}, Nondh and {Garavito-Camargo}, Nicol{\'a}s and {Sharma}, Sanjib},
         title = "{Generating synthetic star catalogs from simulated data for next-gen observatories with py-ananke}",
@@ -123,7 +123,6 @@ archivePrefix = {arXiv},
     2. [EAS 2024 in Padova](https://eas2024programme.kuoni-congress.info/presentation/synthetic-survey-catalogs-for-the-galactic-roman-infrared-plane-survey-grips-using-py-ananke) as an e-poster (available [here](https://k-poster.kuoni-congress.info/eas-2024/poster/749fd8f1-ec4c-4167-911f-914e2215eeab)),
     3. the [Challenging Theory with Roman meeting at Caltech](https://conference.ipac.caltech.edu/roman2024/) (recording available [here](https://youtu.be/93hF1ZCDzw8)),
     4. the [2024 IAU GA in Cape Town](https://astronomy2024.org/) (live streamed [here](https://m.youtube.com/watch?v=8R-Wc9tGWcg&t=7218s)).
-
 
 ## Acknowledgements
 
