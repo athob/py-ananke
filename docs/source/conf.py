@@ -64,7 +64,22 @@ nb_execution_timeout = 100
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme' # 'furo'
+html_theme = 'pydata_sphinx_theme'
+
+html_theme_options = {
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": md.__url__,
+            "icon": "fab fa-github-square",
+            "type": "fontawesome",
+        },
+    ],
+}
+
+html_sidebars = {
+    "**": [],
+}
 
 # -- Options for automatic API doc
 
