@@ -35,7 +35,7 @@ setup(name=NAME,
       package_dir={'': SRC_DIR},
       package_data=package_data,
       include_package_data=True,
-      install_requires=["numpy>=1.22,<2", "scipy>=1.7.2,<2", "pandas>=2,<3",
+      install_requires=["numpy>=1.22,<2", "scipy>=1.7.2,<2", "pandas>=2,<3", "docstring_parser>=0.16,<0.17",
                         f"EnBiD_ananke @ file://{(ROOT_DIR / PYENBID).resolve()}",
                         f"Galaxia_ananke @ file://{(ROOT_DIR / PYGALAXIA).resolve()}"]
       )

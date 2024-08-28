@@ -2,11 +2,14 @@
 """
 Module miscellaneous utilities
 """
+from typing import Optional, List
+import re
+import docstring_parser as DS_parser
 import pandas as pd
 
 from Galaxia_ananke import utils as Gutils
 
-__all__ = ['compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'RecordingDataFrame']
+__all__ = ['compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'RecordingDataFrame', 'extract_parameters_from_docstring']
 
 
 compare_given_and_required = Gutils.compare_given_and_required
@@ -38,3 +41,14 @@ class RecordingDataFrame(pd.DataFrame):
     @property
     def record_of_all_used_keys(self):
         return self._record_of_all_used_keys
+
+
+def extract_parameters_from_docstring(docstring: str, parameters: Optional[List[str]] = None, ignore: Optional[List[str]] = None) -> str:
+    input_DS = DS_parser.parse(docstring)
+    output_DS = DS_parser.Docstring()
+    output_DS.style = input_DS.style
+    output_DS.meta = [param
+                      for param in input_DS.params
+                      if (True if parameters is None else param.arg_name in parameters) and (True if ignore is None else param.arg_name not in ignore)]
+    temp_docstring = re.split("\n-*\n",DS_parser.compose(output_DS),maxsplit=1)[1]
+    return '\n'.join([line if line[:1] in ['', ' '] else f"\n{line}" for line in temp_docstring.split('\n')])
