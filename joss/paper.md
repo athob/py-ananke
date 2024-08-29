@@ -129,6 +129,7 @@ The latter two driver classes require respectively extinction coefficients and e
 - ``scikit-learn`` [@scikit-learn:2011]
 - ``vaex`` [@vaex:2018]
 - ``astroquery`` [@astroquery:2019] and its submodule ``svo_fps`` to access the Spanish Virtual Observatory Filter Profile Service [@svo_fps:2012;@svo_fps:2020]
+- ``docstring_parser`` [@docstring_parser]
 
 It also uses adapted versions of the ``C++`` packages:
 
