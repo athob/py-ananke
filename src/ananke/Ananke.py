@@ -245,7 +245,12 @@ class Ananke:
             Returns
             -------
             output : :obj:`Galaxia.Output`
-                Handler with utilities to utilize the output survey and its data.
+                Handler with utilities to utilize the output survey and its
+                data.
+
+            Notes
+            -----
+            {notes_from_galaxia_output}
             """
         input: Galaxia.Input = self._prepare_galaxia_input(rho, **{k:kwargs.pop(k) for k in ['input_dir', 'k_factor'] if k in kwargs})
         survey: Galaxia.Survey = self._prepare_galaxia_survey(input, **{k:kwargs.pop(k) for k in ['surveyname'] if k in kwargs})
@@ -259,7 +264,9 @@ class Ananke:
                                                                'fsample', 'cmd_magnames', 'parfile', 'output_dir',
                                                                'rSun0, rSun1, rSun2', 'vSun0, vSun1, vSun2', 'r_max, r_min',
                                                                'app_mag_lim_lo, app_mag_lim_hi, abs_mag_lim_lo, abs_mag_lim_hi, color_lim_lo, color_lim_hi'
-                                                            ]).replace("\n", "\n            "))
+                                                            ]).replace("\n", "\n            "),
+                                                       notes_from_galaxia_output = utils.extract_notes_from_docstring(
+                                                           Galaxia.Output.__init__.__doc__).replace("\n", "\n            "))
     
     @classmethod
     def __pp_observed_mags(cls, df: pd.DataFrame, mag_names, _dmod) -> None:
@@ -301,7 +308,36 @@ class Ananke:
             Returns
             -------
             galaxia_output : :obj:`Galaxia.Output`
-                Handler with utilities to utilize the output survey and its data.
+                Handler with utilities to utilize the output survey and its
+                data.
+            
+            Notes
+            -----
+            {notes_from_run_galaxia}
+
+            Ananke complements this set of properties with those that are
+            generated from its various post-processing subroutines. As a result
+            the ``photosys_filtername``-formatted columns contain the apparent
+            photometry, computed with addition of extinction and instrument
+            error. Each component contributing to this final apparent
+            photometry are stored in other columns with the
+            ``photosys_filtername`` format with relevant prefixing/suffixing as
+            listed below:
+            
+            * The intrinsic photometry are stored in the suffixed ``{_Intrinsic}`` keys
+            * The extinction values are stored in the prefixed ``{A_}`` keys
+            * The properties' standard error are stored in the suffixed ``{_Sig}`` keys
+            * The properties' actually drawn gaussian error are stored in the suffixed ``_Err`` keys
+
+            Note that because the error model generally also affect astrometry,
+            the latter 2 suffixing rules also apply to the astrometric
+            properties.
+            
+            The extinction post-processing routine also add 3 properties:
+
+            * The log10 hydrogen column density between Observer position and star in {log10_NH_unit} via key ``{log10_NH}``
+            * The reddening index via key ``{E_B_V}``
+            * The reference extinction (which extinction coefficients are based on) via key ``{A_0}``
         """
         if 'i_o_dir' in kwargs:  kwargs['input_dir'] = kwargs['output_dir'] = kwargs.pop('i_o_dir')
         galaxia_output: Galaxia.Output = self._run_galaxia(self.densities, **kwargs)
@@ -313,7 +349,17 @@ class Ananke:
     run.__doc__ = run.__doc__.format(
         parameters_from_run_galaxia = utils.extract_parameters_from_docstring(
             _run_galaxia.__doc__,
-            ignore=['input_dir, output_dir', 'rho']).replace("\n", "\n            "))
+            ignore=['input_dir, output_dir', 'rho']).replace("\n", "\n            "),
+        notes_from_run_galaxia = utils.extract_notes_from_docstring(
+            _run_galaxia.__doc__).replace("\n", "\n            "),
+        _Intrinsic = _intrinsic_mag_template(""),
+        A_ = "A_",  # TODO
+        _Sig = "_Sig",
+        _Err = "_Err",
+        log10_NH_unit = "$cm^{-2}$",
+        log10_NH = _log10NH,
+        E_B_V = "E(B-V)",
+        A_0 = "A_0")
     
     @property
     def _densitiesdriver_proxy(self) -> DensitiesDriver:

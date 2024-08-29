@@ -9,7 +9,7 @@ import pandas as pd
 
 from Galaxia_ananke import utils as Gutils
 
-__all__ = ['compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'RecordingDataFrame', 'extract_parameters_from_docstring']
+__all__ = ['compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'RecordingDataFrame', 'extract_parameters_from_docstring', 'extract_notes_from_docstring']
 
 
 compare_given_and_required = Gutils.compare_given_and_required
@@ -52,3 +52,11 @@ def extract_parameters_from_docstring(docstring: str, parameters: Optional[List[
                       if (True if parameters is None else param.arg_name in parameters) and (True if ignore is None else param.arg_name not in ignore)]
     temp_docstring = re.split("\n-*\n",DS_parser.compose(output_DS),maxsplit=1)[1]
     return '\n'.join([line if line[:1] in ['', ' '] else f"\n{line}" for line in temp_docstring.split('\n')])
+
+
+def extract_notes_from_docstring(docstring: str) -> str:
+    input_DS = DS_parser.parse(docstring)
+    output_DS = DS_parser.Docstring()
+    output_DS.style = input_DS.style
+    output_DS.meta = [meta for meta in input_DS.meta if 'notes' in meta.args]
+    return re.split("\n-*\n",DS_parser.compose(output_DS),maxsplit=1)[1]
