@@ -335,7 +335,7 @@ class Ananke:
             
             The extinction post-processing routine also add 3 properties:
 
-            * The log10 hydrogen column density between Observer position and star in {log10_NH_unit} via key ``{log10_NH}``
+            * The line-of-sight hydrogen column density in {log10_NH_unit} and decimal logarithmic scale via key ``{log10_NH}``
             * The reddening index via key ``{E_B_V}``
             * The reference extinction (which extinction coefficients are based on) via key ``{A_0}``
         """
@@ -356,6 +356,7 @@ class Ananke:
         A_ = "A_",  # TODO
         _Sig = "_Sig",
         _Err = "_Err",
+        log10 = "$log_{10}$",
         log10_NH_unit = "$cm^{-2}$",
         log10_NH = _log10NH,
         E_B_V = "E(B-V)",
