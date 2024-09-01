@@ -12,7 +12,7 @@ import subprocess
 from ._constants import *
 from .__metadata__ import *
 
-__all__ = ['say', 'all_files', 'check_submodules']
+__all__ = ['make_package_data', 'check_submodules', 'append_install_requires_with_submodules']
 
 ROOT_DIR = pathlib.Path(__file__).parent.parent
 
@@ -43,6 +43,12 @@ def all_files(*paths, basedir='.'):
             for f in files]
 
 
+def make_package_data():
+    for_all_files = ('__license__', )
+    return {NAME: all_files(*for_all_files,
+                            basedir=pathlib.Path(SRC_DIR, NAME))}
+
+
 def import_source_file(module_name, file_path):
     # based on https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
     spec = importlib.util.spec_from_file_location(module_name, file_path)
@@ -64,7 +70,15 @@ def check_submodules(root_dir):
     EnBiD_meta = import_source_file("EnBiD_meta", root_dir / PYENBID / SRC_DIR / '__metadata__.py')
     Galaxia_meta = import_source_file("Galaxia_meta", root_dir / PYGALAXIA / SRC_DIR / '__metadata__.py')
     #### TODO: below's fix is ugly, there must be something better to do!
-    if pathlib.Path(sys.argv[0]).name == 'setup.py' and sys.argv[1] == 'egg_info' and 'pip' in sys.argv[-1]:
+    if pathlib.Path(sys.argv[0]).name == 'setup.py' and (sys.argv[1] == 'egg_info' if len(sys.argv)>1 else False) and 'pip' in sys.argv[-1]:
         subprocess.call(['pip', 'cache', 'remove', '*_ananke'])
     ####
     return EnBiD_meta, Galaxia_meta
+
+
+def append_install_requires_with_submodules(install_requires):
+    EnBiD_meta, Galaxia_meta = check_submodules(ROOT_DIR)
+    return install_requires + [
+        f"EnBiD_ananke @ file://{pathlib.Path(EnBiD_meta.__file__).parent.parent}",
+        f"Galaxia_ananke @ file://{pathlib.Path(Galaxia_meta.__file__).parent.parent}"
+        ]
