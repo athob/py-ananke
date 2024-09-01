@@ -5,7 +5,9 @@ Contains the ananke module metadata.
 import _sitebuiltins
 import textwrap
 from typing import Final
-from datetime import date
+from datetime import datetime
+
+from . import _version
 
 try:
     from .__license__ import __license_full__
@@ -31,8 +33,9 @@ __license_classifier__ = "License :: OSI Approved :: GNU General Public License 
 __license_short__ = "Licensed under the GNU GPL v3 or later"
 
 # SOFTWARE METADATA
-__version__: Final[str] = "0.2.0b3.dev1"
-__date__: date = date(2024, 8, 21)  # TODO how to automatize based on commit day?
+__version__: Final[str] = _version.get_versions()['version']
+__date__: str = _version.get_versions()['date']
+__date__: datetime = datetime.fromisoformat(f"{__date__[:-2]}:{__date__[-2:]}")
 __maintainer__ = "Adrien Thob"
 __email__ = "athob@sas.upenn.edu"
 __status_classifier__ = "Development Status :: 4 - Beta"

@@ -11,8 +11,9 @@ import subprocess
 
 from ._constants import *
 from .__metadata__ import *
+from . import versioneer
 
-__all__ = ['make_package_data', 'check_submodules', 'append_install_requires_with_submodules']
+__all__ = ['make_package_data', 'check_submodules', 'append_install_requires_with_submodules', 'make_cmdclass']
 
 ROOT_DIR = pathlib.Path(__file__).parent.parent
 
@@ -67,8 +68,14 @@ def check_submodules(root_dir):
         raise OSError("Your system does not have git installed. Please install git before proceeding")
     if _temp == 128:
         raise OSError(f"The repository from which you are attempting to install this package is not a git repository.\nPlease follow the online instructions for proper installation ({__url__}/#installation).")
-    EnBiD_meta = import_source_file("EnBiD_meta", root_dir / PYENBID / SRC_DIR / '__metadata__.py')
-    Galaxia_meta = import_source_file("Galaxia_meta", root_dir / PYGALAXIA / SRC_DIR / '__metadata__.py')
+    #
+    EnBiD_src_root = root_dir / PYENBID / SRC_DIR
+    EnBiD_src = import_source_file("EnBiD_src", EnBiD_src_root / '__init__.py')
+    EnBiD_meta = import_source_file("EnBiD_src.__metadata__", EnBiD_src_root / '__metadata__.py')
+    #
+    Galaxia_src_root = root_dir / PYGALAXIA / SRC_DIR
+    Galaxia_src = import_source_file("Galaxia_src", Galaxia_src_root / '__init__.py')
+    Galaxia_meta = import_source_file("Galaxia_src.__metadata__", Galaxia_src_root / '__metadata__.py')
     #### TODO: below's fix is ugly, there must be something better to do!
     if pathlib.Path(sys.argv[0]).name == 'setup.py' and (sys.argv[1] == 'egg_info' if len(sys.argv)>1 else False) and 'pip' in sys.argv[-1]:
         subprocess.call(['pip', 'cache', 'remove', '*_ananke'])
@@ -82,3 +89,6 @@ def append_install_requires_with_submodules(install_requires):
         f"EnBiD_ananke @ file://{pathlib.Path(EnBiD_meta.__file__).parent.parent}",
         f"Galaxia_ananke @ file://{pathlib.Path(Galaxia_meta.__file__).parent.parent}"
         ]
+
+
+make_cmdclass = versioneer.get_cmdclass
