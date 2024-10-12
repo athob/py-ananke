@@ -86,7 +86,7 @@ Likewise, a number of studies made use of @Sanderson:2020's existing ``ananke`` 
 - @Shipp:2023 investigated the detectability of MW stellar streams in the Dark Energy Survey [@DES:2015;@DES:2018;@DES:2021], for which they produced mock star catalogs mimicking DECam photometry from disrupted star clusters identified around simulated MW-mass galaxies
 - @Nguyen:2023 produced a synthetic survey mimicking the third data release of Gaia [@Gaia:2021;@Gaia:2023], similar to how @Sanderson:2020 produced a synthetic survey of the second data release of Gaia [@Gaia:2018]
 
-These studies required significant effort caused by the challenges of using ``ananke``, which ``py-ananke`` is designed to alleviate. Current ongoing projects are already using the new ``py-ananke`` package, and are benefiting significantly from his ergonomicity.
+These studies required significant effort caused by the challenges of using ``ananke``, which ``py-ananke`` is designed to alleviate. Current ongoing projects are already using the new ``py-ananke`` package, and are benefiting significantly from its ergonomics.
 
 # Acknowledgements
 
