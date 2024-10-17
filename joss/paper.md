@@ -86,7 +86,7 @@ Likewise, a number of studies made use of @Sanderson:2020's existing ``ananke`` 
 - @Shipp:2023 investigated the detectability of MW stellar streams in the Dark Energy Survey [@DES:2015;@DES:2018;@DES:2021], for which they produced mock star catalogs mimicking DECam photometry from disrupted star clusters identified around simulated MW-mass galaxies
 - @Nguyen:2023 produced a synthetic survey mimicking the third data release of Gaia [@Gaia:2021;@Gaia:2023], similar to how @Sanderson:2020 produced a synthetic survey of the second data release of Gaia [@Gaia:2018]
 
-These studies required significant effort caused by the challenges of using ``ananke``, which ``py-ananke`` is designed to alleviate. Current ongoing projects are already using the new ``py-ananke`` package, and are benefiting significantly from his ergonomicity.
+These studies required significant effort caused by the challenges of using ``ananke``, which ``py-ananke`` is designed to alleviate. Current ongoing projects are already using the new ``py-ananke`` package, and are benefiting significantly from its ergonomics.
 
 # Acknowledgements
 
@@ -94,7 +94,7 @@ ACRT and RES acknowledge support from the Research Corporation through the Scial
 
 Package development used resources provided by the Frontera computing project at the Texas Advanced Computing Center (TACC). Frontera is made possible by NSF award OAC-1818253. Simulations used as test data for the package, and which form part of the example suite, were run using Early Science Allocation 1923870 and analyzed using computing resources supported by the Scientific Computing Core at the Flatiron Institute. This work used additional computational resources from the University of Texas at Austin and TACC, the NASA Advanced Supercomputing (NAS) Division and the NASA Center for Climate Simulation (NCCS), and the Extreme Science and Engineering Discovery Environment (XSEDE), which was supported by NSF grant number OCI-1053575.
 
-Package development and testing was performed in part at the Aspen Center for Physics, supported by NSF grant PHY-1607611, and at the Kavli Insitute for Theoretical Physics workshop "Dynamical Models for Stars and Gas in Galaxies in the Gaia Era" and 2019 Santa Barbara Gaia Sprint, supported in part by the NSF under Grant No. NSF PHY-1748958 and by the Heising-Simons Foundation.
+Package development and testing was performed in part at the Aspen Center for Physics, supported by NSF grant PHY-1607611, and at the Kavli Institute for Theoretical Physics workshop "Dynamical Models for Stars and Gas in Galaxies in the Gaia Era" and 2019 Santa Barbara Gaia Sprint, supported in part by the NSF under Grant No. NSF PHY-1748958 and by the Heising-Simons Foundation.
 
 The authors are grateful to Anthony Brown and Jos de Bruijne for their cooperation in building the Gaia error models. We also acknowledge the input and encouragement of the participants of the Gaia Sprints (2017--2019), Gaia Challenge series (2012-2019) and "anankethon" workshops. We also thank Josh Borrow and the other developers of ``swiftsimio`` [@swiftsimio:2020] for their help in preparing our documentation inspired by the latter.
 
