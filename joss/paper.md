@@ -1,5 +1,5 @@
 ---
-title: Generating synthetic star catalogs from simulated data for next-gen observatories with ``py-ananke``
+title: Generating synthetic star catalogs from simulated data for next-gen observatories with py-ananke
 tags:
   - Python
   - C++
