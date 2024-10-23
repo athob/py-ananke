@@ -1,0 +1,68 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Thob
+  given-names: Adrien C. R.
+  orcid: "https://orcid.org/0000-0001-7928-1973"
+- family-names: Sanderson
+  given-names: Robyn E.
+  orcid: "https://orcid.org/0000-0003-3939-3297"
+- family-names: Eden
+  given-names: Andrew P.
+  orcid: "https://orcid.org/0009-0004-2146-4856"
+- family-names: Nikakhtar
+  given-names: Farnik
+  orcid: "https://orcid.org/0000-0002-3641-4366"
+- family-names: Panithanpaisal
+  given-names: Nondh
+  orcid: "https://orcid.org/0000-0001-5214-8822"
+- family-names: Garavito-Camargo
+  given-names: Nicolás
+  orcid: "https://orcid.org/0000-0001-7107-1744"
+- family-names: Sharma
+  given-names: Sanjib
+  orcid: "https://orcid.org/0000-0002-0920-809X"
+contact:
+- family-names: Thob
+  given-names: Adrien C. R.
+  orcid: "https://orcid.org/0000-0001-7928-1973"
+doi: 10.5281/zenodo.13942954
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Thob
+    given-names: Adrien C. R.
+    orcid: "https://orcid.org/0000-0001-7928-1973"
+  - family-names: Sanderson
+    given-names: Robyn E.
+    orcid: "https://orcid.org/0000-0003-3939-3297"
+  - family-names: Eden
+    given-names: Andrew P.
+    orcid: "https://orcid.org/0009-0004-2146-4856"
+  - family-names: Nikakhtar
+    given-names: Farnik
+    orcid: "https://orcid.org/0000-0002-3641-4366"
+  - family-names: Panithanpaisal
+    given-names: Nondh
+    orcid: "https://orcid.org/0000-0001-5214-8822"
+  - family-names: Garavito-Camargo
+    given-names: Nicolás
+    orcid: "https://orcid.org/0000-0001-7107-1744"
+  - family-names: Sharma
+    given-names: Sanjib
+    orcid: "https://orcid.org/0000-0002-0920-809X"
+  date-published: 2024-10-23
+  doi: 10.21105/joss.06234
+  issn: 2475-9066
+  issue: 102
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 6234
+  title: Generating synthetic star catalogs from simulated data for
+    next-gen observatories with py-ananke
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.06234"
+  volume: 9
+title: Generating synthetic star catalogs from simulated data for
+  next-gen observatories with py-ananke

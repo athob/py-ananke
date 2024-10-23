@@ -1,0 +1,22 @@
+{
+    "access_right": "open",
+    "title": "py-ananke: a Python pipeline to generate synthetic star catalogs from cosmological simulations",
+    "creators": [
+        {
+            "affiliation": "University of Pennsylvania",
+            "name": "Thob, Adrien C. R.",
+            "orcid": "0000-0001-7928-1973"
+        }
+    ],
+    "contributors": [
+        {
+            "affiliation": "University of Pennsylvania",
+            "name": "Sanderson, Robyn E.",
+            "orcid": "0000-0003-3939-3297",
+            "type": "Supervisor"
+        }
+    ],
+    "license": "GPL-3.0-or-later",
+    "upload_type": "software",
+    "description": "Python package that offers a comprehensive pipeline designed to generate mock astrometric and photometric catalogs of synthetic stars derived from particle-based simulated star populations"
+}

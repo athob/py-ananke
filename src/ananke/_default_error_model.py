@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Contains the definition of default error model estimators for
-existing isochrones of Galaxia.
+existing photometric systems of Galaxia.
 
 Please note that this module is private.
 """
@@ -20,9 +20,9 @@ def _temp(df):
     Table 3 which returns uncertainty estimates in magnitudes, mas, mas/yr,
     km/s.
     """
-    GMAG  = 'gaiadr2_gmag'
-    RPMAG = 'gaiadr2_g_rpmag'
-    BPMAG = 'gaiadr2_g_bpmag'
+    GMAG  = 'gaia__dr2_g'
+    RPMAG = 'gaia__dr2_grp'
+    BPMAG = 'gaia__dr2_gbp'
     PI    = 'pi'
     RA    = 'ra'
     DEC   = 'dec'
@@ -66,4 +66,4 @@ def _temp(df):
     errors[VR][maglims] = np.sqrt(errors[VR][maglims]**2 + 0.11**2) #systematic floor
     return errors
 
-ph.available_photo_systems['padova/GAIADR2'].default_error_model = _temp
+ph.available_photo_systems['padova/GAIA__DR2'].default_error_model = _temp
