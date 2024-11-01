@@ -57,7 +57,7 @@ Work in progress...
 
 ## On-going development
 
-Currently in beta, `py-ananke` has been [submitted for publication to The Journal of Open Source Software](https://joss.theoj.org/papers/357c0445d891fc10e1b0ca4dba1e3cc0) and is presently [under peer review](https://github.com/openjournals/joss-reviews/issues/6234). Simultaneously, an early version has been deposited on arXiv, an open-access repository for electronic preprints and postprints. You can access the arXiv submission [here](https://arxiv.org/abs/2312.02268).
+`py-ananke` is now [published in The Journal of Open Source Software](https://joss.theoj.org/papers/10.21105/joss.06234). You can also access the associated arXiv publication [here](https://arxiv.org/abs/2312.02268).
 
 ### Upcoming updates
 
@@ -85,37 +85,42 @@ You can readily access the code in the [main GitHub repository](https://github.c
 
 If py-ananke has played a role in your research project or software development, we kindly request that you acknowledge and cite the project. Citing py-ananke not only gives credit to the dedicated efforts of its creators but also helps others discover and benefit from this software.
 
-To cite `py-ananke`, please use DOI `10.48550/arXiv.2312.02268` as a reference in your publications, or cite as the following:
+To cite `py-ananke`, please use DOI `10.21105/joss.06234` as a reference in your publications, or cite as the following:
 
 ```text
-Thob, Adrien C. R. et al. 2023, “Generating synthetic star catalogs from simulated data for next-gen observatories with py-ananke”, arXiv e-prints, doi:10.48550/arXiv.2312.02268.
+Thob, Adrien C. R. et al. 2024, “Generating synthetic star catalogs from simulated data for next-gen observatories with py-ananke”, The Journal of Open Source Software, 9, 6234, doi:10.21105/joss.06234.
 ```
 
 Alternatively, you may use [one of the entries associated with `py-ananke` as listed by The SAO/NASA Astrophysics Data System](https://ui.adsabs.harvard.edu/abs/2023arXiv231202268T/exportcitation), such as the following BibTeX entry:
 
 ```text
-@ARTICLE{2023arXiv231202268T,
-       author = {{Thob}, Adrien C.~R. and {Sanderson}, Robyn E. and {Eden}, Andrew P. and {Nikakhtar}, Farnik and {Panithanpaisal}, Nondh and {Garavito-Camargo}, Nicol{\'a}s and {Sharma}, Sanjib},
+@ARTICLE{2024JOSS....9.6234T,
+       author = {{Thob}, Adrien and {Sanderson}, Robyn and {Eden}, Andrew and {Nikakhtar}, Farnik and {Panithanpaisal}, Nondh and {Garavito-Camargo}, Nicol{\'a}s and {Sharma}, Sanjib},
         title = "{Generating synthetic star catalogs from simulated data for next-gen observatories with py-ananke}",
-      journal = {arXiv e-prints},
-     keywords = {Astrophysics - Astrophysics of Galaxies, Astrophysics - Instrumentation and Methods for Astrophysics},
-         year = 2023,
-        month = dec,
-          eid = {arXiv:2312.02268},
-        pages = {arXiv:2312.02268},
-          doi = {10.48550/arXiv.2312.02268},
+      journal = {The Journal of Open Source Software},
+     keywords = {C++, astronomy, galaxies, stars, simulations, mock observations, Jupyter Notebook, Python, Astrophysics - Astrophysics of Galaxies, Astrophysics - Instrumentation and Methods for Astrophysics},
+         year = 2024,
+        month = oct,
+       volume = {9},
+       number = {102},
+          eid = {6234},
+        pages = {6234},
+          doi = {10.21105/joss.06234},
 archivePrefix = {arXiv},
        eprint = {2312.02268},
  primaryClass = {astro-ph.GA},
-       adsurl = {https://ui.adsabs.harvard.edu/abs/2023arXiv231202268T},
-      adsnote = {Provided by the SAO/NASA Astrophysics Data System},
-         note = {Submitted to The Journal of Open Source Software, in review}
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2024JOSS....9.6234T},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
 }
 ```
 
 ### Dissemination
 
-<!-- Below, you will find a selection of scientific papers that showcase the potential and capabilities of py-ananke. These papers serve as valuable resources for understanding the practical implementation and impact of py-ananke in various domains. -->
+Below, you will find a selection of scientific papers that showcase the potential and capabilities of py-ananke. These papers serve as valuable resources for understanding the practical implementation and impact of py-ananke in various domains.
+
+- Gray et al. 2024, “EDGE: A new model for Nuclear Star Cluster formation in dwarf galaxies”, arXiv e-prints, arXiv:2405.19286, [doi:10.48550/arXiv.2405.19286](https://arxiv.org/pdf/2405.19286)
+
+`py-ananke` has also been discussed extensively in various workshops and conferences.
 
 - [`py-ananke_v0.0.2-beta2`](https://github.com/athob/py-ananke/releases/tag/v0.0.2-beta2) was featured at [EAS 2023 in Krakow](https://eas2023programme.kuoni-congress.info/presentation/generating-mock-euclid-and-roman-surveys-of-stellar-halos-of-simulated-nearby-galaxies-using-the-py-ananke-pipeline) as an e-poster, check it at [this URL](https://k-poster.kuoni-congress.info/eas-2023/poster/5bf40113-efa9-4bfc-89a5-b67ebd81f7dd).
 - [`py-ananke_v0.1.0-beta2`](https://github.com/athob/py-ananke/releases/tag/v0.1.0-beta2) was featured at the 243rd AAS meeting in New Orleans.
