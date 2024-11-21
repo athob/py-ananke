@@ -91,24 +91,28 @@ class ExtinctionDriver:
     @property
     def galaxia_output(self) -> Galaxia.Output:
         return self.ananke._galaxia_output
-    
-    @cached_property
-    def column_density_interpolator(self) -> LinearNDInterpolator:
-        # center particle coordinates on the observer
-        xhel_p = self.ananke.particle_positions - self.ananke.observer_position[:3]
+
+    @classmethod
+    def _make_column_density_interpolator(cls, xhel_p, lognh, rshell = (0,np.inf)) -> LinearNDInterpolator:
         # TODO coordinates.SkyCoord(**dict(zip([*'uvw'], xhel_p.T)), unit='kpc', representation_type='cartesian', frame='galactic') ?
         # return distances from observer to particles
         dhel_p = np.linalg.norm(xhel_p, axis=1)
         # return the min,max extent of the shell of particles used by Galaxia (with a +-0.1 margin factor)
-        rmin, rmax = self.ananke.universe_rshell * [0.9, 1.1]
+        rmin, rmax = rshell * [0.9, 1.1]
         # create a mask for the particles that are within the shell
         sel_interp = (rmin<dhel_p) & (dhel_p<rmax)
-        # get the array of column densities input by the user to each particle
-        lognh = self.particle_column_densities
         # generate the interpolator to use to get the column densities at positions in and around the particles
-        self.__interpolator = LinearNDInterpolator(xhel_p[sel_interp],lognh[sel_interp],rescale=False)  # TODO investigate NaN outputs from interpolator
-        self.__interpolator(3*(0,))
-        return self.__interpolator
+        interpolator = LinearNDInterpolator(np.vstack([3*[0],xhel_p[sel_interp]]),
+                                            np.hstack([0,10**lognh[sel_interp]]),
+                                            rescale=False)  # TODO investigate NaN outputs from interpolator
+        interpolator(3*(0,))
+        return interpolator
+
+    @cached_property
+    def column_density_interpolator(self) -> LinearNDInterpolator:
+        return self._make_column_density_interpolator(self.ananke.particle_positions - self.ananke.observer_position[:3],
+                                                      self.particle_column_densities,
+                                                      rshell=self.ananke.universe_rshell)
 
     @staticmethod
     def _expand_and_apply_extinction_coeff(df, A0, extinction_coeff) -> Dict[str, ArrayLike]:
@@ -144,7 +148,7 @@ class ExtinctionDriver:
                                                                  Dict[str, NDArray]],
                                                         Dict[str, float]]]) -> None:
         column_densities = df[cls._interp_col_dens] = column_density_interpolator(np.array(df[cls._galaxia_pos]))
-        reddening        = df[cls._reddening]       = q_dust * 10**column_densities
+        reddening        = df[cls._reddening]       = q_dust * column_densities
         extinction_0     = df[cls._extinction_0]    = total_to_selective * reddening
         if extinction_keys.difference(df.columns):
             for mag_name, extinction in cls._expand_and_apply_extinction_coeff(df, extinction_0, extinction_coeff).items():
