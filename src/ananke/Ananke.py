@@ -283,7 +283,7 @@ class Ananke:
     def _pp_extinctions(self) -> None:
         pipeline_name = "extinctions"
         print(f"Running {pipeline_name} post-processing pipeline")
-        if self._extinctiondriver_proxy._col_density in self.particles:
+        if self._extinctiondriver_proxy._col_density in self.particles or self._extinctiondriver_proxy.mw_model is not None:
             _ = self.extinctions
 
     def _pp_errors(self) -> None:

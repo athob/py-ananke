@@ -54,6 +54,11 @@ class ExtinctionDriver:
                 Optical total-to-selective extinction ratio between extinction and
                 reddenning A(V)/E(B-V). Default to {TOTAL_TO_SELECTIVE}
 
+            mw_model : str
+                Optional, can be used to request a specific MW extinction model.
+                The only available model is "Marshall2006", future updates may
+                expand model availability.
+
             extinction_coeff : function [df --> dict(band: coefficient)]
                 Use to specify a function that returns extinction coefficients per
                 band from characterisitics of the extinguished star given in a
@@ -95,7 +100,7 @@ class ExtinctionDriver:
         # return distances from observer to particles
         dhel_p = np.linalg.norm(xhel_p, axis=1)
         # return the min,max extent of the shell of particles used by Galaxia (with a +-0.1 margin factor)
-        rmin, rmax = rshell * [0.9, 1.1]
+        rmin, rmax = np.array(rshell) * [0.9, 1.1]
         # create a mask for the particles that are within the shell
         sel_interp = (rmin<dhel_p) & (dhel_p<rmax)
         # generate the interpolator to use to get the column densities at positions in and around the particles
@@ -107,9 +112,15 @@ class ExtinctionDriver:
 
     @cached_property
     def column_density_interpolator(self) -> utils.LinearNDInterpolatorExtrapolator:
-        return self._make_column_density_interpolator(self.ananke.particle_positions - self.ananke.observer_position[:3],
-                                                      self.particle_column_densities,
-                                                      rshell=self.ananke.universe_rshell)
+        if self.mw_model is None:
+            xhel_p = self.ananke.particle_positions - self.ananke.observer_position[:3]
+            lognh = self.particle_column_densities
+            rshell = self.ananke.universe_rshell
+        elif self.mw_model == 'Marshall2006':
+            xhel_p = np.array(marshall2006['x','y','z'].as_array().tolist())
+            lognh = np.log10(marshall2006['ext'].value.unmasked/(self.q_dust*self.total_to_selective))
+            rshell = (0, np.inf)
+        return self._make_column_density_interpolator(xhel_p, lognh, rshell=rshell)
 
     @staticmethod
     def _expand_and_apply_extinction_coeff(df, A0, extinction_coeff) -> Dict[str, ArrayLike]:
@@ -157,8 +168,10 @@ class ExtinctionDriver:
     @property
     def extinctions(self):  # TODO figure out output typing
         galaxia_output = self.galaxia_output
+        print(f"Preparing interpolator")
         coldens_interpolator = self.column_density_interpolator
         extinction_keys = self._extinction_keys
+        print(f"Now parallelizing extinctions pipeline")
         galaxia_output.apply_post_process_pipeline_and_flush(self.__pp_pipeline, coldens_interpolator,
                                                              self.q_dust, self.total_to_selective, extinction_keys,
                                                              self.extinction_coeff, flush_with_columns=self.ananke.galaxia_catalogue_mag_names)
@@ -175,6 +188,10 @@ class ExtinctionDriver:
     @property
     def total_to_selective(self) -> float:
         return self.parameters.get('total_to_selective', TOTAL_TO_SELECTIVE)
+
+    @property
+    def mw_model(self) -> float:
+        return self.parameters.get('mw_model', None)
     
     @property
     def extinction_coeff(self) -> List[Union[Callable[[pd.DataFrame], Dict[str, NDArray]], Dict[str, float]]]:

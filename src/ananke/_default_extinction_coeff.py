@@ -60,7 +60,7 @@ marshall2006 = table.vstack([
                 for k in ['GLON', 'GLAT', f'r{i}', f'ext{i}']})
             for i in range(1,t['nb'][0]+1)])
         for t in marshall2006.group_by('nb').groups])
-marshall2006 = table.hstack([marshall2006, table.QTable(dict(zip(['x','y','z'], coordinates.Galactic(l=marshall2006['GLON'], b=marshall2006['GLAT'], distance=marshall2006['r']).cartesian.xyz)))])
+marshall2006 = table.hstack([marshall2006, table.QTable(dict(zip(['x','y','z'], coordinates.Galactic(l=marshall2006['GLON'], b=marshall2006['GLAT'], distance=marshall2006['r']).cartesian.xyz.to('kpc'))))])
 marshall2006['ext'] /= universal_extinction_law([dict(zip(ph.available_photo_systems['padova/GAIA__0+TYCHO+2MASS'].mag_names, ph.available_photo_systems['padova/GAIA__0+TYCHO+2MASS'].effective_wavelengths))['Ks'].to('micron').value])[0]
 
 
