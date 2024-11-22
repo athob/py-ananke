@@ -12,8 +12,6 @@ from warnings import warn
 from functools import cached_property
 from collections.abc import Iterable
 import numpy as np
-import scipy as sp
-from scipy.interpolate import LinearNDInterpolator
 import pandas as pd
 
 from . import utils
@@ -68,7 +66,6 @@ class ExtinctionDriver:
                 values.
         """
         self.__ananke: Ananke = ananke
-        self.__interpolator: Union[LinearNDInterpolator, None] = None
         self.__parameters: Dict[str, Any] = kwargs
         self._test_extinction_coeff()
     
@@ -93,7 +90,7 @@ class ExtinctionDriver:
         return self.ananke._galaxia_output
 
     @classmethod
-    def _make_column_density_interpolator(cls, xhel_p, lognh, rshell = (0,np.inf)) -> LinearNDInterpolator:
+    def _make_column_density_interpolator(cls, xhel_p, lognh, rshell = (0,np.inf)) -> utils.LinearNDInterpolatorExtrapolator:
         # TODO coordinates.SkyCoord(**dict(zip([*'uvw'], xhel_p.T)), unit='kpc', representation_type='cartesian', frame='galactic') ?
         # return distances from observer to particles
         dhel_p = np.linalg.norm(xhel_p, axis=1)
@@ -102,14 +99,14 @@ class ExtinctionDriver:
         # create a mask for the particles that are within the shell
         sel_interp = (rmin<dhel_p) & (dhel_p<rmax)
         # generate the interpolator to use to get the column densities at positions in and around the particles
-        interpolator = LinearNDInterpolator(np.vstack([3*[0],xhel_p[sel_interp]]),
-                                            np.hstack([0,10**lognh[sel_interp]]),
-                                            rescale=False)  # TODO investigate NaN outputs from interpolator
+        interpolator = utils.LinearNDInterpolatorExtrapolator(np.vstack([3*[0],xhel_p[sel_interp]]),
+                                                              np.hstack([0,10**lognh[sel_interp]]),
+                                                              rescale=False)  # TODO investigate NaN outputs from interpolator
         interpolator(3*(0,))
         return interpolator
 
     @cached_property
-    def column_density_interpolator(self) -> LinearNDInterpolator:
+    def column_density_interpolator(self) -> utils.LinearNDInterpolatorExtrapolator:
         return self._make_column_density_interpolator(self.ananke.particle_positions - self.ananke.observer_position[:3],
                                                       self.particle_column_densities,
                                                       rshell=self.ananke.universe_rshell)
@@ -142,7 +139,7 @@ class ExtinctionDriver:
         return set(map(self._extinction_template, self.ananke.galaxia_catalogue_mag_names))
 
     @classmethod
-    def __pp_pipeline(cls, df: pd.DataFrame, column_density_interpolator: LinearNDInterpolator,
+    def __pp_pipeline(cls, df: pd.DataFrame, column_density_interpolator: utils.LinearNDInterpolatorExtrapolator,
                            q_dust: float, total_to_selective: float, extinction_keys: Set[str],
                            extinction_coeff: List[Union[Callable[[pd.DataFrame],
                                                                  Dict[str, NDArray]],

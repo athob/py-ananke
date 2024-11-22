@@ -2,14 +2,16 @@
 """
 Module miscellaneous utilities
 """
-from typing import Optional, List
+from typing import Optional, List, Union
 import re
 import docstring_parser as DS_parser
+import numpy as np
+from scipy import interpolate
 import pandas as pd
 
 from Galaxia_ananke import utils as Gutils
 
-__all__ = ['compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'RecordingDataFrame', 'extract_parameters_from_docstring', 'extract_notes_from_docstring']
+__all__ = ['compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'RecordingDataFrame', 'extract_parameters_from_docstring', 'extract_notes_from_docstring', 'LinearNDInterpolatorExtrapolator']
 
 
 compare_given_and_required = Gutils.compare_given_and_required
@@ -60,3 +62,25 @@ def extract_notes_from_docstring(docstring: str) -> str:
     output_DS.style = input_DS.style
     output_DS.meta = [meta for meta in input_DS.meta if 'notes' in meta.args]
     return re.split("\n-*\n",DS_parser.compose(output_DS),maxsplit=1)[1]
+
+
+class LinearNDInterpolatorExtrapolator:
+    def __init__(self, points: np.ndarray, values: np.ndarray, **kwargs):
+        """
+        Use ND-linear interpolation over the convex hull of points, and nearest neighbor outside (for
+        extrapolation)
+
+        Idea taken from https://stackoverflow.com/questions/20516762/extrapolate-with-linearndinterpolator
+        Adapted from https://stackoverflow.com/a/75327466
+        """
+        self.linear_interpolator = interpolate.LinearNDInterpolator(points, values, **kwargs)
+        self.nearest_neighbor_interpolator = interpolate.NearestNDInterpolator(points, values, **kwargs)
+        self.linear_interpolator((points.shape[1] if points.ndim == 2 else 1)*[0])
+        self.nearest_neighbor_interpolator((points.shape[1] if points.ndim == 2 else 1)*[0])
+
+    def __call__(self, *args) -> Union[float, np.ndarray]:
+        t = self.linear_interpolator(*args)
+        t[np.isnan(t)] = self.nearest_neighbor_interpolator(*args)[np.isnan(t)]
+        if t.size == 1:
+            return t.item(0)
+        return t
