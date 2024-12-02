@@ -107,7 +107,8 @@ class ExtinctionDriver:
         interpolator = utils.LinearNDInterpolatorExtrapolator(np.vstack([3*[0],xhel_p[sel_interp]]),
                                                               np.hstack([0,10**lognh[sel_interp]]),
                                                               rescale=False)  # TODO investigate NaN outputs from interpolator
-        interpolator(3*(0,))
+        calibrating_center = np.mean(xhel_p[sel_interp],axis=0)
+        interpolator(calibrating_center)
         return interpolator
 
     @cached_property
@@ -173,8 +174,10 @@ class ExtinctionDriver:
         extinction_keys = self._extinction_keys
         print(f"Now parallelizing extinctions pipeline")
         galaxia_output.apply_post_process_pipeline_and_flush(self.__pp_pipeline, coldens_interpolator,
-                                                             self.q_dust, self.total_to_selective, extinction_keys,
-                                                             self.extinction_coeff, flush_with_columns=self.ananke.galaxia_catalogue_mag_names)
+                                                             self.q_dust, self.total_to_selective,
+                                                             extinction_keys, self.extinction_coeff,
+                                                             flush_with_columns=self.ananke.galaxia_catalogue_mag_names,
+                                                             consolidate_partitions_per_process=True)
         return galaxia_output[list(extinction_keys)]
 
     @property
