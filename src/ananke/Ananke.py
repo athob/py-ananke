@@ -49,7 +49,8 @@ class Ananke:
     """
         Represents a single ananke pipeline.
     """
-    _mass = Galaxia.Input._mass  # mass in solar masses
+    _mass = 'mass'  # current mass in solar masses
+    _massinit = Galaxia.Input._massinit  # initial mass in solar masses
     _pos = Galaxia.Input._pos  # position in kpc
     _vel = Galaxia.Input._vel  # velocity in km/s
     _age = Galaxia.Input._age  # log age in yr 
@@ -459,6 +460,10 @@ class Ananke:
         return self.particles[self._mass]
 
     @property
+    def particle_initialmasses(self) -> NDArray:
+        return self.particles[self._massinit]
+    
+    @property
     def particle_positions(self) -> NDArray:
         return self.particles[self._pos]
 
@@ -476,7 +481,7 @@ class Ananke:
 
     @property
     def particle_parentids(self) -> NDArray:
-        return self.particles[self._par_id] if self._par_id in self.particles else np.arange(self.particle_masses.shape[0])
+        return self.particles[self._par_id] if self._par_id in self.particles else np.arange(self.particle_initialmasses.shape[0])
 
     @property
     def name(self) -> str:
