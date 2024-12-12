@@ -33,7 +33,7 @@ class Ananke:
     """
         Represents a single ananke pipeline.
     """
-    # _mass = 'mass'  # mass in solar masses
+    _mass = Galaxia.Input._mass  # mass in solar masses
     _massinit = Galaxia.Input._massinit  # initial mass in solar masses
     _pos = Galaxia.Input._pos  # position in kpc
     _vel = Galaxia.Input._vel  # velocity in km/s
