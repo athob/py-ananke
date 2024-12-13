@@ -5,7 +5,7 @@ Contains the Ananke class definition
 Please note that this module is private. The Ananke class is
 available in the main ``ananke`` namespace - use that instead.
 """
-from typing import TYPE_CHECKING, Any, Union, Tuple, List, Dict
+from typing import TYPE_CHECKING, Any, Optional, Union, Tuple, List, Dict
 from numpy.typing import NDArray
 from Galaxia_ananke.photometry.PhotoSystem import PhotoSystem
 from astropy.units import Quantity
@@ -57,7 +57,7 @@ class Ananke:
     _intrinsic_mag_formatter = '{}_Intrinsic'
     _intrinsic_mag_template = _intrinsic_mag_formatter.format
 
-    def __init__(self, particles: Dict[str, NDArray], name: str, ngb: int = 64,
+    def __init__(self, particles: Dict[str, NDArray], name: str, ngb: int = 64, caching: bool = False,
                  d_params: Dict[str, Any] = {}, e_params: Dict[str, Any] = {}, err_params: Dict[str, Any] = {}, **kwargs: Dict[str, Any]) -> None:
         """
             Parameters
@@ -71,6 +71,11 @@ class Ananke:
 
             ngb : int
                 Number of neighbours to use in kernel density estimation
+
+            caching : bool
+                EXPERIMENTAL: activate caching mode at every steps to resume
+                work where it was left at from a previous python instance if
+                needed. Default to True.
 
             d_params : dict
                 Parameters to configure the kernel density estimation. Use
@@ -169,6 +174,7 @@ class Ananke:
         self.__galaxia_input: Union[Galaxia.Input, None] = None
         self.__galaxia_survey: Union[Galaxia.Survey, None] = None
         self.__galaxia_output: Union[Galaxia.Output, None] = None
+        self.caching: bool = caching
 
     __init__.__doc__ = __init__.__doc__.format(_def_obs_position=_def_obs_position,
                                                _def_obs_velocity=_def_obs_velocity,
@@ -209,18 +215,18 @@ class Ananke:
         return ErrorModelDriver(self, **err_params)
 
     def _prepare_galaxia_input(self, rho, **kwargs) -> Galaxia.Input:
-        input_kwargs = {'name': self.name, 'ngb': self.ngb, **kwargs}  # input_dir, k_factor
+        input_kwargs = {'name': self.name, 'ngb': self.ngb, 'caching': self.caching, **kwargs}  # input_dir, k_factor
         if self.__galaxia_input is None:
             self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], **input_kwargs)
         return self.__galaxia_input
 
-    def _prepare_galaxia_survey(self, input: Galaxia.Input, surveyname = 'survey', **kwargs) -> Galaxia.Survey:  # TODO why is kwarg surveyname unused?
-        survey_kwargs = {'photo_sys': self.photo_sys, **kwargs}  # surveyname
+    def _prepare_galaxia_survey(self, input: Galaxia.Input, **kwargs) -> Galaxia.Survey:
+        survey_kwargs = {'photo_sys': self.photo_sys, **kwargs}
         if self.__galaxia_survey is None:
             self.__galaxia_survey = Galaxia.Survey(input, **survey_kwargs)
         return self.__galaxia_survey
 
-    def _run_galaxia(self, rho, **kwargs) -> Galaxia.Output:
+    def _run_galaxia(self, rho, caching: Optional[bool] = None, **kwargs) -> Galaxia.Output:
         """
             Method to generate the survey out of the pipeline particles given
             a dictionary of kernel density estimates
@@ -230,6 +236,12 @@ class Ananke:
             rho : dict({POS_TAG}=array_like, {VEL_TAG}=array_like)
                 A dictionary of same-length arrays representing kernel density
                 estimates for the pipeline particles
+
+            caching : bool
+                EXPERIMENTAL: activate caching mode at every steps to resume
+                work where it was left at from a previous python instance if
+                needed. Default to existing caching given to object at
+                construction.
 
             input_dir : string
             output_dir : string
@@ -255,6 +267,8 @@ class Ananke:
             output : :obj:`Galaxia.Output`
                 Handler with utilities to utilize the output survey and its data.
             """
+        if caching is not None:
+            self.caching: bool = caching
         input: Galaxia.Input = self._prepare_galaxia_input(rho, **{k:kwargs.pop(k) for k in ['input_dir', 'k_factor'] if k in kwargs})
         survey: Galaxia.Survey = self._prepare_galaxia_survey(input, **{k:kwargs.pop(k) for k in ['surveyname'] if k in kwargs})
         self.__galaxia_output: Galaxia.Output = survey.make_survey(**self._galaxia_kwargs, **kwargs)
@@ -291,6 +305,12 @@ class Ananke:
             
             Parameters
             ----------
+            caching : bool
+                EXPERIMENTAL: activate caching mode at every steps to resume
+                work where it was left at from a previous python instance if
+                needed. Default to existing caching given to object at
+                construction.
+
             input_dir : string
             output_dir : string
             i_o_dir : string
@@ -320,9 +340,9 @@ class Ananke:
         """
         if 'i_o_dir' in kwargs:  kwargs['input_dir'] = kwargs['output_dir'] = kwargs.pop('i_o_dir')
         galaxia_output: Galaxia.Output = self._run_galaxia(self.densities, **kwargs)
-        self._pp_observed_mags(galaxia_output)
-        self._pp_extinctions()
-        self._pp_errors()
+        galaxia_output.check_state_before_running(description="ananke_pp_observed_mags")(self._pp_observed_mags)(galaxia_output)
+        galaxia_output.check_state_before_running(description="ananke_pp_extinctions", level=1)(self._pp_extinctions)()
+        galaxia_output.check_state_before_running(description="ananke_pp_errors", level=1)(self._pp_errors)()
         return galaxia_output
 
     @property
@@ -360,6 +380,17 @@ class Ananke:
     @property
     def ngb(self) -> int:
         return self.__ngb
+    
+    @property
+    def caching(self) -> bool:
+        return self.__caching
+    
+    @caching.setter
+    def caching(self, value: bool) -> None:
+        if value:
+            warn(f"You have requested caching mode, be aware this feature is currently experimental and may result in unintended behaviour.", DeprecationWarning, stacklevel=2)
+        self.__caching: bool = value
+        self._densitiesdriver_proxy.parameters['caching'] = self.caching
     
     @property
     def universe(self) -> Universe:
