@@ -75,12 +75,19 @@ class LinearNDInterpolatorExtrapolator:
         """
         self.linear_interpolator = interpolate.LinearNDInterpolator(points, values, **kwargs)
         self.nearest_neighbor_interpolator = interpolate.NearestNDInterpolator(points, values, **kwargs)
-        self.linear_interpolator((points.shape[1] if points.ndim == 2 else 1)*[0])
-        self.nearest_neighbor_interpolator((points.shape[1] if points.ndim == 2 else 1)*[0])
+        self._calibrating_center = np.mean(points,axis=0)
+        self.linear_interpolator(self._calibrating_center)
+        from_calibrating_center = points - self._calibrating_center
+        self._calibrating_outer = self._calibrating_center + 2*from_calibrating_center[
+            np.argmax(np.linalg.norm(from_calibrating_center)
+                      if points.ndim == 2
+                      else np.abs(from_calibrating_center))
+                      ]
+        self.nearest_neighbor_interpolator(self._calibrating_outer)
 
     def __call__(self, *args) -> Union[float, np.ndarray]:
         t = self.linear_interpolator(*args)
-        t[np.isnan(t)] = self.nearest_neighbor_interpolator(*args)[np.isnan(t)]
+        t[np.isnan(t)] = self.nearest_neighbor_interpolator(*args)[np.isnan(t)]  # TODO reduce unnecessary interpolation use?
         if t.size == 1:
             return t.item(0)
         return t
