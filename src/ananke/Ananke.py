@@ -17,7 +17,8 @@ import pandas as pd
 import Galaxia_ananke as Galaxia
 import Galaxia_ananke.photometry as Galaxia_photo
 
-from .constants import *
+from . import utils
+from ._constants import *
 from .Universe import Universe
 from .Observer import Observer
 from .DensitiesDriver import DensitiesDriver
@@ -53,7 +54,6 @@ class Ananke:
     _def_uni_rshell = Universe._default_rshell
     _def_photo_sys = Galaxia.DEFAULT_PSYS
     _def_cmd_mags = Galaxia.DEFAULT_CMD
-    _def_cmd_box = Galaxia.DEFAULT_CMD_BOX
     _intrinsic_mag_formatter = '{}_Intrinsic'
     _intrinsic_mag_template = _intrinsic_mag_formatter.format
 
@@ -79,18 +79,18 @@ class Ananke:
 
             d_params : dict
                 Parameters to configure the kernel density estimation. Use
-                class method display_density_docs to find what parameters can
-                be defined
+                class method ``display_density_docs`` to find what parameters
+                can be defined
 
             e_params : dict
                 Parameters to configure the extinction pipeline. Use class
-                method display_extinction_docs to find what parameters can be
-                defined
+                method ``display_extinction_docs`` to find what parameters can
+                be defined
 
             err_params : dict
                 Parameters to configure the error model pipeline. Use class
-                method display_errormodel_docs to find what parameters can be
-                defined
+                method ``display_errormodel_docs`` to find what parameters can
+                be defined
 
             observer : array-like shape (3,) or dict of array-like shape (3,)
                 Coordinates for the observer in phase space. Position and
@@ -99,67 +99,58 @@ class Ananke:
                 enough. If specifying both position and velocity, please
                 provide a dictionary containing both coordinates as array-like
                 objects of shape (3,), respectively denoting the position and
-                velocity coordinates with keys `{_pos}` and `{_vel}`.
-                Position coordinates default to
-                {_def_obs_position}
-                and velocity coordinates default to
-                {_def_obs_velocity}
+                velocity coordinates with keys ``{_pos}`` and ``{_vel}``.
+                Position coordinates default to::
+                
+                    {_def_obs_position}
+                
+                and velocity coordinates default to::
+                
+                    {_def_obs_velocity}
             
             rshell : array-like shape (2,)
                 Range in kpc of distances from the observer position of the
-                particles that are to be considered. Default to
-                {_def_uni_rshell}.
+                particles that are to be considered. Default to::
+                
+                    {_def_uni_rshell}
 
             photo_sys : string or list
                 Name(s) of the photometric system(s) Galaxia should use to
-                generate the survey. Default to {_def_photo_sys}.
+                generate the survey. Default to ``{_def_photo_sys}``.
                 Available photometric systems can be queried with the class
-                method display_available_photometric_systems.
+                method ``display_available_photometric_systems``.
 
             cmd_magnames : string or dict
                 Names of the filters Galaxia should use for the color-magnitude
                 diagram box selection.
                 The input can be given as string in which case it must meet the
-                following format:
+                following format::
+
                     "band1,band2-band3"
-                where band1 is the magnitude filter and (band2, band3) are the
-                filters that define the band2-band3 color index.
+                
+                where ``band1`` is the magnitude filter and ``(band2, band3)``
+                are the filters that define the ``band2-band3`` color index.
                 Alternatively, a dictionary can be passed with the following
-                format:
+                format::
+
                     dict('magnitude': band1,
                          'color_minuend': band2,
                          'color_subtrahend': band3)
+                
                 The filter names must correspond to filters that are part of
                 the first chosen photometric system in photo_sys. Default to
-                {_def_cmd_mags}.
-                
-            app_mag_lim_lo : float
-            app_mag_lim_hi : float
-            abs_mag_lim_lo : float
-            abs_mag_lim_hi : float
-            color_lim_lo : float
-            color_lim_hi : float
-                These allow to specify the limits of the chosen color-magnitude
-                diagram box selection (lo for lower and hi for upper). app_mag,
-                abs_mag and color represent respectively limits in apparent
-                magnitudes, absolute magnitudes and color index. Default values
-                follow those set in:
-                {_def_cmd_box}.
-
-            fsample : float
-                Sampling rate from 0 to 1 for the resulting synthetic star
-                survey. 1 returns a full sample while any value below returns
-                partial surveys. Default to 1.
+                ``'{_def_cmd_mags}'``.
+            {parameters_from_galaxia}
             
             Notes
             -----
-            The input particles must include same-length arrays for every key of
-            the list of keys return by property required_particles_keys.
-            Particular attention should be given to arrays of keys '{_pos}' and
-            '{_vel}' that must be shaped as (Nx3) arrays of, respectively,
-            position and velocity vectors. Use the class method
-            make_dummy_particles_input to generate a dummy example of such input
-            dictionary.
+            The input particles must include same-length arrays for every key
+            of the list of keys return by property required_particles_keys.
+            Particular attention should be given to arrays of keys ``'{_pos}'``
+            and ``'{_vel}'`` that must be shaped as (Nx3) arrays of,
+            respectively, position and velocity vectors. Use the class method
+            ``make_dummy_particles_input`` to generate a dummy example of such
+            input dictionary.
         """
         self.__particles: Dict[str, NDArray] = particles
         self.__name: str = name
@@ -180,8 +171,13 @@ class Ananke:
                                                _def_obs_velocity=_def_obs_velocity,
                                                _def_uni_rshell=_def_uni_rshell,
                                                _def_photo_sys=_def_photo_sys,
+                                               parameters_from_galaxia = utils.extract_parameters_from_docstring(
+                                                   Galaxia.Survey.make_survey.__doc__,
+                                                   parameters=[
+                                                       'fsample',
+                                                       'app_mag_lim_lo, app_mag_lim_hi, abs_mag_lim_lo, abs_mag_lim_hi, color_lim_lo, color_lim_hi'
+                                                    ]).replace("\n", "\n            "),
                                                _def_cmd_mags=_def_cmd_mags,
-                                               _def_cmd_box=_def_cmd_box,
                                                _pos=_pos, _vel=_vel)
 
     def _prepare_universe_proxy(self, kwargs: Dict[str, Any]) -> Universe:
@@ -221,7 +217,7 @@ class Ananke:
         return self.__galaxia_input
 
     def _prepare_galaxia_survey(self, input: Galaxia.Input, **kwargs) -> Galaxia.Survey:
-        survey_kwargs = {'photo_sys': self.photo_sys, **kwargs}
+        survey_kwargs = {'photo_sys': self.photo_sys, **kwargs}  # surveyname
         if self.__galaxia_survey is None:
             self.__galaxia_survey = Galaxia.Survey(input, **survey_kwargs)
         return self.__galaxia_survey
@@ -243,8 +239,7 @@ class Ananke:
                 needed. Default to existing caching given to object at
                 construction.
 
-            input_dir : string
-            output_dir : string
+            input_dir, output_dir : string
                 Optional arguments to specify paths for the directories where
                 ananke should generate input and output data.
                 
@@ -257,15 +252,16 @@ class Ananke:
             surveyname : string
                 Optional name Galaxia should use for the output files. Default
                 to 'survey'.
-
-            **kwargs
-                Additional parameters used by the method make_survey of
-                Galaxia's Survey objects
+            {parameters_from_galaxia}
 
             Returns
             -------
             output : :obj:`Galaxia.Output`
                 Handler with utilities to utilize the output survey and its data.
+
+            Notes
+            -----
+            {notes_from_galaxia_output}
             """
         if caching is not None:
             self.caching: bool = caching
@@ -274,7 +270,16 @@ class Ananke:
         self.__galaxia_output: Galaxia.Output = survey.make_survey(**self._galaxia_kwargs, **kwargs)
         return self._galaxia_output
     
-    _run_galaxia.__doc__ = _run_galaxia.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG)
+    _run_galaxia.__doc__ = _run_galaxia.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG,
+                                                       parameters_from_galaxia = utils.extract_parameters_from_docstring(
+                                                           Galaxia.Survey.make_survey.__doc__,
+                                                           ignore=[
+                                                               'fsample', 'cmd_magnames', 'parfile', 'output_dir',
+                                                               'rSun0, rSun1, rSun2', 'vSun0, vSun1, vSun2', 'r_max, r_min',
+                                                               'app_mag_lim_lo, app_mag_lim_hi, abs_mag_lim_lo, abs_mag_lim_hi, color_lim_lo, color_lim_hi'
+                                                            ]).replace("\n", "\n            "),
+                                                       notes_from_galaxia_output = utils.extract_notes_from_docstring(
+                                                           Galaxia.Output.__init__.__doc__).replace("\n", "\n            "))
     
     @classmethod
     def __pp_observed_mags(cls, df: pd.DataFrame, mag_names, _dmod) -> None:
@@ -291,13 +296,14 @@ class Ananke:
     def _pp_extinctions(self) -> None:
         pipeline_name = "extinctions"
         print(f"Running {pipeline_name} post-processing pipeline")
-        if self._extinctiondriver_proxy._col_density in self.particles:
+        if self._extinctiondriver_proxy._col_density in self.particles or self._extinctiondriver_proxy.mw_model is not None:
             _ = self.extinctions
 
     def _pp_errors(self) -> None:
         pipeline_name = "error_modeling"
         print(f"Running {pipeline_name} post-processing pipeline")
-        _ = self.errors
+        if not self._errormodeldriver_proxy.ignore:
+            _ = self.errors
 
     def run(self, **kwargs) -> Galaxia.Output:
         """
@@ -311,32 +317,46 @@ class Ananke:
                 needed. Default to existing caching given to object at
                 construction.
 
-            input_dir : string
-            output_dir : string
-            i_o_dir : string
+            input_dir, output_dir, i_o_dir : string
                 Optional arguments to specify paths for the directories where
                 ananke should generate input and output data. If the i_o_dir
                 keyword argument is provided, it overrides any path given to
                 the input_dir and output_dir keyword arguments.
-
-            k_factor : float
-                Scaling factor applied to the kernels lengths to adjust all
-                the kernels sizes uniformly. Lower values reduces the kernels
-                extents, while higher values increases them.
-                Default to 1 (no adjustment).
-                 
-            surveyname : string
-                Optional name Galaxia should use for the output files. Default
-                to 'survey'.
-
-            **kwargs
-                Additional parameters used by the method make_survey of
-                Galaxia's Survey objects
+            {parameters_from_run_galaxia}
 
             Returns
             -------
             galaxia_output : :obj:`Galaxia.Output`
-                Handler with utilities to utilize the output survey and its data.
+                Handler with utilities to utilize the output survey and its
+                data.
+            
+            Notes
+            -----
+            {notes_from_run_galaxia}
+
+            Ananke complements this set of properties with those that are
+            generated from its various post-processing subroutines. As a result
+            the ``photosys_filtername``-formatted columns contain the apparent
+            photometry, computed with addition of extinction and instrument
+            error. Each component contributing to this final apparent
+            photometry are stored in other columns with the
+            ``photosys_filtername`` format with relevant prefixing/suffixing as
+            listed below:
+            
+            * The intrinsic photometry are stored in the suffixed ``{_Intrinsic}`` keys
+            * The extinction values are stored in the prefixed ``{A_}`` keys
+            * The properties' standard error are stored in the suffixed ``{_Sig}`` keys
+            * The properties' actually drawn gaussian error are stored in the suffixed ``_Err`` keys
+
+            Note that because the error model generally also affect astrometry,
+            the latter 2 suffixing rules also apply to the astrometric
+            properties.
+            
+            The extinction post-processing routine also add 3 properties:
+
+            * The line-of-sight hydrogen column density in {log10_NH_unit} and decimal logarithmic scale via key ``{log10_NH}``
+            * The reddening index via key ``{E_B_V}``
+            * The reference extinction (which extinction coefficients are based on) via key ``{A_0}``
         """
         if 'i_o_dir' in kwargs:  kwargs['input_dir'] = kwargs['output_dir'] = kwargs.pop('i_o_dir')
         galaxia_output: Galaxia.Output = self._run_galaxia(self.densities, **kwargs)
@@ -345,6 +365,22 @@ class Ananke:
         galaxia_output.check_state_before_running(description="ananke_pp_errors", level=1)(self._pp_errors)()
         return galaxia_output
 
+    run.__doc__ = run.__doc__.format(
+        parameters_from_run_galaxia = utils.extract_parameters_from_docstring(
+            _run_galaxia.__doc__,
+            ignore=['input_dir, output_dir', 'rho']).replace("\n", "\n            "),
+        notes_from_run_galaxia = utils.extract_notes_from_docstring(
+            _run_galaxia.__doc__).replace("\n", "\n            "),
+        _Intrinsic = _intrinsic_mag_template(""),
+        A_ = "A_",  # TODO
+        _Sig = "_Sig",
+        _Err = "_Err",
+        log10 = "$log_{10}$",
+        log10_NH_unit = "$cm^{-2}$",
+        log10_NH = _log10NH,
+        E_B_V = "E(B-V)",
+        A_0 = "A_0")
+    
     @property
     def _densitiesdriver_proxy(self) -> DensitiesDriver:
         return self.__densitiesdriver_proxy
@@ -488,13 +524,13 @@ class Ananke:
     @classmethod
     def make_dummy_dictionary_description(cls) -> str:
         description = """{particles_dictionary_description}
-                Ananke compute the phase space densities that are used to
-                determine particle smoothing lengths, but the dictionary can
-                include pre-computed densities with the following entries:
-                {density_properties}
+            Ananke compute the phase space densities that are used to
+            determine particle smoothing lengths, but the dictionary can
+            include pre-computed densities with the following entries:
+            {density_properties}
         """.format(particles_dictionary_description=Galaxia.Input.particles_dictionary_description,
                    density_properties=''.join(
-                       [f"\n                 -{desc} via key `{str(key)}`"
+                       [f"\n            * {desc} via key ``{str(key)}``"
                         for key, desc in [Galaxia.Input._positiondensity_prop,
                                           Galaxia.Input._velocitydensity_prop]]))
         return description
@@ -518,7 +554,10 @@ class Ananke:
             -------
             p : dict
                 Dummy example input particles dictionary for Ananke.
-                {dummy_dictionary_description}
+            
+            Notes
+            -----
+            {dummy_dictionary_description}
         """
         p = Galaxia.make_dummy_particles_input(n_parts)
         p[cls._log10NH] = 22 + np.random.randn(n_parts)
@@ -549,7 +588,7 @@ class Ananke:
     @classmethod
     def display_EnBiD_docs(cls) -> None:
         """
-            Print the EnBiD.run_enbid docstring
+            Print the EnBiD.run_enbid method docstring
         """
         DensitiesDriver.display_EnBiD_docs()
 
@@ -566,6 +605,13 @@ class Ananke:
             Print the ErrorModelDriver constructor docstring
         """
         print(ErrorModelDriver.__init__.__doc__)
+
+    @classmethod
+    def display_galaxia_makesurvey_docs(cls) -> None:
+        """
+            Print the Galaxia.Survey.make_survey method docstring
+        """
+        print(Galaxia.Survey.make_survey.__doc__)
 
 
 Ananke.make_dummy_particles_input.__func__.__doc__ = Ananke.make_dummy_particles_input.__doc__.format(

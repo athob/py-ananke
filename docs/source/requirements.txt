@@ -1,0 +1,8 @@
+sphinx-math-dollar
+sphinx-copybutton
+myst-parser>=3
+myst-nb>=1
+linkify-it-py
+pydata-sphinx-theme
+markdown
+lxml

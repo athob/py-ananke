@@ -12,13 +12,11 @@ from warnings import warn
 from functools import cached_property
 from collections.abc import Iterable
 import numpy as np
-import scipy as sp
-from scipy.interpolate import LinearNDInterpolator
 import pandas as pd
 
 from . import utils
 from ._default_extinction_coeff import *
-from .constants import *
+from ._constants import *
 
 if TYPE_CHECKING:
     from .Ananke import Ananke
@@ -56,6 +54,11 @@ class ExtinctionDriver:
                 Optical total-to-selective extinction ratio between extinction and
                 reddenning A(V)/E(B-V). Default to {TOTAL_TO_SELECTIVE}
 
+            mw_model : str
+                Optional, can be used to request a specific MW extinction model.
+                The only available model is "Marshall2006", future updates may
+                expand model availability.
+
             extinction_coeff : function [df --> dict(band: coefficient)]
                 Use to specify a function that returns extinction coefficients per
                 band from characterisitics of the extinguished star given in a
@@ -68,7 +71,6 @@ class ExtinctionDriver:
                 values.
         """
         self.__ananke: Ananke = ananke
-        self.__interpolator: Union[LinearNDInterpolator, None] = None
         self.__parameters: Dict[str, Any] = kwargs
         self._test_extinction_coeff()
     
@@ -91,33 +93,43 @@ class ExtinctionDriver:
     @property
     def galaxia_output(self) -> Galaxia.Output:
         return self.ananke._galaxia_output
-    
-    @cached_property
-    def column_density_interpolator(self) -> LinearNDInterpolator:
-        # center particle coordinates on the observer
-        xhel_p = self.ananke.particle_positions - self.ananke.observer_position[:3]
+
+    @classmethod
+    def _make_column_density_interpolator(cls, xhel_p, lognh, rshell = (0,np.inf)) -> utils.LinearNDInterpolatorExtrapolator:
         # TODO coordinates.SkyCoord(**dict(zip([*'uvw'], xhel_p.T)), unit='kpc', representation_type='cartesian', frame='galactic') ?
         # return distances from observer to particles
         dhel_p = np.linalg.norm(xhel_p, axis=1)
         # return the min,max extent of the shell of particles used by Galaxia (with a +-0.1 margin factor)
-        rmin, rmax = self.ananke.universe_rshell * [0.9, 1.1]
+        rmin, rmax = np.array(rshell) * [0.9, 1.1]
         # create a mask for the particles that are within the shell
         sel_interp = (rmin<dhel_p) & (dhel_p<rmax)
-        # get the array of column densities input by the user to each particle
-        lognh = self.particle_column_densities
         # generate the interpolator to use to get the column densities at positions in and around the particles
-        self.__interpolator = LinearNDInterpolator(xhel_p[sel_interp],lognh[sel_interp],rescale=False)  # TODO investigate NaN outputs from interpolator
-        self.__interpolator(3*(0,))
-        return self.__interpolator
+        interpolator = utils.LinearNDInterpolatorExtrapolator(np.vstack([3*[0],xhel_p[sel_interp]]),
+                                                              np.hstack([0,10**lognh[sel_interp]]),
+                                                              rescale=False)  # TODO investigate NaN outputs from interpolator
+        calibrating_center = np.mean(xhel_p[sel_interp],axis=0)
+        interpolator(calibrating_center)
+        return interpolator
+
+    @cached_property
+    def column_density_interpolator(self) -> utils.LinearNDInterpolatorExtrapolator:
+        if self.mw_model is None:
+            xhel_p = self.ananke.particle_positions - self.ananke.observer_position[:3]
+            lognh = self.particle_column_densities
+            rshell = self.ananke.universe_rshell
+        elif self.mw_model == 'Marshall2006':
+            xhel_p = np.array(marshall2006['x','y','z'].as_array().tolist())
+            lognh = np.log10(marshall2006['ext'].value.unmasked/(self.q_dust*self.total_to_selective))
+            rshell = (0, np.inf)
+        return self._make_column_density_interpolator(xhel_p, lognh, rshell=rshell)
 
     @staticmethod
     def _expand_and_apply_extinction_coeff(df, A0, extinction_coeff) -> Dict[str, ArrayLike]:
         if not isinstance(extinction_coeff, Iterable):
             extinction_coeff = [extinction_coeff]
         return {
-            key: (coeff * A0.to_numpy()
-                   if isinstance(coeff, np.ndarray) and not isinstance(A0, np.ndarray)
-                   else coeff * A0)  # TODO temporary fix while waiting issue https://github.com/vaexio/vaex/issues/2405 to be fixed
+            key: ((coeff if isinstance(coeff, np.ndarray) else coeff.to_numpy())*
+                  (A0 if isinstance(A0, np.ndarray) else A0.to_numpy()))  # TODO temporary fix while waiting issue https://github.com/vaexio/vaex/issues/2405 to be fixed
             for coeff_dict in [
                 (ext_coeff(df) if callable(ext_coeff) else ext_coeff)
                 for ext_coeff in extinction_coeff
@@ -139,13 +151,13 @@ class ExtinctionDriver:
         return set(map(self._extinction_template, self.ananke.galaxia_catalogue_mag_names))
 
     @classmethod
-    def __pp_pipeline(cls, df: pd.DataFrame, column_density_interpolator: LinearNDInterpolator,
+    def __pp_pipeline(cls, df: pd.DataFrame, column_density_interpolator: utils.LinearNDInterpolatorExtrapolator,
                            q_dust: float, total_to_selective: float, extinction_keys: Set[str],
                            extinction_coeff: List[Union[Callable[[pd.DataFrame],
                                                                  Dict[str, NDArray]],
                                                         Dict[str, float]]]) -> None:
         column_densities = df[cls._interp_col_dens] = column_density_interpolator(np.array(df[cls._galaxia_pos]))
-        reddening        = df[cls._reddening]       = q_dust * 10**column_densities
+        reddening        = df[cls._reddening]       = q_dust * column_densities
         extinction_0     = df[cls._extinction_0]    = total_to_selective * reddening
         if extinction_keys.difference(df.columns):
             for mag_name, extinction in cls._expand_and_apply_extinction_coeff(df, extinction_0, extinction_coeff).items():
@@ -157,11 +169,15 @@ class ExtinctionDriver:
     @property
     def extinctions(self):  # TODO figure out output typing
         galaxia_output = self.galaxia_output
+        print(f"Preparing interpolator")
         coldens_interpolator = self.column_density_interpolator
         extinction_keys = self._extinction_keys
+        print(f"Now parallelizing extinctions pipeline")
         galaxia_output.apply_post_process_pipeline_and_flush(self.__pp_pipeline, coldens_interpolator,
-                                                             self.q_dust, self.total_to_selective, extinction_keys,
-                                                             self.extinction_coeff, flush_with_columns=self.ananke.galaxia_catalogue_mag_names)
+                                                             self.q_dust, self.total_to_selective,
+                                                             extinction_keys, self.extinction_coeff,
+                                                             flush_with_columns=self.ananke.galaxia_catalogue_mag_names,
+                                                             consolidate_partitions_per_process=True)
         return galaxia_output[list(extinction_keys)]
 
     @property
@@ -175,6 +191,10 @@ class ExtinctionDriver:
     @property
     def total_to_selective(self) -> float:
         return self.parameters.get('total_to_selective', TOTAL_TO_SELECTIVE)
+
+    @property
+    def mw_model(self) -> float:
+        return self.parameters.get('mw_model', None)
     
     @property
     def extinction_coeff(self) -> List[Union[Callable[[pd.DataFrame], Dict[str, NDArray]], Dict[str, float]]]:

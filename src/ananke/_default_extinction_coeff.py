@@ -6,17 +6,18 @@ existing photometric systems of Galaxia.
 Please note that this module is private.
 """
 import numpy as np
-from astropy.units import Quantity
+import pyvo
+from astropy import units, table, coordinates
 
 from Galaxia_ananke import photometry as ph
 
 
-__all__ = ['universal_extinction_law']
+__all__ = ['universal_extinction_law', 'marshall2006']
 
 
 def _wang_and_chen_2019_eq_9(lambda_eff):
     # for optical 0.3 to 1 micron
-    lambda_eff = Quantity(lambda_eff, unit='micron').value
+    lambda_eff = units.Quantity(lambda_eff, unit='micron').value
     coefficients = np.array([[1.0, 0.7499, -0.1086, -0.08909, 0.02905, 0.01069, 0.001707, -0.001002]]).T
     Y = 1/lambda_eff - 1.82
     return np.matmul(Y[...,np.newaxis]**np.arange(coefficients.shape[0])[np.newaxis], coefficients)[...,0]
@@ -24,7 +25,7 @@ def _wang_and_chen_2019_eq_9(lambda_eff):
 
 def _wang_and_chen_2019_eq_10(lambda_eff):
     # for near IR 1 to 3.33 micron
-    lambda_eff = Quantity(lambda_eff, unit='micron').value
+    lambda_eff = units.Quantity(lambda_eff, unit='micron').value
     coefficient = 0.3722
     exponent = -2.070
     return coefficient * lambda_eff**exponent
@@ -32,7 +33,7 @@ def _wang_and_chen_2019_eq_10(lambda_eff):
 
 def universal_extinction_law(lambda_eff):
     # return extinction coefficient A_lambda/A_V at lambda effective
-    lambda_eff = Quantity(lambda_eff, unit='micron').value
+    lambda_eff = units.Quantity(lambda_eff, unit='micron').value
     choose = np.vstack([
         np.zeros(lambda_eff.shape[0]),
         _wang_and_chen_2019_eq_9(lambda_eff),
@@ -42,6 +43,25 @@ def universal_extinction_law(lambda_eff):
     choice[(0.3 < lambda_eff) & (lambda_eff < 1)] = 1  # optical
     choice[(1 < lambda_eff) & (lambda_eff < 3.33)] = 2  # NIR
     return choose[np.arange(choose.shape[0]), choice]
+
+
+def __remove_description_from_quantity(quantity):
+    quantity.info.description = ""
+    return quantity
+
+
+voresource = pyvo.registry.search(ivoid="ivo://CDS.VizieR/J/A+A/453/635")[0]
+marshall2006 = voresource.get_service("tap").run_sync(f'select * from "{list(voresource.get_tables().keys())[0]}"').to_qtable()
+marshall2006.sort('nb')
+marshall2006 = table.vstack([
+        table.vstack([
+            table.QTable({
+                k.replace(f'{i}',''): __remove_description_from_quantity(t[k])
+                for k in ['GLON', 'GLAT', f'r{i}', f'ext{i}']})
+            for i in range(1,t['nb'][0]+1)])
+        for t in marshall2006.group_by('nb').groups])
+marshall2006 = table.hstack([marshall2006, table.QTable(dict(zip(['x','y','z'], coordinates.Galactic(l=marshall2006['GLON'], b=marshall2006['GLAT'], distance=marshall2006['r']).cartesian.xyz.to('kpc'))))])
+marshall2006['ext'] /= universal_extinction_law([dict(zip(ph.available_photo_systems['padova/GAIA__0+TYCHO+2MASS'].mag_names, ph.available_photo_systems['padova/GAIA__0+TYCHO+2MASS'].effective_wavelengths))['Ks'].to('micron').value])[0]
 
 
 def _temp(df):

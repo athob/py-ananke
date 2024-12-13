@@ -15,7 +15,7 @@ import pandas as pd
 
 from . import utils
 from ._default_error_model import *
-from .constants import *
+from ._constants import *
 
 if TYPE_CHECKING:
     from .Ananke import Ananke
@@ -127,6 +127,10 @@ class ErrorModelDriver:
     @property
     def parameters(self) -> Dict[str, Any]:
         return self.__parameters
+    
+    @property
+    def ignore(self) -> bool:
+        return self.parameters.get('ignore', False)
     
     @property
     def error_model(self) -> List[Union[Callable[[pd.DataFrame], Dict[str, NDArray]], Dict[str, float]]]:  # TODO design
