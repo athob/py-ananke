@@ -222,7 +222,7 @@ class Ananke:
             self.__galaxia_survey = Galaxia.Survey(input, **survey_kwargs)
         return self.__galaxia_survey
 
-    def _run_galaxia(self, rho, caching: Optional[bool] = None, **kwargs) -> Galaxia.Output:
+    def _run_galaxia(self, rho, **kwargs) -> Galaxia.Output:
         """
             Method to generate the survey out of the pipeline particles given
             a dictionary of kernel density estimates
@@ -232,12 +232,6 @@ class Ananke:
             rho : dict({POS_TAG}=array_like, {VEL_TAG}=array_like)
                 A dictionary of same-length arrays representing kernel density
                 estimates for the pipeline particles
-
-            caching : bool
-                EXPERIMENTAL: activate caching mode at every steps to resume
-                work where it was left at from a previous python instance if
-                needed. Default to existing caching given to object at
-                construction.
 
             input_dir, output_dir : string
                 Optional arguments to specify paths for the directories where
@@ -263,8 +257,6 @@ class Ananke:
             -----
             {notes_from_galaxia_output}
             """
-        if caching is not None:
-            self.caching: bool = caching
         input: Galaxia.Input = self._prepare_galaxia_input(rho, **{k:kwargs.pop(k) for k in ['input_dir', 'k_factor'] if k in kwargs})
         survey: Galaxia.Survey = self._prepare_galaxia_survey(input, **{k:kwargs.pop(k) for k in ['surveyname'] if k in kwargs})
         self.__galaxia_output: Galaxia.Output = survey.make_survey(**self._galaxia_kwargs, **kwargs)
@@ -305,7 +297,7 @@ class Ananke:
         if not self._errormodeldriver_proxy.ignore:
             _ = self.errors
 
-    def run(self, **kwargs) -> Galaxia.Output:
+    def run(self, caching: Optional[bool] = None, **kwargs) -> Galaxia.Output:
         """
             Method to run the pipeline
             
@@ -358,6 +350,7 @@ class Ananke:
             * The reddening index via key ``{E_B_V}``
             * The reference extinction (which extinction coefficients are based on) via key ``{A_0}``
         """
+        if caching is not None:  self.caching: bool = caching
         if 'i_o_dir' in kwargs:  kwargs['input_dir'] = kwargs['output_dir'] = kwargs.pop('i_o_dir')
         galaxia_output: Galaxia.Output = self._run_galaxia(self.densities, **kwargs)
         galaxia_output.check_state_before_running(description="ananke_pp_observed_mags")(self._pp_observed_mags)(galaxia_output)
