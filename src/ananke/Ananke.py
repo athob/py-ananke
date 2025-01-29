@@ -57,7 +57,7 @@ class Ananke:
     _intrinsic_mag_formatter = '{}_Intrinsic'
     _intrinsic_mag_template = _intrinsic_mag_formatter.format
 
-    def __init__(self, particles: Dict[str, NDArray], name: str, ngb: int = 64, caching: bool = False,
+    def __init__(self, particles: Dict[str, NDArray], name: str, ngb: int = 64, caching: bool = False, append_hash: Optional[bool] = None,
                  d_params: Dict[str, Any] = {}, e_params: Dict[str, Any] = {}, err_params: Dict[str, Any] = {}, **kwargs: Dict[str, Any]) -> None:
         """
             Parameters
@@ -76,6 +76,9 @@ class Ananke:
                 EXPERIMENTAL: activate caching mode at every steps to resume
                 work where it was left at from a previous python instance if
                 needed. Default to True.
+
+            append_hash : bool
+                TODO
 
             d_params : dict
                 Parameters to configure the kernel density estimation. Use
@@ -166,6 +169,7 @@ class Ananke:
         self.__galaxia_survey: Union[Galaxia.Survey, None] = None
         self.__galaxia_output: Union[Galaxia.Output, None] = None
         self.caching: bool = caching
+        self.append_hash: bool = append_hash
 
     __init__.__doc__ = __init__.__doc__.format(_def_obs_position=_def_obs_position,
                                                _def_obs_velocity=_def_obs_velocity,
@@ -211,7 +215,9 @@ class Ananke:
         return ErrorModelDriver(self, **err_params)
 
     def _prepare_galaxia_input(self, rho, **kwargs) -> Galaxia.Input:
-        input_kwargs = {'name': self.name, 'ngb': self.ngb, 'caching': self.caching, **kwargs}  # input_dir, k_factor
+        input_kwargs = {'name': self.name, 'ngb': self.ngb, 'caching': self.caching}
+        if self.append_hash is not None:  input_kwargs['append_hash'] = self.append_hash
+        input_kwargs = {**input_kwargs, **kwargs}  # input_dir, k_factor
         if self.__galaxia_input is None:
             self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], **input_kwargs)
         return self.__galaxia_input
@@ -297,7 +303,7 @@ class Ananke:
         if not self._errormodeldriver_proxy.ignore:
             _ = self.errors
 
-    def run(self, caching: Optional[bool] = None, **kwargs) -> Galaxia.Output:
+    def run(self, caching: Optional[bool] = None, append_hash: Optional[bool] = None, **kwargs) -> Galaxia.Output:
         """
             Method to run the pipeline
             
@@ -351,6 +357,7 @@ class Ananke:
             * The reference extinction (which extinction coefficients are based on) via key ``{A_0}``
         """
         if caching is not None:  self.caching: bool = caching
+        if append_hash is not None:  self.append_hash: bool = append_hash
         if 'i_o_dir' in kwargs:  kwargs['input_dir'] = kwargs['output_dir'] = kwargs.pop('i_o_dir')
         galaxia_output: Galaxia.Output = self._run_galaxia(self.densities, **kwargs)
         galaxia_output.check_state_before_running(description="ananke_pp_observed_mags")(self._pp_observed_mags)(galaxia_output)
@@ -420,6 +427,14 @@ class Ananke:
             warn(f"You have requested caching mode, be aware this feature is currently experimental and may result in unintended behaviour.", DeprecationWarning, stacklevel=2)
         self.__caching: bool = value
         self._densitiesdriver_proxy.parameters['caching'] = self.caching
+      
+    @property
+    def append_hash(self) -> bool:
+        return self.__append_hash
+    
+    @append_hash.setter
+    def append_hash(self, value: bool) -> None:
+        self.__append_hash: bool = value
     
     @property
     def universe(self) -> Universe:
