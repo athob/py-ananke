@@ -8,16 +8,18 @@ import docstring_parser as DS_parser
 import numpy as np
 from scipy import interpolate, spatial
 import pandas as pd
+import vaex
 
 from Galaxia_ananke import utils as Gutils
 
-__all__ = ['compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'RecordingDataFrame', 'extract_parameters_from_docstring', 'extract_notes_from_docstring', 'LinearNDInterpolatorLOSExtrapolator']
+__all__ = ['compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'PDOrVaexDF', 'RecordingDataFrame', 'extract_parameters_from_docstring', 'extract_notes_from_docstring', 'LinearNDInterpolatorLOSExtrapolator']
 
 
 compare_given_and_required = Gutils.compare_given_and_required
 
 confirm_equal_length_arrays_in_dict = Gutils.confirm_equal_length_arrays_in_dict
 
+PDOrVaexDF = Union[pd.DataFrame, vaex.DataFrame]
 
 class RecordingDataFrame(pd.DataFrame):
     """

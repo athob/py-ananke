@@ -32,6 +32,8 @@ class ErrorModelDriver:
     _sigma_template = _sigma_formatter.format
     _error_formatter = '{}_Err'
     _error_template = _error_formatter.format
+    _clean_formatter = '{}_Clean'
+    _clean_template = _clean_formatter.format
     _extra_output_keys = ()
 
     def __init__(self, ananke: Ananke, **kwargs: Dict[str, Any]) -> None:
@@ -94,27 +96,52 @@ class ErrorModelDriver:
         return set(map(self._error_template, self.ananke.galaxia_catalogue_mag_names))
 
     @classmethod
-    def __pp_pipeline(cls, df: pd.DataFrame, error_keys: Set[str],
-                           error_model: List[Union[Callable[[pd.DataFrame],
+    def __pp_pipeline(cls, df: utils.PDOrVaexDF, error_keys: Set[str],
+                           error_model: List[Union[Callable[[utils.PDOrVaexDF],
                                                             Dict[str, NDArray]],
-                                                   Dict[str, float]]]) -> None:
+                                                   Dict[str, float]]], _dmod: str,
+                           _intrinsic_mag_template: Callable[[str],str],
+                           _extinction_template: Callable[[str],str]) -> None:
         if error_keys.difference(df.columns):
             for prop_name, error in cls._expand_and_apply_error_model(df, error_model).items():
                 # pre-generate the keys to use for the standard error and its actual gaussian drawn error of property prop_name
-                prop_sig_name, prop_err_name = cls._sigma_template(prop_name), cls._error_template(prop_name)
-                # assign the column of the standard error values for property prop_name in the final catalogue output 
-                df[prop_sig_name] = error
-                # assign the column of the actual gaussian drawn error values for property prop_name in the final catalogue output 
-                df[prop_err_name] = error*np.random.randn(df.shape[0])
-                # add the drawn error value to the existing quantity for property prop_name
-                df[prop_name] += df[prop_err_name]
-                # with_columns.append(prop_name)
+                prop_sig_name, prop_err_name, prop_clean_name = cls._sigma_template(prop_name), cls._error_template(prop_name), cls._clean_template(prop_name)
+                prop_intrinsic_name = _intrinsic_mag_template(prop_name)
+                prop_extinction_name = _extinction_template(prop_name)
+                prop_is_mag = prop_intrinsic_name in df.columns
+                if prop_sig_name not in df.columns:
+                    # assign the column of the standard error values for property prop_name in the final catalogue output 
+                    df[prop_sig_name] = error
+                if prop_err_name not in df.columns:
+                    # assign the column of the actual gaussian drawn error values for property prop_name in the final catalogue output 
+                    df[prop_err_name] = df[prop_sig_name].to_numpy()*np.random.randn(df.shape[0])
+                if not prop_is_mag:
+                    if prop_clean_name not in df.column_names:
+                        df[prop_clean_name] = df[prop_name]
+                # determine if drawn error has already been added to property
+                i_max_err = np.abs(df[prop_err_name] if isinstance(df, pd.DataFrame) else df[prop_err_name].to_pandas_series()).argmax()
+                max_err = df[prop_err_name][i_max_err:i_max_err+1].to_numpy()[0]
+                prop_at_max_err = df[prop_name][i_max_err:i_max_err+1].to_numpy()[0]
+                clean_prop_at_max_err = (
+                    (df[prop_intrinsic_name][i_max_err:i_max_err+1].to_numpy()
+                    + df[_dmod][i_max_err:i_max_err+1].to_numpy()
+                    + (df[prop_extinction_name][i_max_err:i_max_err+1].to_numpy()
+                        if prop_extinction_name in df.columns else 0))
+                    if prop_is_mag else
+                    df[prop_clean_name][i_max_err:i_max_err+1].to_numpy()
+                    )[0]
+                if np.abs(clean_prop_at_max_err + max_err - prop_at_max_err) > 2*np.abs(np.nextafter(clean_prop_at_max_err, prop_at_max_err)-clean_prop_at_max_err):
+                    # add the drawn error value to the existing quantity for property prop_name
+                    df[prop_name] += df[prop_err_name]
 
     @property
     def errors(self):  # TODO figure out output typing
         galaxia_output = self.galaxia_output
         error_keys = self._error_keys
-        galaxia_output.apply_post_process_pipeline_and_flush(self.__pp_pipeline, error_keys, self.error_model, flush_with_columns=tuple(self._error_prop_names))
+        galaxia_output.apply_post_process_pipeline_and_flush(self.__pp_pipeline, error_keys, self.error_model,
+                                                             self.galaxia_output._dmod, self.ananke._intrinsic_mag_template,
+                                                             self.ananke._extinctiondriver_proxy._extinction_template,
+                                                             flush_with_columns=tuple(self._error_prop_names))
         galaxia_output._pp_convert_icrs_to_galactic()
         return galaxia_output[list(error_keys)]
 
@@ -133,11 +160,11 @@ class ErrorModelDriver:
         return self.parameters.get('ignore', False)
     
     @property
-    def error_model(self) -> List[Union[Callable[[pd.DataFrame], Dict[str, NDArray]], Dict[str, float]]]:  # TODO design
+    def error_model(self) -> List[Union[Callable[[utils.PDOrVaexDF], Dict[str, NDArray]], Dict[str, float]]]:  # TODO design
         return self.parameters.get('error_model', [getattr(psys, 'default_error_model', self.__missing_default_error_model_for_photosystem(psys)) for psys in self.ananke.galaxia_photosystems])
     
     @staticmethod
-    def __missing_default_error_model_for_photosystem(photosystem) -> Callable[[pd.DataFrame], Dict[str, NDArray]]:
+    def __missing_default_error_model_for_photosystem(photosystem) -> Callable[[utils.PDOrVaexDF], Dict[str, NDArray]]:
         def __return_zero_error_and_warn(df):
             warn(f"Method default_error_model isn't defined for photometric system {photosystem.key}", UserWarning, stacklevel=2)
             return {mag: np.zeros(df.shape[0]) for mag in photosystem.to_export_keys}
