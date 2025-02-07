@@ -10,6 +10,7 @@ from numpy.typing import NDArray
 from Galaxia_ananke.photometry.PhotoSystem import PhotoSystem
 from astropy.units import Quantity
 from warnings import warn
+from collections.abc import Iterable
 import re
 import numpy as np
 import pandas as pd
@@ -280,10 +281,17 @@ class Ananke:
                                                            Galaxia.Output.__init__.__doc__).replace("\n", "\n            "))
     
     @classmethod
-    def __pp_observed_mags(cls, df: pd.DataFrame, mag_names, _dmod) -> None:
+    def __pp_observed_mags(cls, df: utils.PDOrVaexDF, mag_names: Iterable[str], _dmod: str) -> None:
         for mag in mag_names:
-            df[cls._intrinsic_mag_template(mag)] = df[mag]
-            df[mag] += df[_dmod]
+            intrinsic_mag = cls._intrinsic_mag_template(mag)
+            if intrinsic_mag not in df.columns:
+                df[intrinsic_mag] = df[mag]
+            i_max_dmod = np.abs(df[_dmod] if isinstance(df, pd.DataFrame) else df[_dmod].to_pandas_series()).argmax()
+            max_dmod = df[_dmod][i_max_dmod:i_max_dmod+1].to_numpy()[0]
+            mag_at_max_dmod = df[mag][i_max_dmod:i_max_dmod+1].to_numpy()[0]
+            int_mag_at_max_dmod = df[intrinsic_mag][i_max_dmod:i_max_dmod+1].to_numpy()[0]
+            if np.abs(int_mag_at_max_dmod + max_dmod - mag_at_max_dmod) > 2*np.abs(np.nextafter(int_mag_at_max_dmod, mag_at_max_dmod)-int_mag_at_max_dmod):
+                df[mag] += df[_dmod]
 
     def _pp_observed_mags(self, galaxia_output: Galaxia.Output) -> None:
         pipeline_name = "observed_magnitudes"

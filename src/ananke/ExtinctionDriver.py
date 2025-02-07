@@ -151,20 +151,35 @@ class ExtinctionDriver:
         return set(map(self._extinction_template, self.ananke.galaxia_catalogue_mag_names))
 
     @classmethod
-    def __pp_pipeline(cls, df: pd.DataFrame, column_density_interpolator: utils.LinearNDInterpolatorExtrapolator,
+    def __pp_pipeline(cls, df: utils.PDOrVaexDF, column_density_interpolator: utils.LinearNDInterpolatorExtrapolator,
                            q_dust: float, total_to_selective: float, extinction_keys: Set[str],
-                           extinction_coeff: List[Union[Callable[[pd.DataFrame],
+                           extinction_coeff: List[Union[Callable[[utils.PDOrVaexDF],
                                                                  Dict[str, NDArray]],
-                                                        Dict[str, float]]]) -> None:
-        column_densities = df[cls._interp_col_dens] = column_density_interpolator(np.array(df[cls._galaxia_pos]))
-        reddening        = df[cls._reddening]       = q_dust * column_densities
-        extinction_0     = df[cls._extinction_0]    = total_to_selective * reddening
+                                                        Dict[str, float]]], _dmod: str,
+                           _intrinsic_mag_template: Callable[[str],str]) -> None:
+        if cls._interp_col_dens not in df.columns:
+            column_densities = df[cls._interp_col_dens] = column_density_interpolator(np.array(df[cls._galaxia_pos]))
+        if cls._reddening not in df.columns:
+            reddening        = df[cls._reddening]       = q_dust * column_densities
+        if cls._extinction_0 not in df.columns:
+            extinction_0     = df[cls._extinction_0]    = total_to_selective * reddening
         if extinction_keys.difference(df.columns):
             for mag_name, extinction in cls._expand_and_apply_extinction_coeff(df, extinction_0, extinction_coeff).items():
-                # assign the column of the extinction values for filter mag_name in the final catalogue output 
-                df[cls._extinction_template(mag_name)] = extinction
-                # add the extinction value to the existing photometric magnitude for filter mag_name
-                df[mag_name] += df[cls._extinction_template(mag_name)]
+                extinction_mag_name = cls._extinction_template(mag_name)
+                if extinction_mag_name not in df.columns:
+                    # assign the column of the extinction values for filter mag_name in the final catalogue output 
+                    df[extinction_mag_name] = extinction
+                # determine if extinction value has already been added to photometric magnitude
+                i_max_ext = np.abs(df[extinction_mag_name] if isinstance(df, pd.DataFrame) else df[extinction_mag_name].to_pandas_series()).argmax()
+                max_ext = df[extinction_mag_name][i_max_ext:i_max_ext+1].to_numpy()[0]
+                mag_at_max_ext = df[mag_name][i_max_ext:i_max_ext+1].to_numpy()[0]
+                unext_mag_at_max_ext = (
+                    df[_intrinsic_mag_template(mag_name)][i_max_ext:i_max_ext+1].to_numpy()
+                    + df[_dmod][i_max_ext:i_max_ext+1].to_numpy()
+                    )[0]
+                if np.abs(unext_mag_at_max_ext + max_ext - mag_at_max_ext) > 2*np.abs(np.nextafter(unext_mag_at_max_ext, mag_at_max_ext)-unext_mag_at_max_ext):
+                    # add the extinction value to the existing photometric magnitude for filter mag_name
+                    df[mag_name] += df[extinction_mag_name]
 
     @property
     def extinctions(self):  # TODO figure out output typing
@@ -176,6 +191,7 @@ class ExtinctionDriver:
         galaxia_output.apply_post_process_pipeline_and_flush(self.__pp_pipeline, coldens_interpolator,
                                                              self.q_dust, self.total_to_selective,
                                                              extinction_keys, self.extinction_coeff,
+                                                             self.galaxia_output._dmod, self.ananke._intrinsic_mag_template,
                                                              flush_with_columns=self.ananke.galaxia_catalogue_mag_names,
                                                              consolidate_partitions_per_process=True)
         return galaxia_output[list(extinction_keys)]
@@ -197,11 +213,11 @@ class ExtinctionDriver:
         return self.parameters.get('mw_model', None)
     
     @property
-    def extinction_coeff(self) -> List[Union[Callable[[pd.DataFrame], Dict[str, NDArray]], Dict[str, float]]]:
+    def extinction_coeff(self) -> List[Union[Callable[[utils.PDOrVaexDF], Dict[str, NDArray]], Dict[str, float]]]:
         return self.parameters.get('extinction_coeff', [getattr(psys, 'default_extinction_coeff', self.__missing_default_extinction_coeff_for_photosystem(psys)) for psys in self.ananke.galaxia_photosystems])
     
     @staticmethod
-    def __missing_default_extinction_coeff_for_photosystem(photosystem) -> Callable[[pd.DataFrame], Dict[str, NDArray]]:
+    def __missing_default_extinction_coeff_for_photosystem(photosystem) -> Callable[[utils.PDOrVaexDF], Dict[str, NDArray]]:
         def __return_nan_coeff_and_warn(df):
             warn(f"Method default_extinction_coeff isn't defined for photometric system {photosystem.key}", UserWarning, stacklevel=2)
             return {mag: np.zeros(df.shape[0])*0. + coeff for mag, coeff in zip(photosystem.to_export_keys, universal_extinction_law(photosystem.effective_wavelengths))}
