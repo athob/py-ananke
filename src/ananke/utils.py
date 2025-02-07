@@ -128,7 +128,7 @@ class LinearNDInterpolatorLOSExtrapolator:
         t_is_nan = np.isnan(t)
         if t_is_nan.any():
             # convert args to xi
-            xi_is_nan = interpolate.interpnd._ndim_coords_from_arrays(args, ndim=self.linear_interpolator.points.shape[1])[t_is_nan].T
+            xi_is_nan = interpolate._interpolate._ndim_coords_from_arrays(args, ndim=self.linear_interpolator.points.shape[1])[t_is_nan].T
             # determine corresponding unitary LOS vectors
             u_xi_is_nan = xi_is_nan / np.linalg.norm(xi_is_nan, axis=0)
             # compute alphas from LOS intersecting with all hull planes
