@@ -5,12 +5,11 @@ Contains the Ananke class definition
 Please note that this module is private. The Ananke class is
 available in the main ``ananke`` namespace - use that instead.
 """
-from typing import TYPE_CHECKING, Any, Optional, Union, Tuple, List, Dict
+from typing import TYPE_CHECKING, Any, Optional, Union, Tuple, List, Dict, Iterable
 from numpy.typing import NDArray
 from Galaxia_ananke.photometry.PhotoSystem import PhotoSystem
 from astropy.units import Quantity
 from warnings import warn
-from collections.abc import Iterable
 import re
 import numpy as np
 import pandas as pd
