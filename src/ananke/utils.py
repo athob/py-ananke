@@ -107,16 +107,14 @@ class LinearNDInterpolatorLOSExtrapolator:
         - https://stackoverflow.com/a/30654855
         """
         self.linear_interpolator = interpolate.LinearNDInterpolator(points, values, **kwargs)
-        self.nearest_neighbor_interpolator = interpolate.NearestNDInterpolator(points, values, **kwargs)
         self._calibrating_center = np.mean(points,axis=0)
         self.linear_interpolator(self._calibrating_center)
-        from_calibrating_center = points - self._calibrating_center
-        self._calibrating_outer = self._calibrating_center + 2*from_calibrating_center[
-            np.argmax(np.linalg.norm(from_calibrating_center)
-                      if points.ndim == 2
-                      else np.abs(from_calibrating_center))
-                      ]
-        self.nearest_neighbor_interpolator(self._calibrating_outer)
+        # from_calibrating_center = points - self._calibrating_center
+        # self._calibrating_outer = self._calibrating_center + 2*from_calibrating_center[
+        #     np.argmax(np.linalg.norm(from_calibrating_center)
+        #               if points.ndim == 2
+        #               else np.abs(from_calibrating_center))
+        #               ]
         self._convex_hull = spatial.ConvexHull(self.linear_interpolator.tri.points[np.unique(self.linear_interpolator.tri.convex_hull)])
         self._hull_equations = self._convex_hull.equations.T
         self._hull_normals, self._hull_offsets = self._hull_equations[:-1], self._hull_equations[-1]
@@ -128,24 +126,24 @@ class LinearNDInterpolatorLOSExtrapolator:
         t_is_nan = np.isnan(t)
         if t_is_nan.any():
             # convert args to xi
-            xi_is_nan = interpolate._interpolate._ndim_coords_from_arrays(args, ndim=self.linear_interpolator.points.shape[1])[t_is_nan].T
+            xi_where_nan_t = interpolate._interpolate._ndim_coords_from_arrays(args, ndim=self.linear_interpolator.points.shape[1])[t_is_nan].T
             # determine corresponding unitary LOS vectors
-            u_xi_is_nan = xi_is_nan / np.linalg.norm(xi_is_nan, axis=0)
+            u_xi_where_nan_t = xi_where_nan_t / np.linalg.norm(xi_where_nan_t, axis=0)
             # compute alphas from LOS intersecting with all hull planes
-            alphas = -self._hull_offsets/np.dot(self._hull_normals.T, u_xi_is_nan).T
+            alphas = -self._hull_offsets/np.dot(self._hull_normals.T, u_xi_where_nan_t).T
             # force negative alphas to infinity...
             alphas[alphas<=0] = np.inf
             # ... to get the alphas we want as the minimum positive ones
             alphas_on_hull = np.min(alphas, axis=1)
             # compute run linear interpolator on corresponding positions
-            extrap_t = self.linear_interpolator((alphas_on_hull*u_xi_is_nan).T)
+            extrap_t = self.linear_interpolator((alphas_on_hull*u_xi_where_nan_t).T)
             # assess if any is still nan (due to machine precision)
             extrap_t_is_nan = np.isnan(extrap_t)
             while extrap_t_is_nan.any():
                 # replace the alphas by their previous values in machine precision (next towards 0)
                 alphas_on_hull[extrap_t_is_nan] = np.nextafter(alphas_on_hull[extrap_t_is_nan], 0)
                 # re-run linear interpolator
-                extrap_t[extrap_t_is_nan] = self.linear_interpolator((alphas_on_hull[extrap_t_is_nan]*u_xi_is_nan[:,extrap_t_is_nan]).T)
+                extrap_t[extrap_t_is_nan] = self.linear_interpolator((alphas_on_hull[extrap_t_is_nan]*u_xi_where_nan_t[:,extrap_t_is_nan]).T)
                 # re-assess if still nan, and reloop if needed
                 extrap_t_is_nan = np.isnan(extrap_t)
             # once loop is done, fill the nan that required extrapolation
