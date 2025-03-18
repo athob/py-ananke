@@ -94,3 +94,7 @@ class LinearNDInterpolatorExtrapolator:
         if t.size == 1:
             return t.item(0)
         return t
+
+
+if __name__ == '__main__':
+    raise NotImplementedError()

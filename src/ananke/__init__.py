@@ -33,4 +33,4 @@ display_errormodel_docs = Ananke.display_errormodel_docs
 
 
 if __name__ == '__main__':
-    pass
+    raise NotImplementedError()
