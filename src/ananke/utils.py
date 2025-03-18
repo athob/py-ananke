@@ -12,8 +12,9 @@ import vaex
 
 from Galaxia_ananke import utils as Gutils
 
-__all__ = ['compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'PDOrVaexDF', 'RecordingDataFrame', 'extract_parameters_from_docstring', 'extract_notes_from_docstring', 'LinearNDInterpolatorExtrapolator']
+__all__ = ['classproperty', 'compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'PDOrVaexDF', 'RecordingDataFrame', 'extract_parameters_from_docstring', 'extract_notes_from_docstring', 'LinearNDInterpolatorExtrapolator']
 
+classproperty = Gutils.classproperty
 
 compare_given_and_required = Gutils.compare_given_and_required
 
