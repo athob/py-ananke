@@ -24,6 +24,7 @@ from .Observer import Observer
 from .DensitiesDriver import DensitiesDriver
 from .ExtinctionDriver import ExtinctionDriver
 from .ErrorModelDriver import ErrorModelDriver
+from .IntegratedLightDriver import IntegratedLightDriver
 
 
 __all__ = ['Ananke']
@@ -58,7 +59,8 @@ class Ananke:
     _intrinsic_mag_template = _intrinsic_mag_formatter.format
 
     def __init__(self, particles: Dict[str, NDArray], name: str, ngb: int = 64, caching: bool = False, append_hash: Optional[bool] = None,
-                 d_params: Dict[str, Any] = {}, e_params: Dict[str, Any] = {}, err_params: Dict[str, Any] = {}, **kwargs: Dict[str, Any]) -> None:
+                 d_params: Dict[str, Any] = {}, e_params: Dict[str, Any] = {}, err_params: Dict[str, Any] = {}, il_params: Dict[str, Any] = {},
+                 **kwargs: Dict[str, Any]) -> None:
         """
             Parameters
             ----------
@@ -94,6 +96,11 @@ class Ananke:
                 Parameters to configure the error model pipeline. Use class
                 method ``display_errormodel_docs`` to find what parameters can
                 be defined
+
+            il_params : dict
+                Parameters to configure the integrated light pipeline. Use
+                class method ``display_integratedlight_docs`` to find what
+                parameters can be defined
 
             observer : array-like shape (3,) or dict of array-like shape (3,)
                 Coordinates for the observer in phase space. Position and
@@ -165,6 +172,7 @@ class Ananke:
         self.__densitiesdriver_proxy: DensitiesDriver = self._prepare_densitiesdriver_proxy(d_params)
         self.__extinctiondriver_proxy: ExtinctionDriver = self._prepare_extinctiondriver_proxy(e_params)
         self.__errormodeldriver_proxy: ErrorModelDriver = self._prepare_errormodeldriver_proxy(err_params)
+        self.__integratedlightdriver_proxy: IntegratedLightDriver = self._prepare_integratedlightdriver_proxy(il_params)
         self.__galaxia_input: Union[Galaxia.Input, None] = None
         self.__galaxia_survey: Union[Galaxia.Survey, None] = None
         self.__galaxia_output: Union[Galaxia.Output, None] = None
@@ -213,6 +221,9 @@ class Ananke:
 
     def _prepare_errormodeldriver_proxy(self, err_params: Dict[str, Any]) -> ErrorModelDriver:
         return ErrorModelDriver(self, **err_params)
+
+    def _prepare_integratedlightdriver_proxy(self, il_params: Dict[str, Any]) -> IntegratedLightDriver:
+        return IntegratedLightDriver(self, **il_params)
 
     def _prepare_galaxia_input(self, rho, **kwargs) -> Galaxia.Input:
         input_kwargs = {'name': self.name, 'ngb': self.ngb, 'caching': self.caching}
@@ -401,6 +412,10 @@ class Ananke:
         return self.__errormodeldriver_proxy
 
     @property
+    def _integratedlightdriver_proxy(self) -> IntegratedLightDriver:
+        return self.__integratedlightdriver_proxy
+
+    @property
     def particles(self) -> Dict[str, NDArray]:
         return self.__particles
 
@@ -518,6 +533,10 @@ class Ananke:
     @property
     def errors(self):  # TODO figure out output typing
         return self._errormodeldriver_proxy.errors
+
+    @property
+    def residuals(self):
+        return self._integratedlightdriver_proxy.particle_residual_photometry
 
     @property
     def parameters(self) -> Dict[str, Any]:
@@ -672,6 +691,13 @@ class Ananke:
             Print the ErrorModelDriver constructor docstring
         """
         print(ErrorModelDriver.__init__.__doc__)
+
+    @classmethod
+    def display_integratedlight_docs(cls) -> None:
+        """
+            Print the IntegratedLightDriver constructor docstring
+        """
+        print(IntegratedLightDriver.__init__.__doc__)
 
     @classmethod
     def display_galaxia_makesurvey_docs(cls) -> None:
