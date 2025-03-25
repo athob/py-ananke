@@ -27,6 +27,6 @@ setup(name=NAME,
       package_data=make_package_data(),
       include_package_data=True,
       install_requires=append_install_requires_with_submodules(
-          ["numpy>=1.22,<2", "scipy>=1.7.2,<2", "pandas>=2,<3", "docstring_parser>=0.16,<0.17"]),
+          ["numpy>=1.22,<2", "scipy>=1.7.2,<2", "pandas>=2,<3", "docstring_parser>=0.16,<0.17", "pyvo>=1.6,<2"]),
       cmdclass=make_cmdclass(),
       )
