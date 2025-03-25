@@ -8,11 +8,11 @@ available in the main ``ananke`` namespace - use that instead.
 from typing import TYPE_CHECKING, Any, Optional, Union, Tuple, List, Dict, Iterable
 from numpy.typing import NDArray
 from Galaxia_ananke.photometry.PhotoSystem import PhotoSystem
-from astropy.units import Quantity
 from warnings import warn
 import re
 import numpy as np
 import pandas as pd
+from astropy import units, coordinates
 
 import Galaxia_ananke as Galaxia
 import Galaxia_ananke.photometry as Galaxia_photo
@@ -476,6 +476,38 @@ class Ananke:
         return self.observer.velocity
 
     @property
+    def particle_observed_positions(self) -> NDArray:
+        return self.particle_positions - self.observer_position
+
+    @property
+    def particle_observed_velocities(self) -> NDArray:
+        return self.particle_velocities - self.observer_velocity
+
+    @property
+    def particle_observed_distances(self) -> NDArray:
+        return np.linalg.norm(self.particle_observed_positions, axis=1)
+
+    @property
+    def particle_input_kernels(self) -> NDArray:
+        return self._galaxia_input.kernels
+    
+    @property
+    def particle_input_position_kernels(self) -> NDArray:
+        return self.particle_input_kernels.T[0]
+    
+    @property
+    def particle_input_velocity_kernels(self) -> NDArray:
+        return self.particle_input_kernels.T[1]
+    
+    @property
+    def particle_nearest_observed_distances(self) -> NDArray:
+        return np.clip(self.particle_observed_distances - self.particle_input_position_kernels, 0.01, np.inf)
+    
+    @property
+    def particle_nearest_observed_distmod(self) -> NDArray:
+        return coordinates.Distance(self.particle_nearest_observed_distances*units.kpc).distmod.value
+
+    @property
     def densities(self) -> Dict[str, NDArray]:
         return self._densitiesdriver_proxy.densities
 
@@ -521,11 +553,11 @@ class Ananke:
         return Galaxia.Output._make_catalogue_keys(self.galaxia_photosystems)
 
     @property
-    def photosystems_zeropoints(self) -> Quantity:
+    def photosystems_zeropoints(self) -> units.Quantity:
         return np.hstack([ps.zeropoints for ps in self.galaxia_photosystems])
 
     @property
-    def photosystems_zeropoints_dict(self) -> Dict[str, Quantity]:
+    def photosystems_zeropoints_dict(self) -> Dict[str, units.Quantity]:
         return dict(zip(self.galaxia_catalogue_mag_names, self.photosystems_zeropoints))
 
     @property
@@ -547,6 +579,14 @@ class Ananke:
             raise RuntimeError("You must use the `run` method before accessing the catalogue")
         else:
             return self.__galaxia_output
+
+    @property
+    def _galaxia_survey(self) -> Galaxia.Survey:
+        return self._galaxia_output.survey
+
+    @property
+    def _galaxia_input(self) -> Galaxia.Input:
+        return self._galaxia_survey.input
 
     @classmethod
     def make_dummy_dictionary_description(cls) -> str:
