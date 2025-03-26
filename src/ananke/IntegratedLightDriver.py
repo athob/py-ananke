@@ -199,15 +199,15 @@ class IntegratedLightDriver:
     def particle_residual_distribution_functions(self) -> List[Callable[[ArrayLike], NDArray]]:
         actual_magnames: List[str] = list(self.ananke.galaxia_catalogue_mag_names)
         sub_vaex: vaex.DataFrame = self.galaxia_output[~self.galaxia_output['|'.join(map(lambda c: f"({c}!={c})", actual_magnames))]][[self.galaxia_output._parentid, self.galaxia_output._mini]]
-        toto: vaex.GroupBy = sub_vaex.groupby(self.galaxia_output._parentid)
+        sub_vaex_groupby_parentid: vaex.GroupBy = sub_vaex.groupby(self.galaxia_output._parentid)
         imf: Callable[[ArrayLike], NDArray] = self._default_imf
-        sample_number_imfs: List[Callable[[ArrayLike], NDArray]] = [
+        sample_number_imfs: List[Callable[[ArrayLike], NDArray]] = [  # TODO this step may be highly inefficient, and vaex may have better tools
             self.estimate_number_distribution_function(
-                toto.get_group(i)[self.galaxia_output._mini].to_numpy(),
+                sub_vaex_groupby_parentid.get_group(i)[self.galaxia_output._mini].to_numpy(),
                 mass_range,
                 lambda m: total_star_number*imf(m),
                 (self._default_imf_m_min, self._default_imf_m_max)
-                ) if (i,) in toto.groups else self._zero_imf
+                ) if (i,) in sub_vaex_groupby_parentid.groups else self._zero_imf
             for i, mass_range, total_star_number
             in zip(self.ananke.particle_parentids, self.particle_output_mass_ranges, self.particle_total_star_numbers)
         ]
@@ -318,13 +318,13 @@ class IntegratedLightDriver:
         # get steps centroids and find number IMF values
         distribution_mass_centroids = (distribution_masses[:-1]+distribution_masses[1:])/2
         number_imf_at_centroids = number_imf(distribution_mass_centroids)
-        # from peak to trough, assure estimate at centroids is under numebr IMF
+        # from peak to trough, assure estimate at centroids is under number IMF
         peak_to_trough = np.argsort((np.log10(number_imf_at_centroids) - np.log10(distribution))*mass_diff)
         for i in range(peak_to_trough.shape[0]-1):
             current = peak_to_trough[i]
             nextone = peak_to_trough[i+1]
             residual = number_imf_at_centroids[current]-distribution[current]
-            if residual < 0:
+            if residual < 0:  # TODO redistribution could take into account proximity of remaining mass bins
                 distribution[current] -= np.abs(residual)
                 distribution[nextone] += np.abs(residual)*mass_diff[current]/mass_diff[nextone]
         # refine estimate by shifting from stepwise to linear, conserving integral
