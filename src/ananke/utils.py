@@ -12,8 +12,9 @@ import vaex
 
 from Galaxia_ananke import utils as Gutils
 
-__all__ = ['compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'PDOrVaexDF', 'RecordingDataFrame', 'extract_parameters_from_docstring', 'extract_notes_from_docstring', 'LinearNDInterpolatorLOSExtrapolator']
+__all__ = ['classproperty', 'compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'PDOrVaexDF', 'RecordingDataFrame', 'extract_parameters_from_docstring', 'extract_notes_from_docstring', 'LinearNDInterpolatorLOSExtrapolator']
 
+classproperty = Gutils.classproperty
 
 compare_given_and_required = Gutils.compare_given_and_required
 
@@ -152,3 +153,7 @@ class LinearNDInterpolatorLOSExtrapolator:
         if t.size == 1:
             return t.item(0)
         return t
+
+
+if __name__ == '__main__':
+    raise NotImplementedError()

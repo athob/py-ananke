@@ -18,3 +18,7 @@ VEL_TAG = 'vel'
 # many thanks to Julianne Dalcanton for pointing me to this paper!!
 Q_DUST = 4.0e-23 #1.0/5.8e21
 TOTAL_TO_SELECTIVE = 3.1  #R_V value
+
+
+if __name__ == '__main__':
+    raise NotImplementedError()

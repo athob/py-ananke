@@ -151,3 +151,7 @@ copyright = _sitebuiltins._Printer('copyright', __copyright__)
 credits = _sitebuiltins._Printer('credits', __credits__)
 license = _sitebuiltins._Printer('license', __license_full__)
 readme = _sitebuiltins._Printer('readme', __readme__)
+
+
+if __name__ == '__main__':
+    raise NotImplementedError()

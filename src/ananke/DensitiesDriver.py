@@ -118,3 +118,7 @@ class DensitiesDriver:
             Print the EnBiD.run_enbid docstring
         """
         print(EnBiD.run_enbid.__doc__)
+
+
+if __name__ == '__main__':
+    raise NotImplementedError()

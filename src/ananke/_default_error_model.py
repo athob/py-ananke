@@ -67,3 +67,7 @@ def _temp(df):
     return errors
 
 ph.available_photo_systems['padova/GAIA__DR2'].default_error_model = _temp
+
+
+if __name__ == '__main__':
+    raise NotImplementedError()

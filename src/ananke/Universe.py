@@ -64,4 +64,7 @@ class Universe:
     @property
     def parameters(self) -> Dict[str, Any]:
         return self.__parameters
-    
+
+
+if __name__ == '__main__':
+    raise NotImplementedError()

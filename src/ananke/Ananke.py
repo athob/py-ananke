@@ -8,11 +8,11 @@ available in the main ``ananke`` namespace - use that instead.
 from typing import TYPE_CHECKING, Any, Optional, Union, Tuple, List, Dict, Iterable
 from numpy.typing import NDArray
 from Galaxia_ananke.photometry.PhotoSystem import PhotoSystem
-from astropy.units import Quantity
 from warnings import warn
 import re
 import numpy as np
 import pandas as pd
+from astropy import units, coordinates
 
 import Galaxia_ananke as Galaxia
 import Galaxia_ananke.photometry as Galaxia_photo
@@ -24,6 +24,7 @@ from .Observer import Observer
 from .DensitiesDriver import DensitiesDriver
 from .ExtinctionDriver import ExtinctionDriver
 from .ErrorModelDriver import ErrorModelDriver
+from .IntegratedLightDriver import IntegratedLightDriver
 
 
 __all__ = ['Ananke']
@@ -36,11 +37,11 @@ class Ananke:
     _mass = Galaxia.Input._mass  # mass in solar masses
     _pos = Galaxia.Input._pos  # position in kpc
     _vel = Galaxia.Input._vel  # velocity in km/s
-    # _age = Galaxia.Input._age  # log age in yr 
-    # _feh = Galaxia.Input._feh  # [Fe/H] in dex relative to solar
+    _age = Galaxia.Input._age  # log age in yr 
+    _feh = Galaxia.Input._feh  # [Fe/H] in dex relative to solar
     # _alph = Galaxia.Input._alph  # [Mg/Fe]
     # _elem_list = Galaxia.Input._elem_list  # other abundances in the list as [X/H]
-    # _par_id = Galaxia.Input._parentid  # indices of parent particles in snapshot
+    _par_id = Galaxia.Input._parentid  # indices of parent particles in snapshot
     # _dform = Galaxia.Input._dform  # formation distance
     _rho_pos = DensitiesDriver._density_template(POS_TAG)
     _rho_vel = DensitiesDriver._density_template(VEL_TAG)
@@ -58,7 +59,8 @@ class Ananke:
     _intrinsic_mag_template = _intrinsic_mag_formatter.format
 
     def __init__(self, particles: Dict[str, NDArray], name: str, ngb: int = 64, caching: bool = False, append_hash: Optional[bool] = None,
-                 d_params: Dict[str, Any] = {}, e_params: Dict[str, Any] = {}, err_params: Dict[str, Any] = {}, **kwargs: Dict[str, Any]) -> None:
+                 d_params: Dict[str, Any] = {}, e_params: Dict[str, Any] = {}, err_params: Dict[str, Any] = {}, il_params: Dict[str, Any] = {},
+                 **kwargs: Dict[str, Any]) -> None:
         """
             Parameters
             ----------
@@ -94,6 +96,11 @@ class Ananke:
                 Parameters to configure the error model pipeline. Use class
                 method ``display_errormodel_docs`` to find what parameters can
                 be defined
+
+            il_params : dict
+                Parameters to configure the integrated light pipeline. Use
+                class method ``display_integratedlight_docs`` to find what
+                parameters can be defined
 
             observer : array-like shape (3,) or dict of array-like shape (3,)
                 Coordinates for the observer in phase space. Position and
@@ -165,6 +172,7 @@ class Ananke:
         self.__densitiesdriver_proxy: DensitiesDriver = self._prepare_densitiesdriver_proxy(d_params)
         self.__extinctiondriver_proxy: ExtinctionDriver = self._prepare_extinctiondriver_proxy(e_params)
         self.__errormodeldriver_proxy: ErrorModelDriver = self._prepare_errormodeldriver_proxy(err_params)
+        self.__integratedlightdriver_proxy: IntegratedLightDriver = self._prepare_integratedlightdriver_proxy(il_params)
         self.__galaxia_input: Union[Galaxia.Input, None] = None
         self.__galaxia_survey: Union[Galaxia.Survey, None] = None
         self.__galaxia_output: Union[Galaxia.Output, None] = None
@@ -213,6 +221,9 @@ class Ananke:
 
     def _prepare_errormodeldriver_proxy(self, err_params: Dict[str, Any]) -> ErrorModelDriver:
         return ErrorModelDriver(self, **err_params)
+
+    def _prepare_integratedlightdriver_proxy(self, il_params: Dict[str, Any]) -> IntegratedLightDriver:
+        return IntegratedLightDriver(self, **il_params)
 
     def _prepare_galaxia_input(self, rho, **kwargs) -> Galaxia.Input:
         input_kwargs = {'name': self.name, 'ngb': self.ngb, 'caching': self.caching}
@@ -267,7 +278,7 @@ class Ananke:
         survey: Galaxia.Survey = self._prepare_galaxia_survey(input, **{k:kwargs.pop(k) for k in ['surveyname'] if k in kwargs})
         self.__galaxia_output: Galaxia.Output = survey.make_survey(**self._galaxia_kwargs, **kwargs)
         return self._galaxia_output
-    
+
     _run_galaxia.__doc__ = _run_galaxia.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG,
                                                        parameters_from_galaxia = utils.extract_parameters_from_docstring(
                                                            Galaxia.Survey.make_survey.__doc__,
@@ -278,7 +289,7 @@ class Ananke:
                                                             ]).replace("\n", "\n            "),
                                                        notes_from_galaxia_output = utils.extract_notes_from_docstring(
                                                            Galaxia.Output.__init__.__doc__).replace("\n", "\n            "))
-    
+
     @classmethod
     def __pp_observed_mags(cls, df: utils.PDOrVaexDF, mag_names: Iterable[str], _dmod: str) -> None:
         for mag in mag_names:
@@ -387,7 +398,7 @@ class Ananke:
         log10_NH = _log10NH,
         E_B_V = "E(B-V)",
         A_0 = "A_0")
-    
+
     @property
     def _densitiesdriver_proxy(self) -> DensitiesDriver:
         return self.__densitiesdriver_proxy
@@ -395,26 +406,42 @@ class Ananke:
     @property
     def _extinctiondriver_proxy(self) -> ExtinctionDriver:
         return self.__extinctiondriver_proxy
-    
+
     @property
     def _errormodeldriver_proxy(self) -> ErrorModelDriver:
         return self.__errormodeldriver_proxy
 
     @property
+    def _integratedlightdriver_proxy(self) -> IntegratedLightDriver:
+        return self.__integratedlightdriver_proxy
+
+    @property
     def particles(self) -> Dict[str, NDArray]:
         return self.__particles
-    
+
     @property
     def particle_masses(self) -> NDArray:
         return self.particles[self._mass]
-    
+
     @property
     def particle_positions(self) -> NDArray:
         return self.particles[self._pos]
-    
+
     @property
     def particle_velocities(self) -> NDArray:
         return self.particles[self._vel]
+
+    @property
+    def particle_metallicities(self) -> NDArray:
+        return self.particles[self._feh]
+
+    @property
+    def particle_ages(self) -> NDArray:
+        return self.particles[self._age]
+
+    @property
+    def particle_parentids(self) -> NDArray:
+        return self.particles[self._par_id] if self._par_id in self.particles else np.arange(self.particle_masses.shape[0])
 
     @property
     def name(self) -> str:
@@ -423,11 +450,11 @@ class Ananke:
     @property
     def ngb(self) -> int:
         return self.__ngb
-    
+
     @property
     def caching(self) -> bool:
         return self.__caching
-    
+
     @caching.setter
     def caching(self, value: bool) -> None:
         if value:
@@ -438,15 +465,15 @@ class Ananke:
     @property
     def append_hash(self) -> bool:
         return self.__append_hash
-    
+
     @append_hash.setter
     def append_hash(self, value: bool) -> None:
         self.__append_hash: bool = value
-    
+
     @property
     def universe(self) -> Universe:
         return self.__universe_proxy
-    
+
     @property
     def universe_rshell(self) -> NDArray:
         return self.universe.rshell
@@ -454,19 +481,51 @@ class Ananke:
     @property
     def observer(self) -> Observer:
         return self.__observer_proxy
-    
+
     @property
     def observer_position(self) -> NDArray:
         return self.observer.position
-    
+
     @property
     def observer_velocity(self) -> NDArray:
         return self.observer.velocity
 
     @property
+    def particle_observed_positions(self) -> NDArray:
+        return self.particle_positions - self.observer_position
+
+    @property
+    def particle_observed_velocities(self) -> NDArray:
+        return self.particle_velocities - self.observer_velocity
+
+    @property
+    def particle_observed_distances(self) -> NDArray:
+        return np.linalg.norm(self.particle_observed_positions, axis=1)
+
+    @property
+    def particle_input_kernels(self) -> NDArray:
+        return self._galaxia_input.kernels
+    
+    @property
+    def particle_input_position_kernels(self) -> NDArray:
+        return self.particle_input_kernels.T[0]
+    
+    @property
+    def particle_input_velocity_kernels(self) -> NDArray:
+        return self.particle_input_kernels.T[1]
+    
+    @property
+    def particle_nearest_observed_distances(self) -> NDArray:
+        return np.clip(self.particle_observed_distances - self.particle_input_position_kernels, 0.01, np.inf)
+    
+    @property
+    def particle_nearest_observed_distmod(self) -> NDArray:
+        return coordinates.Distance(self.particle_nearest_observed_distances*units.kpc).distmod.value
+
+    @property
     def densities(self) -> Dict[str, NDArray]:
         return self._densitiesdriver_proxy.densities
-    
+
     @property
     def extinctions(self):  # TODO figure out output typing
         return self._extinctiondriver_proxy.extinctions
@@ -476,9 +535,13 @@ class Ananke:
         return self._errormodeldriver_proxy.errors
 
     @property
+    def residuals(self):
+        return self._integratedlightdriver_proxy.particle_residual_photometry
+
+    @property
     def parameters(self) -> Dict[str, Any]:
         return self.__parameters
-    
+
     @property
     def photo_sys(self) -> str:
         return self.__photo_sys
@@ -491,31 +554,31 @@ class Ananke:
     def galaxia_isochrones(self):
         warn('This property will be deprecated, please use instead property galaxia_photosystems', DeprecationWarning, stacklevel=2)
         return self.galaxia_photosystems
-    
+
     @property
     def galaxia_catalogue_mag_names(self) -> Tuple[str]:
         return Galaxia.Output._compile_export_mag_names(self.galaxia_photosystems)
-    
+
     @property
     def intrinsic_catalogue_mag_names(self) -> Tuple[str]:
         return tuple(map(self._intrinsic_mag_template, self.galaxia_catalogue_mag_names))
-    
+
     @property
     def galaxia_catalogue_mag_and_astrometrics(self) -> Tuple[str]:
         return self.galaxia_catalogue_mag_names + (Galaxia.Output._pi,) + Galaxia.Output._cel + Galaxia.Output._mu + (Galaxia.Output._vr,)
-    
+
     @property
     def galaxia_catalogue_keys(self) -> Tuple[str]:
         return Galaxia.Output._make_catalogue_keys(self.galaxia_photosystems)
 
     @property
-    def photosystems_zeropoints(self) -> Quantity:
+    def photosystems_zeropoints(self) -> units.Quantity:
         return np.hstack([ps.zeropoints for ps in self.galaxia_photosystems])
 
     @property
-    def photosystems_zeropoints_dict(self) -> Dict[str, Quantity]:
+    def photosystems_zeropoints_dict(self) -> Dict[str, units.Quantity]:
         return dict(zip(self.galaxia_catalogue_mag_names, self.photosystems_zeropoints))
-    
+
     @property
     def _galaxia_kwargs(self) -> Dict[str, Any]:
         return {**self.universe.to_galaxia_kwargs, **self.observer.to_galaxia_kwargs, **self.parameters}
@@ -535,7 +598,15 @@ class Ananke:
             raise RuntimeError("You must use the `run` method before accessing the catalogue")
         else:
             return self.__galaxia_output
-    
+
+    @property
+    def _galaxia_survey(self) -> Galaxia.Survey:
+        return self._galaxia_output.survey
+
+    @property
+    def _galaxia_input(self) -> Galaxia.Input:
+        return self._galaxia_survey.input
+
     @classmethod
     def make_dummy_dictionary_description(cls) -> str:
         description = """{particles_dictionary_description}
@@ -579,7 +650,7 @@ class Ananke:
         if with_densities:
             p[cls._rho_pos], p[cls._rho_vel] = Galaxia.make_dummy_densities_input(n_parts)
         return p
-    
+
     @classmethod
     def display_available_photometric_systems(cls):
         """
@@ -620,6 +691,13 @@ class Ananke:
             Print the ErrorModelDriver constructor docstring
         """
         print(ErrorModelDriver.__init__.__doc__)
+
+    @classmethod
+    def display_integratedlight_docs(cls) -> None:
+        """
+            Print the IntegratedLightDriver constructor docstring
+        """
+        print(IntegratedLightDriver.__init__.__doc__)
 
     @classmethod
     def display_galaxia_makesurvey_docs(cls) -> None:

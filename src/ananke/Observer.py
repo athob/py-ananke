@@ -88,4 +88,7 @@ class Observer:  # TODO SkyCoord for center point: SkyCoord(u=-rSun[0], v=-rSun[
     @property
     def parameters(self) -> Dict[str, Any]:
         return self.__parameters
-    
+
+
+if __name__ == '__main__':
+    raise NotImplementedError()
