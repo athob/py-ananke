@@ -6,7 +6,7 @@ Please note that this module is private. The ExtinctionDriver class is
 available in the main ``ananke`` namespace - use that instead.
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Union, Set, List, Dict, Callable
+from typing import TYPE_CHECKING, Any, Union, Tuple, Set, List, Dict, Callable
 from numpy.typing import ArrayLike, NDArray
 from warnings import warn
 from functools import cached_property
@@ -46,19 +46,24 @@ class ExtinctionDriver:
                 The Ananke object that utilizes this ExtinctionDriver object
                 
             q_dust : float
-                Inverted conversion factor for dust efficiency represented by the
-                ratio between reddenning and column density E(B-V)/N_H. Default to
-                {Q_DUST}
+                Inverted conversion factor for dust efficiency represented by
+                the ratio between reddenning and column density E(B-V)/N_H.
+                Default to {Q_DUST}
 
             total_to_selective : float
-                Optical total-to-selective extinction ratio between extinction and
-                reddenning A(V)/E(B-V). Default to {TOTAL_TO_SELECTIVE}
+                Optical total-to-selective extinction ratio between extinction
+                and reddenning A(V)/E(B-V). Default to {TOTAL_TO_SELECTIVE}
 
             mw_model : str
                 Optional, can be used to request a specific MW extinction model.
                 The only available model is "Marshall2006", future updates may
                 expand model availability.
 
+            spherical_interpolation : bool
+                Optional, can be used to request the interpolation to be done
+                along spherical coordinates. Default is to keep interpolation
+                in cartesian coordinates.
+            
             extinction_coeff : function [df --> dict(band: coefficient)]
                 Use to specify a function that returns extinction coefficients per
                 band from characterisitics of the extinguished star given in a
@@ -95,7 +100,9 @@ class ExtinctionDriver:
         return self.ananke._galaxia_output
 
     @classmethod
-    def _make_column_density_interpolator(cls, xhel_p, lognh, rshell = (0,np.inf)) -> utils.LinearNDInterpolatorLOSExtrapolator:
+    def _make_column_density_interpolator(cls, xhel_p: NDArray, col_nh: NDArray,
+                                          rshell: Tuple[float] = (0,np.inf),
+                                          spherical_interpolation: bool = False) -> utils.LinearNDInterpolatorLOSExtrapolator:
         # TODO coordinates.SkyCoord(**dict(zip([*'uvw'], xhel_p.T)), unit='kpc', representation_type='cartesian', frame='galactic') ?
         # return distances from observer to particles
         dhel_p = np.linalg.norm(xhel_p, axis=1)
@@ -104,9 +111,12 @@ class ExtinctionDriver:
         # create a mask for the particles that are within the shell
         sel_interp = (rmin<dhel_p) & (dhel_p<rmax)
         # generate the interpolator to use to get the column densities at positions in and around the particles
-        interpolator = utils.LinearNDInterpolatorLOSExtrapolator(np.vstack([3*[0],xhel_p[sel_interp]]),
-                                                                 np.hstack([0,10**lognh[sel_interp]]),
-                                                                 rescale=False)  # TODO investigate NaN outputs from interpolator
+        # interpolator = utils.LinearNDInterpolatorLOSExtrapolator(np.vstack([3*[0],xhel_p[sel_interp]]),
+        #                                                          np.hstack([0,10**lognh[sel_interp]]),
+        interpolator = utils.LinearNDInterpolatorLOSExtrapolator(xhel_p[sel_interp],
+                                                                 col_nh[sel_interp],
+                                                                 spherical=spherical_interpolation,
+                                                                 rescale=False)
         calibrating_center = np.mean(xhel_p[sel_interp],axis=0)
         interpolator(calibrating_center)
         return interpolator
@@ -115,13 +125,15 @@ class ExtinctionDriver:
     def column_density_interpolator(self) -> utils.LinearNDInterpolatorLOSExtrapolator:
         if self.mw_model is None:
             xhel_p = self.ananke.particle_positions - self.ananke.observer_position[:3]
-            lognh = self.particle_column_densities
+            col_nh = 10**self.particle_column_densities
             rshell = self.ananke.universe_rshell
         elif self.mw_model == 'Marshall2006':
             xhel_p = np.array(marshall2006['x','y','z'].as_array().tolist())
-            lognh = np.log10(marshall2006['ext'].value.unmasked/(self.q_dust*self.total_to_selective))
+            col_nh = marshall2006['ext'].value.unmasked/(self.q_dust*self.total_to_selective)
             rshell = (0, np.inf)
-        return self._make_column_density_interpolator(xhel_p, lognh, rshell=rshell)
+        return self._make_column_density_interpolator(xhel_p, col_nh,
+                                                      rshell=rshell,
+                                                      spherical_interpolation=self.spherical_interpolation)
 
     @staticmethod
     def _expand_and_apply_extinction_coeff(df, A0, extinction_coeff) -> Dict[str, ArrayLike]:
@@ -209,9 +221,13 @@ class ExtinctionDriver:
         return self.parameters.get('total_to_selective', TOTAL_TO_SELECTIVE)
 
     @property
-    def mw_model(self) -> float:
+    def mw_model(self) -> str:
         return self.parameters.get('mw_model', None)
     
+    @property
+    def spherical_interpolation(self) -> bool:
+        return self.parameters.get('spherical_interpolation', False)
+
     @property
     def extinction_coeff(self) -> List[Union[Callable[[utils.PDOrVaexDF], Dict[str, NDArray]], Dict[str, float]]]:
         return self.parameters.get('extinction_coeff', [getattr(psys, 'default_extinction_coeff', self.__missing_default_extinction_coeff_for_photosystem(psys)) for psys in self.ananke.galaxia_photosystems])
