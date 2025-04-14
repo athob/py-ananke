@@ -45,7 +45,7 @@ class ExtinctionDriver:
     """
     _col_density = "log10_NH"  # log10 NH column densities between Observer position and particle
     _galaxia_pos = ['px', 'py', 'pz']
-    _interp_col_dens = _col_density
+    _interp_col_dens = "col_NH" # _col_density
     _reddening = 'E(B-V)'
     _extinction_formatter = 'A_{}'
     _extinction_template = _extinction_formatter.format
@@ -76,6 +76,11 @@ class ExtinctionDriver:
                 Optional, can be used to request the interpolation to be done
                 along spherical coordinates. Default is to keep interpolation
                 in cartesian coordinates.
+            
+            no_extrapolation : bool
+                Optional, forces the interpolator to not apply an extrapolation
+                strategy. This will result in NaN extinctions out of the hull
+                of the Delaunay interpolator. Default is to extrapolate.
             
             extinction_coeff : function [df --> dict(band: coefficient)]
                 Use to specify a function that returns extinction coefficients per
@@ -115,7 +120,8 @@ class ExtinctionDriver:
     @classmethod
     def _make_column_density_interpolator(cls, xhel_p: NDArray, col_nh: NDArray,
                                           rshell: Tuple[float] = (0,np.inf),
-                                          spherical_interpolation: bool = False) -> utils.LinearNDInterpolatorLOSExtrapolator:
+                                          spherical_interpolation: bool = False,
+                                          no_extrapolation: bool = False) -> utils.LinearNDInterpolatorLOSExtrapolator:
         # TODO coordinates.SkyCoord(**dict(zip([*'uvw'], xhel_p.T)), unit='kpc', representation_type='cartesian', frame='galactic') ?
         # return distances from observer to particles
         dhel_p = np.linalg.norm(xhel_p, axis=1)
@@ -129,6 +135,7 @@ class ExtinctionDriver:
         interpolator = utils.LinearNDInterpolatorLOSExtrapolator(xhel_p[sel_interp],
                                                                  col_nh[sel_interp],
                                                                  spherical=spherical_interpolation,
+                                                                 extrapolator=not(no_extrapolation),
                                                                  rescale=False)
         calibrating_center = np.mean(xhel_p[sel_interp],axis=0)
         interpolator(calibrating_center)
@@ -146,7 +153,8 @@ class ExtinctionDriver:
             rshell = (0, np.inf)
         return self._make_column_density_interpolator(xhel_p, col_nh,
                                                       rshell=rshell,
-                                                      spherical_interpolation=self.spherical_interpolation)
+                                                      spherical_interpolation=self.spherical_interpolation,
+                                                      no_extrapolation=self.no_extrapolation)
 
     @staticmethod
     def _expand_and_apply_extinction_coeff(df, A0, extinction_coeff) -> Dict[str, ArrayLike]:
@@ -244,6 +252,10 @@ class ExtinctionDriver:
     @property
     def spherical_interpolation(self) -> bool:
         return self.parameters.get('spherical_interpolation', False)
+
+    @property
+    def no_extrapolation(self) -> bool:
+        return self.parameters.get('no_extrapolation', False)
 
     @property
     def extinction_coeff(self) -> List[Union[Callable[[utils.PDOrVaexDF], Dict[str, NDArray]], Dict[str, float]]]:
