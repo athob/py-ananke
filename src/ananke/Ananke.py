@@ -321,7 +321,8 @@ class Ananke:
         if not self._errormodeldriver_proxy.ignore:
             _ = self.errors
 
-    def run(self, caching: Optional[bool] = None, append_hash: Optional[bool] = None, **kwargs) -> Galaxia.Output:
+    def run(self, caching: Optional[bool] = None, append_hash: Optional[bool] = None,
+                  no_post_processing: Optional[bool] = False, **kwargs) -> Galaxia.Output:
         """
             Method to run the pipeline
             
@@ -333,11 +334,23 @@ class Ananke:
                 needed. Default to existing caching given to object at
                 construction.
 
+            append_hash : bool
+                Only relevant if caching is active. When True, ananke
+                automatically adds truncated hashes to all files it produces,
+                to uniquely identify them. Default to True.
+
             input_dir, output_dir, i_o_dir : string
                 Optional arguments to specify paths for the directories where
                 ananke should generate input and output data. If the i_o_dir
                 keyword argument is provided, it overrides any path given to
                 the input_dir and output_dir keyword arguments.
+
+            no_post_processing : bool
+                If True, ignore the post-processing pipeline following the
+                Galaxia_ananke run. This post-processing pipeline involves
+                the replacement of absolute magnitude quantities by their
+                apparent ones, followed by the extinction estimation pipeline
+                and by the error model application. Default to False.
             {parameters_from_run_galaxia}
 
             Returns
@@ -378,9 +391,10 @@ class Ananke:
         if append_hash is not None:  self.append_hash: bool = append_hash
         if 'i_o_dir' in kwargs:  kwargs['input_dir'] = kwargs['output_dir'] = kwargs.pop('i_o_dir')
         galaxia_output: Galaxia.Output = self._run_galaxia(self.densities, **kwargs)
-        galaxia_output.check_state_before_running(description="ananke_pp_observed_mags")(self._pp_observed_mags)(galaxia_output)
-        galaxia_output.check_state_before_running(description="ananke_pp_extinctions", level=1)(self._pp_extinctions)()
-        galaxia_output.check_state_before_running(description="ananke_pp_errors", level=1)(self._pp_errors)()
+        if not no_post_processing:
+            galaxia_output.check_state_before_running(description="ananke_pp_observed_mags")(self._pp_observed_mags)(galaxia_output)
+            galaxia_output.check_state_before_running(description="ananke_pp_extinctions", level=1)(self._pp_extinctions)()
+            galaxia_output.check_state_before_running(description="ananke_pp_errors", level=1)(self._pp_errors)()
         return galaxia_output
 
     run.__doc__ = run.__doc__.format(
