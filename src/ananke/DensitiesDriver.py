@@ -84,9 +84,17 @@ class DensitiesDriver:
 
     @property
     def particle_densities(self) -> Dict[str, NDArray]:
-        return {key: self.ananke.particles[self._density_template(key)]
-                for key in [POS_TAG, VEL_TAG]
-                if self._density_template(key) in self.ananke.particles}
+        particle_densities = {}
+        if self._density_template(POS_TAG) in self.ananke.particles:
+            particle_densities[POS_TAG] = self.ananke.particles[self._density_template(POS_TAG)]
+            if self._density_template(VEL_TAG) in self.ananke.particles:
+                particle_densities[VEL_TAG] = self.ananke.particles[self._density_template(VEL_TAG)]
+        # particle_densities = {
+        #     key: self.ananke.particles[self._density_template(key)]
+        #     for key in [POS_TAG, VEL_TAG]
+        #     if self._density_template(key) in self.ananke.particles
+        #     }
+        return particle_densities
     
     @property
     def name(self):
