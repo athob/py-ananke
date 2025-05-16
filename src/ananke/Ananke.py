@@ -225,12 +225,12 @@ class Ananke:
     def _prepare_integratedlightdriver_proxy(self, il_params: Dict[str, Any]) -> IntegratedLightDriver:
         return IntegratedLightDriver(self, **il_params)
 
-    def _prepare_galaxia_input(self, rho, **kwargs) -> Galaxia.Input:
+    def _prepare_galaxia_input(self, rho: Dict[str, NDArray], **kwargs) -> Galaxia.Input:
         input_kwargs = {'name': self.name, 'ngb': self.ngb, 'caching': self.caching}
         if self.append_hash is not None:  input_kwargs['append_hash'] = self.append_hash
         input_kwargs = {**input_kwargs, **kwargs}  # input_dir, k_factor
         if self.__galaxia_input is None:
-            self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho[VEL_TAG], **input_kwargs)
+            self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho.get(VEL_TAG), **input_kwargs)
         return self.__galaxia_input
 
     def _prepare_galaxia_survey(self, input: Galaxia.Input, **kwargs) -> Galaxia.Survey:
@@ -239,7 +239,7 @@ class Ananke:
             self.__galaxia_survey = Galaxia.Survey(input, **survey_kwargs)
         return self.__galaxia_survey
 
-    def _run_galaxia(self, rho, **kwargs) -> Galaxia.Output:
+    def _run_galaxia(self, rho: Dict[str, NDArray], **kwargs) -> Galaxia.Output:
         """
             Method to generate the survey out of the pipeline particles given
             a dictionary of kernel density estimates
