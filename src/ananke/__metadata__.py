@@ -38,7 +38,7 @@ __date__: str = _version.get_versions()['date']
 __date__: datetime = datetime.fromisoformat(f"{__date__[:-2]}:{__date__[-2:]}")
 __maintainer__ = "Adrien Thob"
 __email__ = "athob@sas.upenn.edu"
-__status_classifier__ = "Development Status :: 4 - Beta"
+__status_classifier__ = "Development Status :: 5 - Production/Stable"
 __classifiers__ = [
     __status_classifier__,
     "Environment :: Console",
@@ -48,7 +48,7 @@ __classifiers__ = [
     "Operating System :: Unix",
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Astronomy"
-    ],
+    ]
 
 # CREDITS METADATA
 __credits__ = textwrap.fill(f"""
@@ -59,37 +59,39 @@ including {', '.join(__feedback__)[::-1].replace(',','& ', 1)[::-1]}.
 """.strip('\n'))
 
 # CITING METADATA
-__doi__ = "10.48550/arXiv.2312.02268"
+__doi__ = "10.21105/joss.06234"
 __citation__ = textwrap.fill("""
-Thob, Adrien C. R. et al. 2023, “Generating synthetic star catalogs
+Thob, Adrien C. R. et al. 2024, “Generating synthetic star catalogs
 from simulated data for next-gen observatories with py-ananke”,
-arXiv e-prints, doi:10.48550/arXiv.2312.02268.
+The Journal of Open Source Software, 9, 6234, doi:10.21105/joss.06234.
 """.strip('\n'))
-__adsurl__ = "https://ui.adsabs.harvard.edu/abs/2023arXiv231202268T"
+__adsurl__ = "https://ui.adsabs.harvard.edu/abs/2024JOSS....9.6234T"
 __adsexportcitation__ = f"{__adsurl__}/exportcitation"
 __bibtex__ = """
-@ARTICLE{2023arXiv231202268T,
+@ARTICLE{2024JOSS....9.6234T,
        author = {{Thob}, Adrien C.~R. and {Sanderson}, Robyn E. and
        {Eden}, Andrew P. and {Nikakhtar}, Farnik and
        {Panithanpaisal}, Nondh and {Garavito-Camargo}, Nicol{\\'a}s
        and {Sharma}, Sanjib},
         title = "{Generating synthetic star catalogs from simulated data
         for next-gen observatories with py-ananke}",
-      journal = {arXiv e-prints},
-     keywords = {Astrophysics - Astrophysics of Galaxies,
-     Astrophysics - Instrumentation and Methods for Astrophysics},
-         year = 2023,
-        month = dec,
-          eid = {arXiv:2312.02268},
-        pages = {arXiv:2312.02268},
-          doi = {10.48550/arXiv.2312.02268},
+      journal = {The Journal of Open Source Software},
+     keywords = {C++, astronomy, galaxies, stars, simulations,
+          mock observations, Jupyter Notebook, Python,
+          Astrophysics - Astrophysics of Galaxies,
+          Astrophysics - Instrumentation and Methods for Astrophysics},
+         year = 2024,
+        month = oct,
+       volume = {9},
+       number = {102},
+          eid = {6234},
+        pages = {6234},
+          doi = {10.21105/joss.06234},
 archivePrefix = {arXiv},
        eprint = {2312.02268},
  primaryClass = {astro-ph.GA},
-       adsurl = {https://ui.adsabs.harvard.edu/abs/2023arXiv231202268T},
-      adsnote = {Provided by the SAO/NASA Astrophysics Data System},
-         note = {Submitted to The Journal of Open Source Software,
-         in review}
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2024JOSS....9.6234T},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
 }
 """.strip('\n')
 __citing__ = '\n\n'.join(map(textwrap.fill, f"""
