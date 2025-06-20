@@ -14,7 +14,7 @@ import urllib.parse
 import json
 import configparser
 from distutils.errors import CompileError
-# from packaging import version
+from packaging import version
 
 from ._builtin_utils import import_source_file
 from ._constants import *
@@ -24,6 +24,12 @@ from . import _version, versioneer
 __all__ = ['make_package_data', 'check_submodules', 'append_install_requires_with_submodules', 'make_cmdclass']
 
 ROOT_DIR = pathlib.Path(__file__).parent.parent
+
+# Check if we're in a build workflow
+IS_BUILD = any(
+    cmd in sys.argv 
+    for cmd in ('sdist', 'bdist_wheel', 'bdist_egg')
+)
 
 
 # force printing to the terminal even if stdout was redirected
@@ -124,7 +130,7 @@ def clone_and_checkout_submodules(root_dir, submodule_names):
             )
         try:
             _temp = subprocess.Popen(['git', 'clone', galaxia_url], cwd=root_dir,
-                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
             for line in iter(_temp.stdout.readline, ""):
                 say(line)
             _temp.wait()
@@ -164,10 +170,17 @@ def check_submodules(root_dir):
 
 def append_install_requires_with_submodules(install_requires):
     EnBiD_meta, Galaxia_meta = check_submodules(ROOT_DIR)
-    return install_requires + [
-        f"EnBiD_ananke @ file://{pathlib.Path(EnBiD_meta.__file__).parent.parent}",
-        f"Galaxia_ananke @ file://{pathlib.Path(Galaxia_meta.__file__).parent.parent}"
-        ]
+    if IS_BUILD:
+        submodule_dependencies = [
+            f"enbid_ananke=={version.Version(EnBiD_meta.__version__).public}",
+            f"galaxia_ananke=={version.Version(Galaxia_meta.__version__).public}"
+            ]
+    else:
+        submodule_dependencies = [
+            f"enbid_ananke @ file://{pathlib.Path(EnBiD_meta.__file__).parent.parent}",
+            f"galaxia_ananke @ file://{pathlib.Path(Galaxia_meta.__file__).parent.parent}"
+            ]
+    return install_requires + submodule_dependencies
 
 
 make_cmdclass = versioneer.get_cmdclass
