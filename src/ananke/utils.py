@@ -10,7 +10,7 @@ from scipy import interpolate
 import pandas as pd
 import vaex
 
-from Galaxia_ananke import utils as Gutils
+from galaxia_ananke import utils as Gutils
 
 __all__ = ['classproperty', 'compare_given_and_required', 'confirm_equal_length_arrays_in_dict', 'PDOrVaexDF', 'RecordingDataFrame', 'extract_parameters_from_docstring', 'extract_notes_from_docstring', 'LinearNDInterpolatorExtrapolator']
 

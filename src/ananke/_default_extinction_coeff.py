@@ -9,7 +9,7 @@ import numpy as np
 import pyvo
 from astropy import units, table, coordinates
 
-from Galaxia_ananke import photometry as ph
+from galaxia_ananke import photometry as ph
 
 
 __all__ = ['universal_extinction_law', 'marshall2006']
