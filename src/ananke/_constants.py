@@ -2,9 +2,10 @@
 """
 Contains the ananke module constants.
 """
+from ._name import *
+
 __all__ = ['NAME', 'LOG_DIR', 'SRC_DIR', 'PYENBID', 'PYGALAXIA', 'POS_TAG', 'VEL_TAG', 'Q_DUST', 'TOTAL_TO_SELECTIVE']
 
-NAME = 'ananke'
 LOG_DIR = 'log'
 SRC_DIR = 'src'
 PYENBID = 'py-EnBiD-ananke'

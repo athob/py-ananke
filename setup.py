@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import setuptools
 from setuptools import setup
 
 from src._build_utils import *
@@ -22,7 +23,8 @@ setup(name=NAME,
       license=__license__,
       copyright=__copyright__,
       python_requires='>=3.8',
-      packages=[NAME],
+      packages=setuptools.find_namespace_packages(
+          SRC_DIR, exclude=['tests']),
       package_dir={'': SRC_DIR},
       package_data=make_package_data(),
       include_package_data=True,
