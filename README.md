@@ -1,10 +1,12 @@
 # `py-ananke`
 
+[![PyPI - Version](https://img.shields.io/pypi/v/ananke)](https://pypi.org/project/ananke/)
 [![Documentation Status](https://readthedocs.org/projects/py-ananke/badge/?version=latest)](https://py-ananke.readthedocs.io/en/latest/?badge=latest)
 [![Python package](https://github.com/athob/py-ananke/actions/workflows/main.yml/badge.svg)](https://github.com/athob/py-ananke/actions/workflows/main.yml)
 [![status](https://joss.theoj.org/papers/357c0445d891fc10e1b0ca4dba1e3cc0/status.svg)](https://joss.theoj.org/papers/357c0445d891fc10e1b0ca4dba1e3cc0)
 [![arXiv](https://img.shields.io/badge/arXiv-2312.02268-b31b1b.svg?style=flat)](https://arxiv.org/abs/2312.02268)
 [![DOI](https://zenodo.org/badge/498927304.svg)](https://zenodo.org/badge/latestdoi/498927304)
+[![Slack](https://img.shields.io/badge/slack-chat-green.svg)](https://join.slack.com/t/ananke-users/shared_invite/zt-37wmyn7ki-kmroxUul2W_VdFlEt0qCig)
 
 Welcome to `py-ananke`, a Python package that offers `ananke` which is a comprehensive pipeline designed to generate mock astrometric and photometric catalogs of synthetic stars derived from particle-based simulated star populations.
 
@@ -25,23 +27,29 @@ The development of `py-ananke` aims to make this sophisticated framework accessi
 
 ### Installation
 
-To install `py-ananke`, you can use the following pip command, which pulls the latest version directly from the repository's main branch:
+`ananke` is available on the PyPI, so it may be installed using the command:
 
-    pip install git+https://github.com/athob/py-ananke@main
+```bash
+pip install ananke
+```
 
-or
+Alternatively, if you wish to run the latest version on the repository, you can use the following pip command, which pulls it directly from the repository's main branch:
 
-    python -m pip install git+https://github.com/athob/py-ananke@main
+```bash
+pip install git+https://github.com/athob/py-ananke@main
+```
 
-Alternatively, if you prefer, you may clone the repository to your local machine and then install `py-ananke` using the following pip command, which installs it from your local copy of the repository:
+You may also change the branch to use in the above command by replacing the `main` that follows the `@` symbol. If you prefer, you may clone the repository to your local machine and then install `py-ananke` using the following pip command, which installs it from your local copy of the repository:
 
-    git clone https://github.com/athob/py-ananke
-    cd py-ananke
-    pip install .
+```bash
+git clone https://github.com/athob/py-ananke
+cd py-ananke
+pip install .
+```
 
 Please note that the command with flag `pip install . --no-cache-dir` may be necessary due to some dependencies issues.
 
-***Warning: DO NOT download the repository as a ZIP archive with intention to install it this way, the installation requires the git set up of the repository to propertly install its submodule dependencies.***
+<!-- ***Warning: DO NOT download the repository as a ZIP archive with intention to install it this way, the installation requires the git set up of the repository to propertly install its submodule dependencies.*** -->
 
 After installation, the module can be imported in Python under the name `ananke` and be ran as such.
 
@@ -57,7 +65,7 @@ Work in progress...
 
 ## On-going development
 
-`py-ananke` is now [published in The Journal of Open Source Software](https://joss.theoj.org/papers/10.21105/joss.06234). You can also access the associated arXiv publication [here](https://arxiv.org/abs/2312.02268).
+`py-ananke` is now [published in The Journal of Open Source Software](https://joss.theoj.org/papers/10.21105/joss.06234). You can also access the associated [arXiv publication](https://arxiv.org/abs/2312.02268).
 
 ### Upcoming updates
 
@@ -118,17 +126,19 @@ archivePrefix = {arXiv},
 
 Below, you will find a selection of scientific papers that showcase the potential and capabilities of py-ananke. These papers serve as valuable resources for understanding the practical implementation and impact of py-ananke in various domains.
 
-- Gray et al. 2024, “EDGE: A new model for Nuclear Star Cluster formation in dwarf galaxies”, arXiv e-prints, arXiv:2405.19286, [doi:10.48550/arXiv.2405.19286](https://arxiv.org/pdf/2405.19286)
+- Gray et al. 2025, “EDGE: A new model for Nuclear Star Cluster formation in dwarf galaxies”, *Monthly Notices of the Royal Astronomical Society*, Volume 539, Issue 2, May 2025, Pages 1167–1179, [https://doi.org/10.1093/mnras/staf521](https://doi.org/10.1093/mnras/staf521)
 
 `py-ananke` has also been discussed extensively in various workshops and conferences.
 
 - [`py-ananke_v0.0.2-beta2`](https://github.com/athob/py-ananke/releases/tag/v0.0.2-beta2) was featured at [EAS 2023 in Krakow](https://eas2023programme.kuoni-congress.info/presentation/generating-mock-euclid-and-roman-surveys-of-stellar-halos-of-simulated-nearby-galaxies-using-the-py-ananke-pipeline) as an e-poster, check it at [this URL](https://k-poster.kuoni-congress.info/eas-2023/poster/5bf40113-efa9-4bfc-89a5-b67ebd81f7dd).
-- [`py-ananke_v0.1.0-beta2`](https://github.com/athob/py-ananke/releases/tag/v0.1.0-beta2) was featured at the 243rd AAS meeting in New Orleans.
-- a Galactic Plane survey application of `py-ananke` was featured at:
+- [`py-ananke_v0.1.0-beta2`](https://github.com/athob/py-ananke/releases/tag/v0.1.0-beta2) was featured at the [243rd AAS meeting in New Orleans](https://aas.org/meetings/aas243).
+- a Nancy Grace Roman Space Telescope Galactic Plane Survey application of `py-ananke` was featured at:
     1. the [Roman@Yerkes workshop on Galactic Science with the Nancy Grace Roman Space Telescope](https://sites.google.com/cfa.harvard.edu/romanyerkes/home),
-    2. [EAS 2024 in Padova](https://eas2024programme.kuoni-congress.info/presentation/synthetic-survey-catalogs-for-the-galactic-roman-infrared-plane-survey-grips-using-py-ananke) as an e-poster (available [here](https://k-poster.kuoni-congress.info/eas-2024/poster/749fd8f1-ec4c-4167-911f-914e2215eeab)),
-    3. the [Challenging Theory with Roman meeting at Caltech](https://conference.ipac.caltech.edu/roman2024/) (recording available [here](https://youtu.be/93hF1ZCDzw8)),
-    4. the [2024 IAU GA in Cape Town](https://astronomy2024.org/) (live streamed [here](https://m.youtube.com/watch?v=8R-Wc9tGWcg&t=7218s)).
+    2. [EAS 2024 in Padova](https://eas2024programme.kuoni-congress.info/presentation/synthetic-survey-catalogs-for-the-galactic-roman-infrared-plane-survey-grips-using-py-ananke) as an e-poster (available at [this link](https://k-poster.kuoni-congress.info/eas-2024/poster/749fd8f1-ec4c-4167-911f-914e2215eeab)),
+    3. the [Challenging Theory with Roman meeting at Caltech](https://conference.ipac.caltech.edu/roman2024/) (recording available at [this link](https://youtu.be/93hF1ZCDzw8)),
+    4. the [2024 IAU GA in Cape Town](https://astronomy2024.org/) (live streamed at [this link](https://m.youtube.com/watch?v=8R-Wc9tGWcg&t=7218s)),
+    5. the New England FOLIAGE (FIRE mOdeLIng & Galaxy Evolution) workshop,
+    6. the [245th AAS meeting in National Harbor](https://aas.org/meetings/aas245).
 
 ## Acknowledgements
 
