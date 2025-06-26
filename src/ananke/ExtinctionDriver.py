@@ -46,13 +46,12 @@ class ExtinctionDriver:
                 The Ananke object that utilizes this ExtinctionDriver object
                 
             q_dust : float
-                Inverted conversion factor for dust efficiency represented by the
-                ratio between reddenning and column density E(B-V)/N_H. Default to
-                {Q_DUST}
+                Ratio of total neutral hydrogen column density to color excess
+                or reddening N_H/E(B-V). Default to {Q_DUST}
 
             total_to_selective : float
                 Optical total-to-selective extinction ratio between extinction and
-                reddenning A(V)/E(B-V). Default to {TOTAL_TO_SELECTIVE}
+                reddenning A_V/E(B-V). Default to {TOTAL_TO_SELECTIVE}
 
             mw_model : str
                 Optional, can be used to request a specific MW extinction model.
@@ -119,7 +118,7 @@ class ExtinctionDriver:
             rshell = self.ananke.universe_rshell
         elif self.mw_model == 'Marshall2006':
             xhel_p = np.array(marshall2006['x','y','z'].as_array().tolist())
-            lognh = np.log10(marshall2006['ext'].value.unmasked/(self.q_dust*self.total_to_selective))
+            lognh = np.log10(marshall2006['ext'].value.unmasked*self.q_dust/self.total_to_selective)
             rshell = (0, np.inf)
         return self._make_column_density_interpolator(xhel_p, lognh, rshell=rshell)
 
@@ -160,7 +159,7 @@ class ExtinctionDriver:
         if cls._interp_col_dens not in df.columns:
             column_densities = df[cls._interp_col_dens] = column_density_interpolator(np.array(df[cls._galaxia_pos]))
         if cls._reddening not in df.columns:
-            reddening        = df[cls._reddening]       = q_dust * column_densities
+            reddening        = df[cls._reddening]       = q_dust**-1 * column_densities
         if cls._extinction_0 not in df.columns:
             extinction_0     = df[cls._extinction_0]    = total_to_selective * reddening
         if extinction_keys.difference(df.columns):
