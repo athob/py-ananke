@@ -3,6 +3,7 @@
 Contains the ananke module building utility tools. Credit to
 https://github.com/GalacticDynamics-Oxford/Agama/blob/master/setup.py.
 """
+import platform
 import os
 import importlib.util
 import sys
@@ -22,6 +23,9 @@ from .__metadata__ import *
 from . import _version, versioneer
 
 __all__ = ['make_package_data', 'check_submodules', 'append_install_requires_with_submodules', 'make_cmdclass']
+
+if platform.system() == "Windows":
+    raise OSError(f"Windows compatibility is not currently supported by {NAME}. We apologize for the inconvenience.")
 
 ROOT_DIR = pathlib.Path(__file__).parent.parent
 
