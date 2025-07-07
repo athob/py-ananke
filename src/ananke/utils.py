@@ -99,6 +99,25 @@ class LinearNDInterpolatorNNExtrapolator:
             return t.item(0)
         return t
 
+def nextafter_n_times(start_value: Union[float,NDArray],
+                      direction_value: Union[float,NDArray],
+                      num_steps: int) -> Union[float,NDArray]:
+    """
+    Applies numpy.nextafter n times to a start_value in the direction of direction_value.
+
+    Args:
+        start_value (float or np.ndarray): The initial floating-point value(s).
+        direction_value (float or np.ndarray): The value(s) indicating the direction.
+        num_steps (int): The number of times to apply nextafter.
+
+    Returns:
+        float or np.ndarray: The value(s) after applying nextafter num_steps times.
+    """
+    current_value = start_value
+    for _ in range(num_steps):
+        current_value = np.nextafter(current_value, direction_value)
+    return current_value
+
 
 class LinearNDInterpolatorLOSExtrapolator:
     def __init__(self, points: NDArray, values: NDArray, value_at_center: float = 0., spherical: bool = False, extrapolator: bool = True, **kwargs):
@@ -114,7 +133,7 @@ class LinearNDInterpolatorLOSExtrapolator:
         self._spherical: bool = spherical
         self._extrapolator: bool = extrapolator
         points, values = self._complete_points_values_with_center(points, values, value_at_center, self._spherical)
-        self.linear_interpolator = interpolate.LinearNDInterpolator(points, values, **kwargs)
+        self.linear_interpolator: interpolate.LinearNDInterpolator = interpolate.LinearNDInterpolator(points, values, **kwargs)
         self._calibrating_center = np.mean(points,axis=0)
         self.linear_interpolator(self._calibrating_center)
         self._convex_hull = spatial.ConvexHull(self.linear_interpolator.tri.points[np.unique(self.linear_interpolator.tri.convex_hull)])
@@ -212,15 +231,30 @@ class LinearNDInterpolatorLOSExtrapolator:
                     extrap_t[intersection_is_outside_face] = 0.  # TODO should be value_at_center: consider removing value_at_center and hardcoding 0. ?
                     # assess if any is still nan (due to machine precision)
                     extrap_t_is_nan = np.isnan(extrap_t)
+                    # search the alpha values that will return a value and not a nan (with galloping when unsuccessful search)
                     while extrap_t_is_nan.any():
-                        # replace the alphas by their previous values in machine precision (next towards 0)
-                        alphas_on_hull[extrap_t_is_nan] = np.nextafter(alphas_on_hull[extrap_t_is_nan], 0)
-                        # re-run linear interpolator
-                        extrap_t[extrap_t_is_nan] = (
-                            self.linear_interpolator((alphas_on_hull[extrap_t_is_nan]*u_xi_where_nan_t[:,extrap_t_is_nan]).T)
-                            if not self._spherical else
-                            self.linear_interpolator((alphas_on_hull[extrap_t_is_nan]*u_xi_where_nan_t[:,extrap_t_is_nan]+shift[:,extrap_t_is_nan]).T) 
-                            )
+                        galloping_index = 0
+                        while galloping_index >= 0:
+                            # find new alphas as their previous values in machine precision (next towards 0)
+                            temp_alphas = nextafter_n_times(alphas_on_hull[extrap_t_is_nan], 0, 2**galloping_index)  # TODO the galloping
+                            # re-run linear interpolator
+                            temp_extrap = (
+                                self.linear_interpolator((temp_alphas*u_xi_where_nan_t[:,extrap_t_is_nan]).T)
+                                if not self._spherical else
+                                self.linear_interpolator((temp_alphas*u_xi_where_nan_t[:,extrap_t_is_nan]+shift[:,extrap_t_is_nan]).T) 
+                                )
+                            if np.isnan(temp_extrap).all():
+                                galloping_index += 1
+                                save_step = True
+                            elif galloping_index == 0:
+                                galloping_index = -1
+                                save_step = True
+                            else:
+                                galloping_index = -1
+                                save_step = False
+                            if save_step:
+                                alphas_on_hull[extrap_t_is_nan] = temp_alphas
+                                extrap_t[extrap_t_is_nan] = temp_extrap
                         # re-assess if still nan, and reloop if needed
                         extrap_t_is_nan = np.isnan(extrap_t)
                     # once loop is done, fill the nan that required extrapolation
