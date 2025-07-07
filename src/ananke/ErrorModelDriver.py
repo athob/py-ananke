@@ -19,7 +19,7 @@ from ._constants import *
 
 if TYPE_CHECKING:
     from .Ananke import Ananke
-    import Galaxia_ananke as Galaxia
+    import galaxia_ananke as Galaxia
 
 __all__ = ['ErrorModelDriver']
 

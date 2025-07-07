@@ -7,15 +7,15 @@ available in the main ``ananke`` namespace - use that instead.
 """
 from typing import TYPE_CHECKING, Any, Optional, Union, Tuple, List, Dict, Iterable
 from numpy.typing import NDArray
-from Galaxia_ananke.photometry.PhotoSystem import PhotoSystem
+from galaxia_ananke.photometry.PhotoSystem import PhotoSystem
 from warnings import warn
 import re
 import numpy as np
 import pandas as pd
 from astropy import units, coordinates
 
-import Galaxia_ananke as Galaxia
-import Galaxia_ananke.photometry as Galaxia_photo
+import galaxia_ananke as Galaxia
+import galaxia_ananke.photometry as Galaxia_photo
 
 from . import utils
 from ._constants import *
@@ -347,7 +347,7 @@ class Ananke:
 
             no_post_processing : bool
                 If True, ignore the post-processing pipeline following the
-                Galaxia_ananke run. This post-processing pipeline involves
+                galaxia_ananke run. This post-processing pipeline involves
                 the replacement of absolute magnitude quantities by their
                 apparent ones, followed by the extinction estimation pipeline
                 and by the error model application. Default to False.

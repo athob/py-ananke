@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict
 from numpy.typing import NDArray
 import pathlib
-import EnBiD_ananke as EnBiD
+import enbid_ananke as EnBiD
 
 from . import utils
 from ._constants import *

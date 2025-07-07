@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict
 from numpy.typing import ArrayLike, NDArray
 import numpy as np
-from Galaxia_ananke._defaults import DEFAULTS_FOR_PARFILE
+from galaxia_ananke._defaults import DEFAULTS_FOR_PARFILE
 
 from ._constants import *
 

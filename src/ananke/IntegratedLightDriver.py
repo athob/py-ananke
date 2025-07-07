@@ -14,10 +14,10 @@ import pandas as pd
 from scipy import integrate, interpolate
 from astropy import constants, units, table
 
-import Galaxia_ananke as Galaxia
-from Galaxia_ananke.Output import vaex
-from Galaxia_ananke.photometry.Formatting import Formatting as Galaxia_photo_Formatting
-from Galaxia_ananke._templates import FTTAGS
+import galaxia_ananke as Galaxia
+from galaxia_ananke.Output import vaex
+from galaxia_ananke.photometry.Formatting import Formatting as Galaxia_photo_Formatting
+from galaxia_ananke._templates import FTTAGS
 
 from ._constants import *
 from .utils import classproperty
@@ -25,7 +25,7 @@ from .utils import classproperty
 
 if TYPE_CHECKING:
     from .Ananke import Ananke
-    from Galaxia_ananke.photometry.PhotoSystem import PhotoSystem
+    from galaxia_ananke.photometry.PhotoSystem import PhotoSystem
 
 __all__ = ['IntegratedLightDriver']
 

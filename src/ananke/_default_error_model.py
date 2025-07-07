@@ -7,7 +7,7 @@ Please note that this module is private.
 """
 import numpy as np
 from astropy import units
-from Galaxia_ananke import photometry as ph
+from galaxia_ananke import photometry as ph
 
 def _temp(df):
     """
