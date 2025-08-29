@@ -296,11 +296,15 @@ class Ananke:
             intrinsic_mag = cls._intrinsic_mag_template(mag)
             if intrinsic_mag not in df.columns:
                 df[intrinsic_mag] = df[mag]
-            i_max_dmod = np.abs(df[_dmod] if isinstance(df, pd.DataFrame) else df[_dmod].to_pandas_series()).argmax()
-            max_dmod = df[_dmod][i_max_dmod:i_max_dmod+1].to_numpy()[0]
-            mag_at_max_dmod = df[mag][i_max_dmod:i_max_dmod+1].to_numpy()[0]
-            int_mag_at_max_dmod = df[intrinsic_mag][i_max_dmod:i_max_dmod+1].to_numpy()[0]
-            if np.abs(int_mag_at_max_dmod + max_dmod - mag_at_max_dmod) > 2*np.abs(np.nextafter(int_mag_at_max_dmod, mag_at_max_dmod)-int_mag_at_max_dmod):
+            if df.shape[0]:
+                i_max_dmod = np.abs(df[_dmod] if isinstance(df, pd.DataFrame) else df[_dmod].to_pandas_series()).argmax()
+                max_dmod = df[_dmod][i_max_dmod:i_max_dmod+1].to_numpy()[0]
+                mag_at_max_dmod = df[mag][i_max_dmod:i_max_dmod+1].to_numpy()[0]
+                int_mag_at_max_dmod = df[intrinsic_mag][i_max_dmod:i_max_dmod+1].to_numpy()[0]
+                not_done = np.abs(int_mag_at_max_dmod + max_dmod - mag_at_max_dmod) > 2*np.abs(np.nextafter(int_mag_at_max_dmod, mag_at_max_dmod)-int_mag_at_max_dmod)
+            else: 
+                not_done = True
+            if not_done:
                 df[mag] += df[_dmod]
 
     def _pp_observed_mags(self, galaxia_output: Galaxia.Output) -> None:

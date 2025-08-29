@@ -119,18 +119,22 @@ class ErrorModelDriver:
                     if prop_clean_name not in df.column_names:
                         df[prop_clean_name] = df[prop_name]
                 # determine if drawn error has already been added to property
-                i_max_err = np.abs(df[prop_err_name] if isinstance(df, pd.DataFrame) else df[prop_err_name].to_pandas_series()).argmax()
-                max_err = df[prop_err_name][i_max_err:i_max_err+1].to_numpy()[0]
-                prop_at_max_err = df[prop_name][i_max_err:i_max_err+1].to_numpy()[0]
-                clean_prop_at_max_err = (
-                    (df[prop_intrinsic_name][i_max_err:i_max_err+1].to_numpy()
-                    + df[_dmod][i_max_err:i_max_err+1].to_numpy()
-                    + (df[prop_extinction_name][i_max_err:i_max_err+1].to_numpy()
-                        if prop_extinction_name in df.columns else 0))
-                    if prop_is_mag else
-                    df[prop_clean_name][i_max_err:i_max_err+1].to_numpy()
-                    )[0]
-                if np.abs(clean_prop_at_max_err + max_err - prop_at_max_err) > 2*np.abs(np.nextafter(clean_prop_at_max_err, prop_at_max_err)-clean_prop_at_max_err):
+                if df.shape[0]:
+                    i_max_err = np.abs(df[prop_err_name] if isinstance(df, pd.DataFrame) else df[prop_err_name].to_pandas_series()).argmax()
+                    max_err = df[prop_err_name][i_max_err:i_max_err+1].to_numpy()[0]
+                    prop_at_max_err = df[prop_name][i_max_err:i_max_err+1].to_numpy()[0]
+                    clean_prop_at_max_err = (
+                        (df[prop_intrinsic_name][i_max_err:i_max_err+1].to_numpy()
+                        + df[_dmod][i_max_err:i_max_err+1].to_numpy()
+                        + (df[prop_extinction_name][i_max_err:i_max_err+1].to_numpy()
+                            if prop_extinction_name in df.columns else 0))
+                        if prop_is_mag else
+                        df[prop_clean_name][i_max_err:i_max_err+1].to_numpy()
+                        )[0]
+                    not_done = np.abs(clean_prop_at_max_err + max_err - prop_at_max_err) > 2*np.abs(np.nextafter(clean_prop_at_max_err, prop_at_max_err)-clean_prop_at_max_err)
+                else: 
+                    not_done = True
+                if not_done:
                     # add the drawn error value to the existing quantity for property prop_name
                     df[prop_name] += df[prop_err_name]
 

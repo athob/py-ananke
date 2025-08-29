@@ -169,14 +169,18 @@ class ExtinctionDriver:
                     # assign the column of the extinction values for filter mag_name in the final catalogue output 
                     df[extinction_mag_name] = extinction
                 # determine if extinction value has already been added to photometric magnitude
-                i_max_ext = np.abs(df[extinction_mag_name] if isinstance(df, pd.DataFrame) else df[extinction_mag_name].to_pandas_series()).argmax()
-                max_ext = df[extinction_mag_name][i_max_ext:i_max_ext+1].to_numpy()[0]
-                mag_at_max_ext = df[mag_name][i_max_ext:i_max_ext+1].to_numpy()[0]
-                unext_mag_at_max_ext = (
-                    df[_intrinsic_mag_template(mag_name)][i_max_ext:i_max_ext+1].to_numpy()
-                    + df[_dmod][i_max_ext:i_max_ext+1].to_numpy()
-                    )[0]
-                if np.abs(unext_mag_at_max_ext + max_ext - mag_at_max_ext) > 2*np.abs(np.nextafter(unext_mag_at_max_ext, mag_at_max_ext)-unext_mag_at_max_ext):
+                if df.shape[0]:
+                    i_max_ext = np.abs(df[extinction_mag_name] if isinstance(df, pd.DataFrame) else df[extinction_mag_name].to_pandas_series()).argmax()
+                    max_ext = df[extinction_mag_name][i_max_ext:i_max_ext+1].to_numpy()[0]
+                    mag_at_max_ext = df[mag_name][i_max_ext:i_max_ext+1].to_numpy()[0]
+                    unext_mag_at_max_ext = (
+                        df[_intrinsic_mag_template(mag_name)][i_max_ext:i_max_ext+1].to_numpy()
+                        + df[_dmod][i_max_ext:i_max_ext+1].to_numpy()
+                        )[0]
+                    not_done = np.abs(unext_mag_at_max_ext + max_ext - mag_at_max_ext) > 2*np.abs(np.nextafter(unext_mag_at_max_ext, mag_at_max_ext)-unext_mag_at_max_ext)
+                else:
+                    not_done = True
+                if not_done:
                     # add the extinction value to the existing photometric magnitude for filter mag_name
                     df[mag_name] += df[extinction_mag_name]
 
