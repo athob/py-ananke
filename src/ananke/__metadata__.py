@@ -42,9 +42,9 @@ __author__ = "Adrien Thob"
 __contributors__ = ["Robyn Sanderson", "Andrew Eden"]
 __supporters__ = ["Farnik Nikakhtar", "Nondh Panithanpaisal", "Nicolas Garavito-Camargo", "Sanjib Sharma"]
 __feedback__ = ["the extended Galaxy Dynamics @ UPenn group", "the participants of the \"anankethon\" workshops"]
-__license__ = "GNU General Public License v3 or later (GPLv3+)"  # TODO change to longer version?
-__license_classifier__ = "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)"
-__license_short__ = "Licensed under the GNU GPL v3 or later"
+__license__ = "GNU Affero General Public License v3 or later (AGPLv3+)"  # TODO change to longer version?
+__license_classifier__ = "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)"
+__license_short__ = "Licensed under the GNU AGPL v3 or later"
 
 # SOFTWARE METADATA
 __version__: Final[str] = _version.get_versions()['version']
