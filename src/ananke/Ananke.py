@@ -32,6 +32,7 @@ import galaxia_ananke as Galaxia
 import galaxia_ananke.photometry as Galaxia_photo
 
 from . import utils
+from .__metadata__ import *
 from ._constants import *
 from .Universe import Universe
 from .Observer import Observer
@@ -325,7 +326,16 @@ class Ananke:
         pipeline_name = "observed_magnitudes"
         print(f"Running {pipeline_name} post-processing pipeline")
         mag_names = self.galaxia_catalogue_mag_names
-        galaxia_output.apply_post_process_pipeline_and_flush(self.__pp_observed_mags, mag_names, galaxia_output._dmod, flush_with_columns=mag_names)
+        update_metadata = {
+            Galaxia.ATTRIBUTE_HEADER_KEY:
+            (
+                lambda attrs:
+                f"{attrs[Galaxia.ATTRIBUTE_HEADER_KEY]}\n"
+                f"Modified by Python module {NAME} v{__version__}, "
+                f"software available at <{__url__}>."
+            ),
+        }
+        galaxia_output.apply_post_process_pipeline_and_flush(self.__pp_observed_mags, mag_names, galaxia_output._dmod, flush_with_columns=mag_names, update_metadata=update_metadata)
 
     def _pp_extinctions(self) -> None:
         pipeline_name = "extinctions"
