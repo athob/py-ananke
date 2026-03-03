@@ -13,6 +13,7 @@
 # - LICENSE <https://github.com/athob/py-ananke/blob/main/LICENSE>
 # - COPYRIGHT <https://github.com/athob/py-ananke/blob/main/COPYRIGHT>
 #
+import sys, pathlib; sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import setuptools
 from setuptools import setup
 
