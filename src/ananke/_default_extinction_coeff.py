@@ -19,6 +19,7 @@ existing photometric systems of Galaxia.
 
 Please note that this module is private.
 """
+from functools import cache
 import numpy as np
 import pyvo
 from astropy import units, table, coordinates
@@ -64,18 +65,21 @@ def __remove_description_from_quantity(quantity):
     return quantity
 
 
-voresource = pyvo.registry.search(ivoid="ivo://CDS.VizieR/J/A+A/453/635")[0]
-marshall2006 = voresource.get_service("tap").run_sync(f'select * from "{list(voresource.get_tables().keys())[0]}"').to_qtable()
-marshall2006.sort('nb')
-marshall2006 = table.vstack([
-        table.vstack([
-            table.QTable({
-                k.replace(f'{i}',''): __remove_description_from_quantity(t[k])
-                for k in ['GLON', 'GLAT', f'r{i}', f'ext{i}']})
-            for i in range(1,t['nb'][0]+1)])
-        for t in marshall2006.group_by('nb').groups])
-marshall2006 = table.hstack([marshall2006, table.QTable(dict(zip(['x','y','z'], coordinates.Galactic(l=marshall2006['GLON'], b=marshall2006['GLAT'], distance=marshall2006['r']).cartesian.xyz.to('kpc'))))])
-marshall2006['ext'] /= universal_extinction_law([dict(zip(ph.available_photo_systems['padova/GAIA__0+TYCHO+2MASS'].mag_names, ph.available_photo_systems['padova/GAIA__0+TYCHO+2MASS'].effective_wavelengths))['Ks'].to('micron').value])[0]
+@cache
+def marshall2006() -> table.Table:
+    voresource = pyvo.registry.search(ivoid="ivo://CDS.VizieR/J/A+A/453/635")[0]
+    marshall2006 = voresource.get_service("tap").run_sync(f'select * from "{list(voresource.get_tables().keys())[0]}"').to_qtable()
+    marshall2006.sort('nb')
+    marshall2006 = table.vstack([
+            table.vstack([
+                table.QTable({
+                    k.replace(f'{i}',''): __remove_description_from_quantity(t[k])
+                    for k in ['GLON', 'GLAT', f'r{i}', f'ext{i}']})
+                for i in range(1,t['nb'][0]+1)])
+            for t in marshall2006.group_by('nb').groups])
+    marshall2006 = table.hstack([marshall2006, table.QTable(dict(zip(['x','y','z'], coordinates.Galactic(l=marshall2006['GLON'], b=marshall2006['GLAT'], distance=marshall2006['r']).cartesian.xyz.to('kpc'))))])
+    marshall2006['ext'] /= universal_extinction_law([dict(zip(ph.available_photo_systems['padova/GAIA__0+TYCHO+2MASS'].mag_names, ph.available_photo_systems['padova/GAIA__0+TYCHO+2MASS'].effective_wavelengths))['Ks'].to('micron').value])[0]
+    return marshall2006
 
 
 def _temp(df):

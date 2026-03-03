@@ -131,8 +131,8 @@ class ExtinctionDriver:
             lognh = self.particle_column_densities
             rshell = self.ananke.universe_rshell
         elif self.mw_model == 'Marshall2006':
-            xhel_p = np.array(marshall2006['x','y','z'].as_array().tolist())
-            lognh = np.log10(marshall2006['ext'].value.unmasked*self.q_dust/self.total_to_selective)
+            xhel_p = np.array(marshall2006()['x','y','z'].as_array().tolist())
+            lognh = np.log10(marshall2006()['ext'].value.unmasked*self.q_dust/self.total_to_selective)
             rshell = (0, np.inf)
         return self._make_column_density_interpolator(xhel_p, lognh, rshell=rshell)
 
