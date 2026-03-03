@@ -327,10 +327,10 @@ class Ananke:
         print(f"Running {pipeline_name} post-processing pipeline")
         mag_names = self.galaxia_catalogue_mag_names
         update_metadata = {
-            Galaxia.ATTRIBUTE_HEADER_KEY:
+            Galaxia.METADATA_HEADER_KEY:
             (
                 lambda attrs:
-                f"{attrs[Galaxia.ATTRIBUTE_HEADER_KEY]}\n"
+                f"{attrs[Galaxia.METADATA_HEADER_KEY]}\n"
                 f"Modified by Python module {NAME} v{__version__}, "
                 f"software available at <{__url__}>."
             ),
