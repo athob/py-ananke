@@ -22,6 +22,7 @@ available in the main ``ananke`` namespace - use that instead.
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Optional, Dict
 from numpy.typing import NDArray
+from warnings import warn
 import pathlib
 import numpy as np
 import enbid_ananke as EnBiD
@@ -99,6 +100,12 @@ class KernelsDriver:
     def particle_kernels(self) -> Optional[NDArray]:
         if self._kernels in self.ananke.particles:
             return self.ananke.particles[self._kernels]
+        elif 'rho_pos' in self.ananke.particles:
+            warn("The use of 'rho_pos' and 'rho_vel' keys to provide density estimates that inform kernels sizes will be removed in a future update in favour of the currently supported key 'kernels' to directly provides those kernel sizes", DeprecationWarning, stacklevel=2)
+            particle_densities_stack = [self.ananke.particles['rho_pos']]
+            if 'rho_vel' in self.ananke.particles:
+                particle_densities_stack.append(self.ananke.particles['rho_vel'])
+            return 1/np.cbrt(4/3*np.pi*np.vstack(particle_densities_stack).T)
     
     @property
     def name(self):
