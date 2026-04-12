@@ -36,7 +36,8 @@ from .__metadata__ import *
 from ._constants import *
 from .Universe import Universe
 from .Observer import Observer
-from .DensitiesDriver import DensitiesDriver
+# from .DensitiesDriver import DensitiesDriver
+from .KernelsDriver import KernelsDriver
 from .ExtinctionDriver import ExtinctionDriver
 from .ErrorModelDriver import ErrorModelDriver
 from .IntegratedLightDriver import IntegratedLightDriver
@@ -58,8 +59,9 @@ class Ananke:
     # _elem_list = Galaxia.Input._elem_list  # other abundances in the list as [X/H]
     _par_id = Galaxia.Input._parentid  # indices of parent particles in snapshot
     # _dform = Galaxia.Input._dform  # formation distance
-    _rho_pos = DensitiesDriver._density_template(POS_TAG)
-    _rho_vel = DensitiesDriver._density_template(VEL_TAG)
+    # _rho_pos = DensitiesDriver._density_template(POS_TAG)
+    # _rho_vel = DensitiesDriver._density_template(VEL_TAG)
+    _kernels = KernelsDriver._kernels
     _log10NH = ExtinctionDriver._col_density
     _required_particles_keys = Galaxia.Input._required_keys_in_particles
     _optional_particles_keys = Galaxia.Input._optional_keys_in_particles
@@ -74,7 +76,7 @@ class Ananke:
     _intrinsic_mag_template = _intrinsic_mag_formatter.format
 
     def __init__(self, particles: Dict[str, NDArray], name: str, ngb: int = 64, caching: bool = False, append_hash: Optional[bool] = None,
-                 d_params: Dict[str, Any] = {}, e_params: Dict[str, Any] = {}, err_params: Dict[str, Any] = {}, il_params: Dict[str, Any] = {},
+                 k_params: Dict[str, Any] = {}, e_params: Dict[str, Any] = {}, err_params: Dict[str, Any] = {}, il_params: Dict[str, Any] = {},
                  **kwargs: Dict[str, Any]) -> None:
         """
             Parameters
@@ -97,9 +99,9 @@ class Ananke:
             append_hash : bool
                 TODO
 
-            d_params : dict
-                Parameters to configure the kernel density estimation. Use
-                class method ``display_density_docs`` to find what parameters
+            k_params : dict
+                Parameters to configure the kernel sizes estimation. Use
+                class method ``display_kernel_docs`` to find what parameters
                 can be defined
 
             e_params : dict
@@ -184,7 +186,8 @@ class Ananke:
         self.__photo_sys: str = kwargs.pop(self._photo_sys, Galaxia.DEFAULT_PSYS)
         self.__observer_proxy: Observer = self._prepare_observer_proxy(kwargs)
         self.__parameters: Dict[str, Any] = kwargs
-        self.__densitiesdriver_proxy: DensitiesDriver = self._prepare_densitiesdriver_proxy(d_params)
+        # self.__densitiesdriver_proxy: DensitiesDriver = self._prepare_densitiesdriver_proxy(d_params)
+        self.__kernelsdriver_proxy: KernelsDriver = self._prepare_kernelsdriver_proxy(k_params)
         self.__extinctiondriver_proxy: ExtinctionDriver = self._prepare_extinctiondriver_proxy(e_params)
         self.__errormodeldriver_proxy: ErrorModelDriver = self._prepare_errormodeldriver_proxy(err_params)
         self.__integratedlightdriver_proxy: IntegratedLightDriver = self._prepare_integratedlightdriver_proxy(il_params)
@@ -228,8 +231,11 @@ class Ananke:
                 _obs[new_key] = _obs.pop(key)
         return Observer(self, **_obs)
 
-    def _prepare_densitiesdriver_proxy(self, d_params: Dict[str, Any]) -> DensitiesDriver:
-        return DensitiesDriver(self, **d_params)
+    # def _prepare_densitiesdriver_proxy(self, d_params: Dict[str, Any]) -> DensitiesDriver:
+    #     return DensitiesDriver(self, **d_params)
+
+    def _prepare_kernelsdriver_proxy(self, k_params: Dict[str, Any]) -> KernelsDriver:
+        return KernelsDriver(self, **k_params)
 
     def _prepare_extinctiondriver_proxy(self, e_params: Dict[str, Any]) -> ExtinctionDriver:
         return ExtinctionDriver(self, **e_params)
@@ -436,9 +442,13 @@ class Ananke:
         E_B_V = "E(B-V)",
         A_0 = "A_0")
 
+    # @property
+    # def _densitiesdriver_proxy(self) -> DensitiesDriver:
+    #     return self.__densitiesdriver_proxy
+
     @property
-    def _densitiesdriver_proxy(self) -> DensitiesDriver:
-        return self.__densitiesdriver_proxy
+    def _kernelsdriver_proxy(self) -> KernelsDriver:
+        return self.__kernelsdriver_proxy
 
     @property
     def _extinctiondriver_proxy(self) -> ExtinctionDriver:
@@ -497,7 +507,8 @@ class Ananke:
         if value:
             warn(f"You have requested caching mode, be aware this feature is currently experimental and may result in unintended behaviour.", DeprecationWarning, stacklevel=2)
         self.__caching: bool = value
-        self._densitiesdriver_proxy.parameters['caching'] = self.caching
+        # self._densitiesdriver_proxy.parameters['caching'] = self.caching
+        self._kernelsdriver_proxy.parameters['caching'] = self.caching
       
     @property
     def append_hash(self) -> bool:
@@ -559,9 +570,9 @@ class Ananke:
     def particle_nearest_observed_distmod(self) -> NDArray:
         return coordinates.Distance(self.particle_nearest_observed_distances*units.kpc).distmod.value
 
-    @property
-    def densities(self) -> Dict[str, NDArray]:
-        return self._densitiesdriver_proxy.densities
+    # @property
+    # def densities(self) -> Dict[str, NDArray]:
+    #     return self._densitiesdriver_proxy.densities
 
     @property
     def extinctions(self):  # TODO figure out output typing
@@ -626,7 +637,8 @@ class Ananke:
 
     @property
     def _galaxia_kernels(self) -> NDArray:
-        return 1/np.cbrt(4/3*np.pi*np.array([self.densities[k] for k in [POS_TAG, VEL_TAG] if k in self.densities]).T)
+        # return 1/np.cbrt(4/3*np.pi*np.array([self.densities[k] for k in [POS_TAG, VEL_TAG] if k in self.densities]).T)
+        return self._kernelsdriver_proxy.kernels
 
     @property
     def _output(self):
@@ -663,7 +675,7 @@ class Ananke:
         return description
 
     @classmethod
-    def make_dummy_particles_input(cls, n_parts=10**5, with_densities=False) -> Dict[str, NDArray]:
+    def make_dummy_particles_input(cls, n_parts=10**5, with_kernels=False) -> Dict[str, NDArray]:
         """
             Generate an example dummy input particles dictionary for Ananke
             made of randomly generated arrays.
@@ -673,8 +685,8 @@ class Ananke:
             n_parts : int
                 Number of particles the example include. Default to 10**5.
             
-            with_densities : bool
-                Flag to include dummy densities estimates in the returned
+            with_kernels : bool
+                Flag to include dummy kernels estimates in the returned
                 dictionary. Default to False
 
             Returns
@@ -688,9 +700,9 @@ class Ananke:
         """
         p = Galaxia.make_dummy_particles_input(n_parts)
         p[cls._log10NH] = 22 + np.random.randn(n_parts)
-        if with_densities:
-            # p[cls._rho_pos], p[cls._rho_vel] = Galaxia.make_dummy_densities_input(n_parts)
-            p[cls._rho_pos], p[cls._rho_vel] = 1/(4/3*np.pi*Galaxia.make_dummy_kernels_input(n_parts).T**3)
+        if with_kernels:
+            # p[cls._rho_pos], p[cls._rho_vel] = 1/(4/3*np.pi*Galaxia.make_dummy_kernels_input(n_parts).T**3)
+            p[cls._kernels] = Galaxia.make_dummy_kernels_input(n_parts)
         return p
 
     @classmethod
@@ -706,19 +718,26 @@ class Ananke:
         """
         return Galaxia_photo.available_photo_systems
 
+    # @classmethod
+    # def display_density_docs(cls) -> None:
+    #     """
+    #         Print the DensitiesDriver constructor docstring
+    #     """
+    #     print(DensitiesDriver.__init__.__doc__)
+
     @classmethod
-    def display_density_docs(cls) -> None:
+    def display_kernels_docs(cls) -> None:
         """
-            Print the DensitiesDriver constructor docstring
+            Print the KernelsDriver constructor docstring
         """
-        print(DensitiesDriver.__init__.__doc__)
+        print(KernelsDriver.__init__.__doc__)
 
     @classmethod
     def display_EnBiD_docs(cls) -> None:
         """
             Print the EnBiD.run_enbid method docstring
         """
-        DensitiesDriver.display_EnBiD_docs()
+        KernelsDriver.display_EnBiD_docs()
 
     @classmethod
     def display_extinction_docs(cls) -> None:

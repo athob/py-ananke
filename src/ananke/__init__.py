@@ -30,14 +30,16 @@ from .__metadata__ import *
 from ._constants import *
 from .Ananke import Ananke
 
-__all__ = ['Ananke', 'make_dummy_particles_input', 'display_available_photometric_systems', 'display_density_docs', 'display_EnBiD_docs', 'display_extinction_docs', 'display_errormodel_docs']
+__all__ = ['Ananke', 'make_dummy_particles_input', 'display_available_photometric_systems', 'display_kernels_docs', 'display_EnBiD_docs', 'display_extinction_docs', 'display_errormodel_docs']
 
 
 make_dummy_particles_input = Ananke.make_dummy_particles_input
 
 display_available_photometric_systems = Ananke.display_available_photometric_systems
 
-display_density_docs = Ananke.display_density_docs
+# display_density_docs = Ananke.display_density_docs
+
+display_kernels_docs = Ananke.display_kernels_docs
 
 display_EnBiD_docs = Ananke.display_EnBiD_docs
 
