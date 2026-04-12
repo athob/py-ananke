@@ -240,12 +240,12 @@ class Ananke:
     def _prepare_integratedlightdriver_proxy(self, il_params: Dict[str, Any]) -> IntegratedLightDriver:
         return IntegratedLightDriver(self, **il_params)
 
-    def _prepare_galaxia_input(self, rho: Dict[str, NDArray], **kwargs) -> Galaxia.Input:
+    def _prepare_galaxia_input(self, **kwargs) -> Galaxia.Input:
         input_kwargs = {'name': self.name, 'ngb': self.ngb, 'caching': self.caching}
         if self.append_hash is not None:  input_kwargs['append_hash'] = self.append_hash
         input_kwargs = {**input_kwargs, **kwargs}  # input_dir, k_factor
         if self.__galaxia_input is None:
-            self.__galaxia_input = Galaxia.Input(self._galaxia_particles, rho[POS_TAG], rho.get(VEL_TAG), **input_kwargs)
+            self.__galaxia_input = Galaxia.Input(self._galaxia_particles, self._galaxia_kernels, **input_kwargs)
         return self.__galaxia_input
 
     def _prepare_galaxia_survey(self, input: Galaxia.Input, **kwargs) -> Galaxia.Survey:
@@ -254,17 +254,13 @@ class Ananke:
             self.__galaxia_survey = Galaxia.Survey(input, **survey_kwargs)
         return self.__galaxia_survey
 
-    def _run_galaxia(self, rho: Dict[str, NDArray], **kwargs) -> Galaxia.Output:
+    def _run_galaxia(self, **kwargs) -> Galaxia.Output:
         """
             Method to generate the survey out of the pipeline particles given
             a dictionary of kernel density estimates
             
             Parameters
             ----------
-            rho : dict({POS_TAG}=array_like, {VEL_TAG}=array_like)
-                A dictionary of same-length arrays representing kernel density
-                estimates for the pipeline particles
-
             input_dir, output_dir : string
                 Optional arguments to specify paths for the directories where
                 ananke should generate input and output data.
@@ -289,13 +285,12 @@ class Ananke:
             -----
             {notes_from_galaxia_output}
             """
-        input: Galaxia.Input = self._prepare_galaxia_input(rho, **{k:kwargs.pop(k) for k in ['input_dir', 'k_factor'] if k in kwargs})
+        input: Galaxia.Input = self._prepare_galaxia_input(**{k:kwargs.pop(k) for k in ['input_dir', 'k_factor'] if k in kwargs})
         survey: Galaxia.Survey = self._prepare_galaxia_survey(input, **{k:kwargs.pop(k) for k in ['surveyname'] if k in kwargs})
         self.__galaxia_output: Galaxia.Output = survey.make_survey(**self._galaxia_kwargs, **kwargs)
         return self._galaxia_output
 
-    _run_galaxia.__doc__ = _run_galaxia.__doc__.format(POS_TAG=POS_TAG, VEL_TAG=VEL_TAG,
-                                                       parameters_from_galaxia = utils.extract_parameters_from_docstring(
+    _run_galaxia.__doc__ = _run_galaxia.__doc__.format(parameters_from_galaxia = utils.extract_parameters_from_docstring(
                                                            Galaxia.Survey.make_survey.__doc__,
                                                            ignore=[
                                                                'fsample', 'cmd_magnames', 'parfile', 'output_dir',
@@ -418,7 +413,7 @@ class Ananke:
         if caching is not None:  self.caching: bool = caching
         if append_hash is not None:  self.append_hash: bool = append_hash
         if 'i_o_dir' in kwargs:  kwargs['input_dir'] = kwargs['output_dir'] = kwargs.pop('i_o_dir')
-        galaxia_output: Galaxia.Output = self._run_galaxia(self.densities, **kwargs)
+        galaxia_output: Galaxia.Output = self._run_galaxia(**kwargs)
         if not no_post_processing:
             galaxia_output.check_state_before_running(description="ananke_pp_observed_mags")(self._pp_observed_mags)(galaxia_output)
             galaxia_output.check_state_before_running(description="ananke_pp_extinctions", level=1)(self._pp_extinctions)()
@@ -428,7 +423,7 @@ class Ananke:
     run.__doc__ = run.__doc__.format(
         parameters_from_run_galaxia = utils.extract_parameters_from_docstring(
             _run_galaxia.__doc__,
-            ignore=['input_dir, output_dir', 'rho']).replace("\n", "\n            "),
+            ignore=['input_dir, output_dir']).replace("\n", "\n            "),
         notes_from_run_galaxia = utils.extract_notes_from_docstring(
             _run_galaxia.__doc__).replace("\n", "\n            "),
         _Intrinsic = _intrinsic_mag_template(""),
@@ -630,6 +625,10 @@ class Ananke:
         return {key: self.particles[key] for key in self._galaxia_particles_keys if key in self.particles}
 
     @property
+    def _galaxia_kernels(self) -> NDArray:
+        return 1/np.cbrt(4/3*np.pi*np.array([self.densities[k] for k in [POS_TAG, VEL_TAG] if k in self.densities]).T)
+
+    @property
     def _output(self):
         warn('This property will be deprecated, please use instead property _galaxia_output', DeprecationWarning, stacklevel=2)
         return self._galaxia_output
@@ -659,8 +658,8 @@ class Ananke:
         """.format(particles_dictionary_description=Galaxia.Input.particles_dictionary_description,
                    density_properties=''.join(
                        [f"\n            * {desc} via key ``{str(key)}``"
-                        for key, desc in [Galaxia.Input._positiondensity_prop,
-                                          Galaxia.Input._velocitydensity_prop]]))
+                        for key, desc in [("rho_pos", ""),
+                                          ("rho_vel", "")]]))
         return description
 
     @classmethod
@@ -690,7 +689,8 @@ class Ananke:
         p = Galaxia.make_dummy_particles_input(n_parts)
         p[cls._log10NH] = 22 + np.random.randn(n_parts)
         if with_densities:
-            p[cls._rho_pos], p[cls._rho_vel] = Galaxia.make_dummy_densities_input(n_parts)
+            # p[cls._rho_pos], p[cls._rho_vel] = Galaxia.make_dummy_densities_input(n_parts)
+            p[cls._rho_pos], p[cls._rho_vel] = 1/(4/3*np.pi*Galaxia.make_dummy_kernels_input(n_parts).T**3)
         return p
 
     @classmethod
