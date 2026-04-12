@@ -37,8 +37,6 @@ make_dummy_particles_input = Ananke.make_dummy_particles_input
 
 display_available_photometric_systems = Ananke.display_available_photometric_systems
 
-# display_density_docs = Ananke.display_density_docs
-
 display_kernels_docs = Ananke.display_kernels_docs
 
 display_EnBiD_docs = Ananke.display_EnBiD_docs

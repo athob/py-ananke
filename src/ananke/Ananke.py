@@ -36,7 +36,6 @@ from .__metadata__ import *
 from ._constants import *
 from .Universe import Universe
 from .Observer import Observer
-# from .DensitiesDriver import DensitiesDriver
 from .KernelsDriver import KernelsDriver
 from .ExtinctionDriver import ExtinctionDriver
 from .ErrorModelDriver import ErrorModelDriver
@@ -59,8 +58,6 @@ class Ananke:
     # _elem_list = Galaxia.Input._elem_list  # other abundances in the list as [X/H]
     _par_id = Galaxia.Input._parentid  # indices of parent particles in snapshot
     # _dform = Galaxia.Input._dform  # formation distance
-    # _rho_pos = DensitiesDriver._density_template(POS_TAG)
-    # _rho_vel = DensitiesDriver._density_template(VEL_TAG)
     _kernels = KernelsDriver._kernels
     _log10NH = ExtinctionDriver._col_density
     _required_particles_keys = Galaxia.Input._required_keys_in_particles
@@ -186,7 +183,6 @@ class Ananke:
         self.__photo_sys: str = kwargs.pop(self._photo_sys, Galaxia.DEFAULT_PSYS)
         self.__observer_proxy: Observer = self._prepare_observer_proxy(kwargs)
         self.__parameters: Dict[str, Any] = kwargs
-        # self.__densitiesdriver_proxy: DensitiesDriver = self._prepare_densitiesdriver_proxy(d_params)
         self.__kernelsdriver_proxy: KernelsDriver = self._prepare_kernelsdriver_proxy(k_params)
         self.__extinctiondriver_proxy: ExtinctionDriver = self._prepare_extinctiondriver_proxy(e_params)
         self.__errormodeldriver_proxy: ErrorModelDriver = self._prepare_errormodeldriver_proxy(err_params)
@@ -231,9 +227,6 @@ class Ananke:
                 _obs[new_key] = _obs.pop(key)
         return Observer(self, **_obs)
 
-    # def _prepare_densitiesdriver_proxy(self, d_params: Dict[str, Any]) -> DensitiesDriver:
-    #     return DensitiesDriver(self, **d_params)
-
     def _prepare_kernelsdriver_proxy(self, k_params: Dict[str, Any]) -> KernelsDriver:
         return KernelsDriver(self, **k_params)
 
@@ -262,8 +255,7 @@ class Ananke:
 
     def _run_galaxia(self, **kwargs) -> Galaxia.Output:
         """
-            Method to generate the survey out of the pipeline particles given
-            a dictionary of kernel density estimates
+            Method to generate the survey out of the pipeline particles
             
             Parameters
             ----------
@@ -442,10 +434,6 @@ class Ananke:
         E_B_V = "E(B-V)",
         A_0 = "A_0")
 
-    # @property
-    # def _densitiesdriver_proxy(self) -> DensitiesDriver:
-    #     return self.__densitiesdriver_proxy
-
     @property
     def _kernelsdriver_proxy(self) -> KernelsDriver:
         return self.__kernelsdriver_proxy
@@ -507,7 +495,6 @@ class Ananke:
         if value:
             warn(f"You have requested caching mode, be aware this feature is currently experimental and may result in unintended behaviour.", DeprecationWarning, stacklevel=2)
         self.__caching: bool = value
-        # self._densitiesdriver_proxy.parameters['caching'] = self.caching
         self._kernelsdriver_proxy.parameters['caching'] = self.caching
       
     @property
@@ -569,10 +556,6 @@ class Ananke:
     @property
     def particle_nearest_observed_distmod(self) -> NDArray:
         return coordinates.Distance(self.particle_nearest_observed_distances*units.kpc).distmod.value
-
-    # @property
-    # def densities(self) -> Dict[str, NDArray]:
-    #     return self._densitiesdriver_proxy.densities
 
     @property
     def extinctions(self):  # TODO figure out output typing
@@ -637,7 +620,6 @@ class Ananke:
 
     @property
     def _galaxia_kernels(self) -> NDArray:
-        # return 1/np.cbrt(4/3*np.pi*np.array([self.densities[k] for k in [POS_TAG, VEL_TAG] if k in self.densities]).T)
         return self._kernelsdriver_proxy.kernels
 
     @property
@@ -664,14 +646,13 @@ class Ananke:
     def make_dummy_dictionary_description(cls) -> str:
         description = """{particles_dictionary_description}
             Ananke compute the phase space densities that are used to
-            determine particle smoothing lengths, but the dictionary can
-            include pre-computed densities with the following entries:
-            {density_properties}
+            determine particle kernel lengths, but the dictionary can
+            include pre-computed kernels with the following entries:
+            {kernel_properties}
         """.format(particles_dictionary_description=Galaxia.Input.particles_dictionary_description,
-                   density_properties=''.join(
+                   kernel_properties=''.join(
                        [f"\n            * {desc} via key ``{str(key)}``"
-                        for key, desc in [("rho_pos", ""),
-                                          ("rho_vel", "")]]))
+                        for key, desc in [(KernelsDriver._kernels, Galaxia.Input._kernels_prop[1])]]))
         return description
 
     @classmethod
@@ -701,7 +682,6 @@ class Ananke:
         p = Galaxia.make_dummy_particles_input(n_parts)
         p[cls._log10NH] = 22 + np.random.randn(n_parts)
         if with_kernels:
-            # p[cls._rho_pos], p[cls._rho_vel] = 1/(4/3*np.pi*Galaxia.make_dummy_kernels_input(n_parts).T**3)
             p[cls._kernels] = Galaxia.make_dummy_kernels_input(n_parts)
         return p
 
@@ -717,13 +697,6 @@ class Ananke:
                 Dictionary of dictionaries of Isochrone objects.
         """
         return Galaxia_photo.available_photo_systems
-
-    # @classmethod
-    # def display_density_docs(cls) -> None:
-    #     """
-    #         Print the DensitiesDriver constructor docstring
-    #     """
-    #     print(DensitiesDriver.__init__.__doc__)
 
     @classmethod
     def display_kernels_docs(cls) -> None:
