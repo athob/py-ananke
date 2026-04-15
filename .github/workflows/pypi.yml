@@ -1,0 +1,120 @@
+name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
+
+on:
+  push:
+    tags:
+      - 'v*'               # Trigger only when a tag starting with 'v' is pushed
+
+env:
+  PACKAGE_NAME: ananke
+
+jobs:
+  build:
+    name: Build distribution 📦
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - name: Wait for CI/CD workflow to succeed
+      if: contains(github.ref_name, 'a') || contains(github.ref_name, 'b') || contains(github.ref_name, 'rc')
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        WORKFLOW_NAME="CI/CD"
+        TIMEOUT=600
+        INTERVAL=10
+
+        # Get the commit SHA (the tag points to)
+        COMMIT_SHA=${{ github.sha }}
+
+        echo "Waiting for workflow '$WORKFLOW_NAME' to succeed on commit $COMMIT_SHA..."
+
+        START_TIME=$(date +%s)
+        while true; do
+          # Get all workflow runs and filter by head_sha and name
+          RESPONSE=$(gh api repos/${{ github.repository }}/actions/runs --paginate)
+          STATUS=$(echo "$RESPONSE" | jq -r --arg sha "$COMMIT_SHA" --arg name "$WORKFLOW_NAME" \
+            '.workflow_runs[] | select(.head_sha == $sha and .name == $name) | .conclusion' | head -1)
+
+          if [ "$STATUS" = "success" ]; then
+            echo "Workflow succeeded!"
+            break
+          elif [ "$STATUS" = "failure" ] || [ "$STATUS" = "neutral" ] || [ "$STATUS" = "cancelled" ] || [ "$STATUS" = "timed_out" ]; then
+            echo "Workflow failed with status: $STATUS"
+            exit 1
+          fi
+          
+          CURRENT_TIME=$(date +%s)
+          ELAPSED=$((CURRENT_TIME - START_TIME))
+          if [ $ELAPSED -ge $TIMEOUT ]; then
+            echo "Timeout waiting for workflow to complete."
+            exit 1
+          fi
+          
+          echo "Still waiting (current status: ${STATUS:-not found})... retry in ${INTERVAL}s"
+          sleep $INTERVAL
+        done
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.x"
+    - name: Install pypa/build
+      run: python3 -m pip install build --user
+    - name: Build a binary wheel and a source tarball
+      run: python3 -m build
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v5
+      with:
+        name: python-package-distributions
+        path: dist/
+
+  publish-to-testpypi:
+    name: Publish Python 🐍 distribution 📦 to TestPyPI
+    needs:
+    - build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: release
+      url: https://test.pypi.org/p/${{ env.PACKAGE_NAME }}
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v6
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish distribution 📦 to TestPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
+
+  publish-to-pypi:
+    name: Publish Python 🐍 distribution 📦 to PyPI
+    if: github.ref_type == 'tag' && !contains(github.ref_name, 'a') && !contains(github.ref_name, 'b') && !contains(github.ref_name, 'rc') && !contains(github.ref_name, 'dev')
+    needs:
+    - build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: release
+      url: https://pypi.org/p/${{ env.PACKAGE_NAME }}
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v6
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish distribution 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
