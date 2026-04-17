@@ -695,6 +695,8 @@ class Ananke:
         p[cls._log10NH] = 22 + np.random.randn(n_parts)
         if with_kernels:
             p[cls._kernels] = Galaxia.make_dummy_kernels_input(n_parts)
+        else:
+            p[cls._mass] = np.clip(0.7 + 0.05*np.random.randn(n_parts), 0, 1)*p[cls._massinit]
         return p
 
     @classmethod
