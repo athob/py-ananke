@@ -651,10 +651,17 @@ class Ananke:
     def make_dummy_dictionary_description(cls) -> str:
         description = """{particles_dictionary_description}
             Ananke compute the phase space densities that are used to
-            determine particle kernel lengths, but the dictionary can
-            include pre-computed kernels with the following entries:
+            determine particle kernel lengths, and requires for that the
+            particle current stellar mass:
+            {current_mass_properties}
+            
+            but the dictionary can also alternatively receive pre-computed
+            kernels with the following entries:
             {kernel_properties}
         """.format(particles_dictionary_description=Galaxia.Input.particles_dictionary_description,
+                   current_mass_properties=''.join(
+                       [f"\n            * {desc} via key ``{str(key)}``"
+                        for key, desc in [Galaxia.Input._masscurrent_prop]]),
                    kernel_properties=''.join(
                        [f"\n            * {desc} via key ``{str(key)}``"
                         for key, desc in [(KernelsDriver._kernels, Galaxia.Input._kernels_prop[1])]]))
