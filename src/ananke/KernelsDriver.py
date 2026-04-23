@@ -72,7 +72,7 @@ class KernelsDriver:
         path = pathlib.Path(self.name)
         rho_pos = EnBiD.enbid(self.particle_positions, self.particle_masses, name=path / POS_TAG, ngb=self.ngb, **self.parameters)
         rho_vel = EnBiD.enbid(self.particle_velocities, self.particle_masses, name=path / VEL_TAG, ngb=self.ngb, **self.parameters)
-        self.kernels = (self.particle_masses/np.cbrt(4/3*np.pi*np.vstack([rho_pos, rho_vel]))).T
+        self.kernels = np.cbrt(self.particle_masses/(np.vstack([rho_pos, rho_vel])*4/3*np.pi)).T
         return self.kernels
 
     def _check_kernels_format(self, kernels):
