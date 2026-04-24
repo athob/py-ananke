@@ -70,9 +70,12 @@ class KernelsDriver:
                 estimates for the pipeline particles
         """
         path = pathlib.Path(self.name)
-        rho_pos = EnBiD.enbid(self.particle_positions, self.particle_masses, name=path / POS_TAG, ngb=self.ngb, **self.parameters)
-        rho_vel = EnBiD.enbid(self.particle_velocities, self.particle_masses, name=path / VEL_TAG, ngb=self.ngb, **self.parameters)
-        self.kernels = np.cbrt(self.particle_masses/(np.vstack([rho_pos, rho_vel])*4/3*np.pi)).T
+        rho_pos = EnBiD.enbid(self.particle_positions, mass=self.particle_masses, name=path / POS_TAG, ngb=self.ngb, **self.parameters)
+        rho_vel = EnBiD.enbid(self.particle_velocities, mass=self.particle_masses, name=path / VEL_TAG, ngb=self.ngb, **self.parameters)
+        rho = EnBiD.enbid(self.particle_positions, velocities=self.particle_velocities, mass=self.particle_masses, name=path / (POS_TAG+VEL_TAG), ngb=self.ngb, **self.parameters)
+        kernels_from_3d = np.cbrt(self.particle_masses/(np.vstack([rho_pos, rho_vel])*4/3*np.pi)).T
+        normalization_factors = ((self.particle_masses/rho)/(np.pi**3/6*np.prod(kernels_from_3d**3, axis=1)))[:,None]**(1/6)
+        self.kernels = normalization_factors*kernels_from_3d
         return self.kernels
 
     def _check_kernels_format(self, kernels):
