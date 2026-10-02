@@ -20,7 +20,7 @@ Please note that this module is private. The KernelsDriver class is
 available in the main ``ananke`` namespace - use that instead.
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Optional, Dict
+from typing import TYPE_CHECKING, Any, Optional, Dict, Callable
 from numpy.typing import NDArray
 from warnings import warn
 import pathlib
@@ -49,19 +49,31 @@ class KernelsDriver:
                 The Ananke object that utilizes this KernelsDriver object
             
             **kwargs
-                Additional parameters to be used by the density estimator. In
+                Additional parameters to be used by the kernels estimator. In
                 the current implementation, these include all the configurable
                 parameters of EnBiD accessible through the class method
-                display_EnBiD_docs
+                display_EnBiD_docs (except `name` and `ngb`)
         """
         self.__ananke: Ananke = ananke
+        self.__kernels_estimator: Optional[Callable] = kwargs.pop('kernels_estimator', None)
         self.__parameters: Dict[str, Any] = kwargs
         self.kernels = self.particle_kernels
+
+    def __enbid_kernel_estimator(self, positions, velocities, masses, **kwargs):
+        path = pathlib.Path(self.name)
+        rho_pos = EnBiD.enbid(positions, mass=masses, name=path / POS_TAG, **kwargs)
+        rho_vel = EnBiD.enbid(velocities, mass=masses, name=path / VEL_TAG, **kwargs)
+        rho = EnBiD.enbid(positions, velocities=velocities, mass=masses, name=path / (POS_TAG+VEL_TAG), **kwargs)
+        kernels_from_3d = np.cbrt(masses/(np.vstack([rho_pos, rho_vel])*4/3*np.pi)).T
+        normalization_factors = ((masses/rho)/(np.pi**3/6*np.prod(kernels_from_3d**3, axis=1)))[:,None]**(1/6)
+        kernels = normalization_factors*kernels_from_3d
+        return kernels
     
-    def _run_enbid(self):
+    def _compute_kernels(self):
         """
-            Method to generate the array of kernel sizes estimates via EnBiD
-            that is needed to generate the survey from the pipeline particles
+            Method to generate via the estimator given at class construction
+            the array of kernel sizes estimates that is needed to generate the
+            survey from the pipeline particles
             
             Returns
             ----------
@@ -69,14 +81,19 @@ class KernelsDriver:
                 A (Nx2) array representing kernel sizes
                 estimates for the pipeline particles
         """
-        path = pathlib.Path(self.name)
-        rho_pos = EnBiD.enbid(self.particle_positions, mass=self.particle_masses, name=path / POS_TAG, ngb=self.ngb, **self.parameters)
-        rho_vel = EnBiD.enbid(self.particle_velocities, mass=self.particle_masses, name=path / VEL_TAG, ngb=self.ngb, **self.parameters)
-        rho = EnBiD.enbid(self.particle_positions, velocities=self.particle_velocities, mass=self.particle_masses, name=path / (POS_TAG+VEL_TAG), ngb=self.ngb, **self.parameters)
-        kernels_from_3d = np.cbrt(self.particle_masses/(np.vstack([rho_pos, rho_vel])*4/3*np.pi)).T
-        normalization_factors = ((self.particle_masses/rho)/(np.pi**3/6*np.prod(kernels_from_3d**3, axis=1)))[:,None]**(1/6)
-        self.kernels = normalization_factors*kernels_from_3d
+        self.kernels = self._kernels_estimator(self.particle_positions, self.particle_velocities, self.particle_masses, ngb=self.ngb, **self.parameters)
+        # path = pathlib.Path(self.name)
+        # rho_pos = EnBiD.enbid(self.particle_positions, mass=self.particle_masses, name=path / POS_TAG, ngb=self.ngb, **self.parameters)
+        # rho_vel = EnBiD.enbid(self.particle_velocities, mass=self.particle_masses, name=path / VEL_TAG, ngb=self.ngb, **self.parameters)
+        # rho = EnBiD.enbid(self.particle_positions, velocities=self.particle_velocities, mass=self.particle_masses, name=path / (POS_TAG+VEL_TAG), ngb=self.ngb, **self.parameters)
+        # kernels_from_3d = np.cbrt(self.particle_masses/(np.vstack([rho_pos, rho_vel])*4/3*np.pi)).T
+        # normalization_factors = ((self.particle_masses/rho)/(np.pi**3/6*np.prod(kernels_from_3d**3, axis=1)))[:,None]**(1/6)
+        # self.kernels = normalization_factors*kernels_from_3d
         return self.kernels
+
+    def _run_enbid(self):
+        warn('This method will be deprecated, please use instead method _compute_kernels', DeprecationWarning, stacklevel=2)
+        return self._compute_kernels()
 
     def _check_kernels_format(self, kernels):
         if kernels is not None:
@@ -86,6 +103,13 @@ class KernelsDriver:
             #     utils.confirm_equal_length_arrays_in_dict(kernels, error_message_dict_name="kernels")
             # else:
             #     raise ValueError("Kernels should be either None or an array-like")
+
+    @property
+    def _kernels_estimator(self) -> Callable:
+        if self.__kernels_estimator is None:
+            return self.__enbid_kernel_estimator
+        else:
+            return self.__kernels_estimator
 
     @property
     def ananke(self):
@@ -131,7 +155,7 @@ class KernelsDriver:
         if self.__kernels is not None:
             return self.__kernels
         else:
-            return self._run_enbid()
+            return self._compute_kernels()
     
     @kernels.setter
     def kernels(self, kernels):
