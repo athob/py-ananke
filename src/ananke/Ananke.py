@@ -500,7 +500,6 @@ class Ananke:
         if value:
             warn(f"You have requested caching mode, be aware this feature is currently experimental and may result in unintended behaviour.", DeprecationWarning, stacklevel=2)
         self.__caching: bool = value
-        self._kernelsdriver_proxy.parameters['caching'] = self.caching
       
     @property
     def append_hash(self) -> bool:

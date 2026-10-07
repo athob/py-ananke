@@ -506,9 +506,9 @@ class KernelsDriver:
 
     def __enbid_kernel_estimator(self, positions, velocities, masses, **kwargs):
         path = pathlib.Path(self.name)
-        rho_pos = EnBiD.enbid(positions, mass=masses, name=path / POS_TAG, **kwargs)
-        rho_vel = EnBiD.enbid(velocities, mass=masses, name=path / VEL_TAG, **kwargs)
-        rho = EnBiD.enbid(positions, velocities=velocities, mass=masses, name=path / (POS_TAG+VEL_TAG), **kwargs)
+        rho_pos = EnBiD.enbid(positions, mass=masses, name=path / POS_TAG, caching=self.caching, **kwargs)
+        rho_vel = EnBiD.enbid(velocities, mass=masses, name=path / VEL_TAG, caching=self.caching, **kwargs)
+        rho = EnBiD.enbid(positions, velocities=velocities, mass=masses, name=path / (POS_TAG+VEL_TAG), caching=self.caching, **kwargs)
         kernels_from_3d = np.cbrt(masses/(np.vstack([rho_pos, rho_vel])*4/3*np.pi)).T
         normalization_factors = ((masses/rho)/(np.pi**3/6*np.prod(kernels_from_3d**3, axis=1)))[:,None]**(1/6)
         kernels = normalization_factors*kernels_from_3d
@@ -569,6 +569,10 @@ class KernelsDriver:
     @property
     def ngb(self):
         return self.ananke.ngb
+
+    @property
+    def caching(self):
+        return self.ananke.caching
 
     @property
     def parameters(self) -> Dict[str, Any]:
