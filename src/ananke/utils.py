@@ -105,8 +105,8 @@ class LinearNDInterpolatorExtrapolator:
     def __call__(self, *args) -> Union[float, np.ndarray]:
         t = self.linear_interpolator(*args)
         t[np.isnan(t)] = self.nearest_neighbor_interpolator(*args)[np.isnan(t)]  # TODO reduce unnecessary interpolation use?
-        if t.size == 1:
-            return t.item(0)
+        # if t.size == 1:
+        #     return t.item(0)
         return t
 
 
