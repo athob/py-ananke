@@ -22,6 +22,7 @@ Please note that this module is private.
 from functools import cache
 import numpy as np
 import pyvo
+from astroquery import vizier
 from astropy import units, table, coordinates
 
 from galaxia_ananke import photometry as ph
@@ -67,8 +68,17 @@ def __remove_description_from_quantity(quantity):
 
 @cache
 def marshall2006() -> table.Table:
-    voresource = pyvo.registry.search(ivoid="ivo://CDS.VizieR/J/A+A/453/635")[0]
-    marshall2006 = voresource.get_service("tap").run_sync(f'select * from "{list(voresource.get_tables().keys())[0]}"').to_qtable()
+    # voresource = pyvo.registry.search(ivoid="ivo://CDS.VizieR/J/A+A/453/635")[0]
+    # marshall2006 = voresource.get_service("tap").run_sync(f'select * from "{list(voresource.get_tables().keys())[0]}"').to_qtable()
+    #
+    v = vizier.Vizier(
+        columns=['**'], 
+        row_limit=-1, 
+        vizier_server='vizier.cfa.harvard.edu'  # Or 'vizier.idia.ac.za'
+    )
+    catalogs = v.get_catalogs('J/A+A/453/635')
+    marshall2006 = table.QTable(catalogs[0])
+    #
     marshall2006.sort('nb')
     marshall2006 = table.vstack([
             table.vstack([
