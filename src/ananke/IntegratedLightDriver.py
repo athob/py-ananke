@@ -90,7 +90,7 @@ class IntegratedLightDriver:
     _lum = Galaxia_photo_Formatting._lum
     _teff = Galaxia_photo_Formatting._teff
     _grav = Galaxia_photo_Formatting._grav
-    _label = Galaxia_photo_Formatting._label
+    # _label = Galaxia_photo_Formatting._label
     _ms_labels = [0,1]
     _default_imf_utils: Tuple[Callable[[ArrayLike], NDArray], float, float, float] = make_truncated_kroupa_imf()
     _zero_imf: Callable[[ArrayLike], NDArray] = lambda m: 0*m
