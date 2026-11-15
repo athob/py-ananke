@@ -146,6 +146,8 @@ class LinearNDInterpolatorLOSExtrapolator:
         """
         self._spherical: bool = spherical
         self._extrapolator: bool = extrapolator
+        points = np.asarray(points)
+        values = np.asarray(values)
         points, values = self._complete_points_values_with_center(points, values, value_at_center, self._spherical)
         self.linear_interpolator: interpolate.LinearNDInterpolator = interpolate.LinearNDInterpolator(points, values, **kwargs)
         self._calibrating_center = np.mean(points,axis=0)
